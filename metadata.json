@@ -1,0 +1,6 @@
+{
+  "name": "Sage",
+  "description": "An intelligent AI learning companion powered by Google Gemini.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

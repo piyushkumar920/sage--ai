@@ -1,0 +1,15 @@
+{
+  "name": "sage-backend-proxy",
+  "version": "1.0.0",
+  "description": "Secure server-side API proxy for Sage AI tutor with Google Gemini",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  }
+}

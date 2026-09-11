@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Outer Wisdom Radiant Diamond Crest -->
+    <path
+        android:pathData="M54,26 L76,48 L54,78 L32,48 Z"
+        android:strokeWidth="1.5"
+        android:strokeColor="#8B5CF6">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="54"
+                android:startY="26"
+                android:endX="54"
+                android:endY="78"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#33A78BFA" />
+                <item android:offset="1.0" android:color="#054C1D95" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Neural constellation nodes & lines -->
+    <path
+        android:pathData="M54,34 L42,46 L46,62 L54,68 L62,62 L66,46 Z"
+        android:strokeWidth="1.8"
+        android:strokeColor="#C4B5FD"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000" />
+
+    <!-- Center Knowledge Star / Gem -->
+    <path
+        android:pathData="M54,42 L56.5,49.5 L64,52 L56.5,54.5 L54,62 L51.5,54.5 L44,52 L51.5,49.5 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="44"
+                android:startY="42"
+                android:endX="64"
+                android:endY="62"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FDE68A" />
+                <item android:offset="0.5" android:color="#FBBF24" />
+                <item android:offset="1.0" android:color="#F59E0B" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Wisdom Eyes / Dual Nodes -->
+    <path
+        android:pathData="M42,46m-2.5,0a2.5,2.5 0 1,1 5,0a2.5,2.5 0 1,1 -5,0"
+        android:fillColor="#FBBF24" />
+    <path
+        android:pathData="M66,46m-2.5,0a2.5,2.5 0 1,1 5,0a2.5,2.5 0 1,1 -5,0"
+        android:fillColor="#FBBF24" />
+
+    <!-- Crown Apex Spark -->
+    <path
+        android:pathData="M54,23 L55.5,28 L60.5,29.5 L55.5,31 L54,36 L52.5,31 L47.5,29.5 L52.5,28 Z"
+        android:fillColor="#FBBF24" />
+
+    <!-- Base Quill / Crystal Pedestal -->
+    <path
+        android:pathData="M54,68 L50,78 L54,83 L58,78 Z"
+        android:fillColor="#8B5CF6" />
+</vector>
