@@ -25,12 +25,24 @@ sealed class GeminiResult<out T> {
 }
 
 class GeminiClient(
-    private val backendUrlProvider: () -> String? = { null }
+    private val backendUrlProvider: () -> String? = { null },
+    private val apiKeyProvider: () -> String? = { null }
 ) {
     private val okHttpClient: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(60, TimeUnit.SECONDS)
         .readTimeout(60, TimeUnit.SECONDS)
         .writeTimeout(60, TimeUnit.SECONDS)
+        .addInterceptor { chain ->
+            val response = chain.proceed(chain.request())
+            val contentType = response.body?.contentType()?.toString()
+            if (response.code in 301..308) {
+                throw IOException("Server returned redirect HTTP ${response.code} (gateway authentication or invalid path)")
+            }
+            if (contentType != null && contentType.contains("text/html")) {
+                throw IOException("Server returned HTML instead of JSON (HTTP ${response.code})")
+            }
+            response
+        }
         .addInterceptor(HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BASIC
         })
@@ -46,6 +58,19 @@ class GeminiClient(
         return if (base.endsWith("/")) base else "$base/"
     }
 
+    fun getEffectiveApiKey(): String? {
+        val custom = apiKeyProvider()?.trim()
+        if (custom != null) {
+            return if (custom.isNotEmpty()) custom else null
+        }
+        val buildKey = try {
+            com.example.BuildConfig.GEMINI_API_KEY
+        } catch (_: Throwable) {
+            null
+        }
+        return if (!buildKey.isNullOrBlank() && buildKey != "MY_GEMINI_API_KEY") buildKey else null
+    }
+
     private fun createApiService(): GeminiApiService {
         val url = getEffectiveBackendUrl()
         return Retrofit.Builder()
@@ -56,7 +81,60 @@ class GeminiClient(
             .create(GeminiApiService::class.java)
     }
 
+    private fun createGoogleApiService(): GeminiApiService {
+        return Retrofit.Builder()
+            .baseUrl("https://generativelanguage.googleapis.com/")
+            .client(okHttpClient)
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .build()
+            .create(GeminiApiService::class.java)
+    }
+
     suspend fun testConnection(): GeminiResult<Boolean> {
+        val directKey = getEffectiveApiKey()
+        if (directKey != null) {
+            return testDirectGoogleConnection(directKey)
+        }
+        return testBackendConnection()
+    }
+
+    private suspend fun testDirectGoogleConnection(apiKey: String): GeminiResult<Boolean> {
+        return try {
+            val api = createGoogleApiService()
+            val probeRequest = GeminiRequest(
+                contents = listOf(
+                    GeminiContent(
+                        role = "user",
+                        parts = listOf(GeminiPart(text = GeminiConfig.CONNECTION_TEST_PROMPT))
+                    )
+                ),
+                generationConfig = GeminiGenerationConfig(maxOutputTokens = 64)
+            )
+
+            val models = listOf("gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-flash-latest", "gemini-3.6-flash")
+            var lastErr: GeminiResult.Error? = null
+            for (model in models) {
+                val response = api.generateContentDirect(model, apiKey, probeRequest)
+                if (response.isSuccessful) {
+                    val reply = response.body()?.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
+                    if (!reply.isNullOrBlank()) {
+                        return GeminiResult.Success(true)
+                    }
+                } else {
+                    lastErr = parseHttpError(response.code(), response.errorBody()?.string())
+                    if (response.code() == 404 || response.code() == 429 || response.code() == 503) {
+                        continue // try next candidate model
+                    }
+                    return lastErr
+                }
+            }
+            lastErr ?: GeminiResult.Error("Google Gemini API returned an empty response.")
+        } catch (e: Exception) {
+            handleException(e)
+        }
+    }
+
+    private suspend fun testBackendConnection(): GeminiResult<Boolean> {
         return try {
             val api = createApiService()
             // 1. Try health check endpoint first
@@ -105,6 +183,66 @@ class GeminiClient(
         history: List<GeminiContent>,
         systemPrompt: String = GeminiConfig.SYSTEM_PROMPT,
         mode: String = "normal"
+    ): GeminiResult<String> {
+        val directKey = getEffectiveApiKey()
+        if (directKey != null) {
+            return generateDirectGoogleContent(directKey, history, systemPrompt, mode)
+        }
+        return generateBackendContent(history, systemPrompt, mode)
+    }
+
+    private suspend fun generateDirectGoogleContent(
+        apiKey: String,
+        history: List<GeminiContent>,
+        systemPrompt: String,
+        mode: String
+    ): GeminiResult<String> {
+        return try {
+            val api = createGoogleApiService()
+            val request = GeminiRequest(
+                contents = history.map { item ->
+                    GeminiContent(
+                        role = if (item.role == "model" || item.role == "assistant") "model" else "user",
+                        parts = item.parts.map { GeminiPart(text = it.text) }
+                    )
+                },
+                systemInstruction = GeminiSystemInstruction(
+                    parts = listOf(GeminiPart(text = "$systemPrompt\nCurrent Mode: $mode"))
+                ),
+                generationConfig = GeminiGenerationConfig(
+                    temperature = 0.7f,
+                    maxOutputTokens = 2048
+                )
+            )
+
+            val fallbackModels = listOf("gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-flash-latest", "gemini-3.6-flash")
+            var lastError: GeminiResult.Error? = null
+            for (model in fallbackModels) {
+                val response = api.generateContentDirect(model, apiKey, request)
+                if (response.isSuccessful) {
+                    val reply = response.body()?.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
+                    if (!reply.isNullOrBlank()) {
+                        return GeminiResult.Success(reply)
+                    }
+                } else {
+                    val err = parseHttpError(response.code(), response.errorBody()?.string())
+                    if (response.code() == 404 || response.code() == 429 || response.code() == 503) {
+                        lastError = err
+                        continue // try next model
+                    }
+                    return err
+                }
+            }
+            lastError ?: GeminiResult.Error("Gemini returned an empty response.")
+        } catch (e: Exception) {
+            handleException(e)
+        }
+    }
+
+    private suspend fun generateBackendContent(
+        history: List<GeminiContent>,
+        systemPrompt: String,
+        mode: String
     ): GeminiResult<String> {
         val historyItems = history.map { item ->
             SageHistoryItem(
@@ -187,10 +325,20 @@ class GeminiClient(
                 isTimeout = true,
                 isNetworkError = true
             )
-            is IOException -> GeminiResult.Error(
-                "Network communication error: ${e.localizedMessage ?: "Connection interrupted"}",
-                isNetworkError = true
-            )
+            is IOException -> {
+                val msg = e.localizedMessage ?: e.message ?: "Connection interrupted"
+                if (msg.contains("HTML instead of JSON", ignoreCase = true) || msg.contains("redirect HTTP", ignoreCase = true)) {
+                    GeminiResult.Error(
+                        "Backend returned web page instead of JSON. Please set your Gemini API key in Developer Diagnostics & API Key Setup for direct free-tier access.",
+                        isBackendError = true
+                    )
+                } else {
+                    GeminiResult.Error(
+                        "Network communication error: $msg",
+                        isNetworkError = true
+                    )
+                }
+            }
             else -> GeminiResult.Error(
                 "Unexpected error: ${e.localizedMessage ?: e.javaClass.simpleName}"
             )

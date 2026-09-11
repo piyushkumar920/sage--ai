@@ -24,6 +24,8 @@ import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.VpnKey
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -33,6 +35,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -53,6 +56,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.api.GeminiConfig
@@ -61,6 +65,7 @@ import com.example.ui.theme.SageCardBorder
 import com.example.ui.theme.SageError
 import com.example.ui.theme.SageGold
 import com.example.ui.theme.SagePrimary
+import com.example.ui.theme.SagePrimaryLight
 import com.example.ui.theme.SageRaisedSurface
 import com.example.ui.theme.SageSuccess
 import com.example.ui.theme.SageSurface
@@ -78,12 +83,19 @@ fun DiagnosticScreen(
     lastLatencyMs: Long,
     isTesting: Boolean,
     backendUrl: String,
+    apiKey: String = "",
     onRunTest: () -> Unit,
     onSaveBackendUrl: (String) -> Unit,
-    onBack: () -> Unit
+    onSaveApiKey: ((String) -> Unit)? = null,
+    onClearApiKey: (() -> Unit)? = null,
+    onBack: (() -> Unit)? = null
 ) {
     var urlInput by remember { mutableStateOf("") }
     var urlSavedNotification by remember { mutableStateOf(false) }
+
+    var apiKeyInput by remember { mutableStateOf("") }
+    var showApiKey by remember { mutableStateOf(false) }
+    var apiKeySavedNotification by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -98,7 +110,7 @@ fun DiagnosticScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Diagnostics",
+                            text = "Settings & Diagnostics",
                             color = SageTextPrimary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp
@@ -106,12 +118,14 @@ fun DiagnosticScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack, modifier = Modifier.testTag("diagnostic_back_button")) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = SageTextPrimary
-                        )
+                    if (onBack != null) {
+                        IconButton(onClick = onBack, modifier = Modifier.testTag("diagnostic_back_button")) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = SageTextPrimary
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = SageSurface)
@@ -171,7 +185,7 @@ fun DiagnosticScreen(
 
                     DiagnosticRow(
                         label = "Architecture",
-                        value = "HTTPS Proxy (Zero APK Secret)",
+                        value = if (apiKey.isNotBlank()) "Google Gemini Direct API" else "HTTPS Backend Proxy",
                         isSuccess = true
                     )
 
@@ -222,6 +236,161 @@ fun DiagnosticScreen(
                     Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Run Connection Test", fontWeight = FontWeight.Bold)
+                }
+            }
+
+            // Gemini API Key Setup Card (Direct Connection)
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .border(
+                        1.dp,
+                        if (apiKey.isNotBlank()) SageSuccess.copy(alpha = 0.5f) else SageCardBorder,
+                        RoundedCornerShape(16.dp)
+                    )
+                    .testTag("api_key_setup_card"),
+                colors = CardDefaults.cardColors(containerColor = SageSurface)
+            ) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.VpnKey,
+                                contentDescription = null,
+                                tint = if (apiKey.isNotBlank()) SageSuccess else SageGold,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Gemini API Key Setup",
+                                color = SageTextPrimary,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(
+                                    if (apiKey.isNotBlank()) SageSuccess.copy(alpha = 0.15f)
+                                    else SagePrimary.copy(alpha = 0.15f)
+                                )
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = if (apiKey.isNotBlank()) "DIRECT API ACTIVE" else "FREE TIER READY",
+                                color = if (apiKey.isNotBlank()) SageSuccess else SagePrimaryLight,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = if (apiKey.isNotBlank())
+                            "Direct Google Gemini API Key configured (${apiKey.take(4)}...${apiKey.takeLast(4)}). AI queries connect directly to Google without server proxy dependencies."
+                        else
+                            "Enter your Google AI Studio Gemini API Key for direct, 100% reliable connection on the Free Tier (no Cloud Run proxy or web login required).",
+                        color = SageTextSecondary,
+                        fontSize = 11.sp,
+                        lineHeight = 16.sp
+                    )
+
+                    OutlinedTextField(
+                        value = apiKeyInput,
+                        onValueChange = {
+                            apiKeyInput = it
+                            apiKeySavedNotification = false
+                        },
+                        placeholder = {
+                            Text(
+                                text = if (apiKey.isNotBlank()) "Replace current key..." else "Paste AI Studio API key (AIzaSy...)",
+                                color = SageTextMuted
+                            )
+                        },
+                        singleLine = true,
+                        visualTransformation = if (showApiKey) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { showApiKey = !showApiKey }) {
+                                Icon(
+                                    imageVector = if (showApiKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                    contentDescription = if (showApiKey) "Hide key" else "Show key",
+                                    tint = SageTextMuted,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        },
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = {
+                            if (apiKeyInput.isNotBlank() && onSaveApiKey != null) {
+                                onSaveApiKey(apiKeyInput)
+                                apiKeySavedNotification = true
+                                apiKeyInput = ""
+                            }
+                        }),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = SageTextPrimary,
+                            unfocusedTextColor = SageTextPrimary,
+                            focusedBorderColor = SageGold,
+                            unfocusedBorderColor = SageCardBorder
+                        ),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("custom_api_key_input")
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+                    ) {
+                        if (apiKey.isNotBlank() && onClearApiKey != null) {
+                            OutlinedButton(
+                                onClick = {
+                                    onClearApiKey()
+                                    apiKeySavedNotification = false
+                                },
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.testTag("clear_api_key_button")
+                            ) {
+                                Text("Remove Key", color = SageError, fontSize = 12.sp)
+                            }
+                        }
+
+                        Button(
+                            onClick = {
+                                if (apiKeyInput.isNotBlank() && onSaveApiKey != null) {
+                                    onSaveApiKey(apiKeyInput)
+                                    apiKeySavedNotification = true
+                                    apiKeyInput = ""
+                                }
+                            },
+                            enabled = apiKeyInput.isNotBlank(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = SageGold,
+                                contentColor = Color.Black
+                            ),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.testTag("save_api_key_button")
+                        ) {
+                            Text("Save API Key", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        }
+                    }
+
+                    if (apiKeySavedNotification) {
+                        Text(
+                            text = "✓ API Key saved. AI connection is now running in Direct Mode.",
+                            color = SageSuccess,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
             }
 
@@ -294,8 +463,20 @@ fun DiagnosticScreen(
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
                     ) {
+                        OutlinedButton(
+                            onClick = {
+                                onSaveBackendUrl("")
+                                urlSavedNotification = true
+                                urlInput = ""
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.testTag("reset_backend_url_button")
+                        ) {
+                            Text("Reset Default", color = SageTextSecondary, fontSize = 12.sp)
+                        }
+
                         Button(
                             onClick = {
                                 if (urlInput.isNotBlank()) {

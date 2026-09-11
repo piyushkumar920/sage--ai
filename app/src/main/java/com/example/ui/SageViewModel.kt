@@ -32,7 +32,8 @@ class SageViewModel(application: Application) : AndroidViewModel(application) {
 
     private val preferencesManager = PreferencesManager(application)
     private val geminiClient = GeminiClient(
-        backendUrlProvider = { preferencesManager.customBackendUrl.ifEmpty { null } }
+        backendUrlProvider = { preferencesManager.customBackendUrl.ifEmpty { null } },
+        apiKeyProvider = { preferencesManager.customApiKey.ifEmpty { null } }
     )
     private val database = SageDatabase.getInstance(application)
     private val repository = SageRepository(
@@ -122,6 +123,31 @@ class SageViewModel(application: Application) : AndroidViewModel(application) {
         preferencesManager.activeTopicId = topic.id
     }
 
+    fun openTrack(title: String, initialPrompt: String? = null) {
+        viewModelScope.launch {
+            val existing = allTopics.value.find { it.title.equals(title.trim(), ignoreCase = true) }
+            val targetTopic = existing ?: repository.createTopic(title.trim(), "NORMAL")
+            selectTopic(targetTopic)
+            if (!initialPrompt.isNullOrBlank()) {
+                sendMessage(initialPrompt)
+            }
+        }
+    }
+
+    fun practiceConcept(conceptName: String) {
+        openTrack(
+            title = "Machine Learning & AI",
+            initialPrompt = "Let's do a focused practice drill on '$conceptName'. Please present a realistic scenario or conceptual problem with multiple choices or thought prompts for me to solve."
+        )
+    }
+
+    fun discussChallenge(question: String, selectedAnswer: String) {
+        openTrack(
+            title = "Machine Learning & AI",
+            initialPrompt = "In today's Daily Challenge, the question was: \"$question\"\nMy answer was: \"$selectedAnswer\". Can you provide an intuitive explanation of Covariate/Distribution Shift in real-world machine learning systems and how we detect and solve it?"
+        )
+    }
+
     fun createTopic(title: String, mode: String) {
         viewModelScope.launch {
             val created = repository.createTopic(title, mode)
@@ -179,6 +205,19 @@ class SageViewModel(application: Application) : AndroidViewModel(application) {
 
     val backendUrl: String
         get() = preferencesManager.customBackendUrl.ifEmpty { geminiClient.getEffectiveBackendUrl() }
+
+    val apiKey: String
+        get() = preferencesManager.customApiKey.ifEmpty { geminiClient.getEffectiveApiKey() ?: "" }
+
+    fun saveApiKey(key: String) {
+        preferencesManager.customApiKey = key.trim()
+        testAiConnection()
+    }
+
+    fun clearApiKey() {
+        preferencesManager.customApiKey = ""
+        testAiConnection()
+    }
 
     fun saveBackendUrl(url: String) {
         preferencesManager.customBackendUrl = url.trim()

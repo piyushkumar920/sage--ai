@@ -11,6 +11,7 @@ class PreferencesManager(context: Context) {
 
     companion object {
         private const val KEY_CUSTOM_BACKEND_URL = "custom_backend_url"
+        private const val KEY_CUSTOM_API_KEY = "custom_gemini_api_key"
         private const val KEY_CONNECTION_VERIFIED = "connection_verified"
         private const val KEY_STREAK = "learning_streak"
         private const val KEY_LAST_ACTIVE_DATE = "last_active_date"
@@ -23,6 +24,10 @@ class PreferencesManager(context: Context) {
     var customBackendUrl: String
         get() = prefs.getString(KEY_CUSTOM_BACKEND_URL, "") ?: ""
         set(value) = prefs.edit().putString(KEY_CUSTOM_BACKEND_URL, value.trim()).apply()
+
+    var customApiKey: String
+        get() = prefs.getString(KEY_CUSTOM_API_KEY, "") ?: ""
+        set(value) = prefs.edit().putString(KEY_CUSTOM_API_KEY, value.trim()).apply()
 
     var isConnectionVerified: Boolean
         get() = prefs.getBoolean(KEY_CONNECTION_VERIFIED, false)

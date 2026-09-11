@@ -2,6 +2,7 @@ package com.example.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
@@ -248,6 +250,33 @@ fun ConnectionTestScreen(
                                     text = "Try Again",
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(10.dp))
+                            OutlinedButton(
+                                onClick = onEnterApp,
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = SageTextPrimary
+                                ),
+                                border = BorderStroke(1.dp, SageCardBorder),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(46.dp)
+                                    .testTag("continue_offline_button")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.MenuBook,
+                                    contentDescription = null,
+                                    tint = SageTextSecondary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Continue to App (Offline Mode)",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = SageTextSecondary
                                 )
                             }
                         }

@@ -30,6 +30,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Build
@@ -100,6 +101,7 @@ fun ChatScreen(
     onOpenRoadmap: () -> Unit,
     onOpenDiagnostics: () -> Unit,
     onTestConnection: () -> Unit,
+    onNavigateBack: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     var inputText by remember { mutableStateOf("") }
@@ -118,6 +120,17 @@ fun ChatScreen(
         containerColor = SageBackground,
         topBar = {
             TopAppBar(
+                navigationIcon = {
+                    if (onNavigateBack != null) {
+                        IconButton(onClick = onNavigateBack, modifier = Modifier.testTag("chat_back_button")) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back",
+                                tint = SageTextPrimary
+                            )
+                        }
+                    }
+                },
                 title = {
                     Column(
                         modifier = Modifier.clickable { onOpenTopics() }
