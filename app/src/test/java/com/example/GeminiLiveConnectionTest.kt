@@ -54,7 +54,7 @@ class GeminiLiveConnectionTest {
         val effectiveUrl = client.getEffectiveBackendUrl()
         println("Effective Backend Proxy URL: $effectiveUrl")
         assertTrue("Backend URL must start with https:// or http://", effectiveUrl.startsWith("http"))
-        assertEquals("Configured model must be gemini-3.6-flash", "gemini-3.6-flash", GeminiConfig.GEMINI_MODEL)
+        assertEquals("Configured model must be gemini-3.5-flash", "gemini-3.5-flash", GeminiConfig.GEMINI_MODEL)
     }
 
     @Test
@@ -72,7 +72,7 @@ class GeminiLiveConnectionTest {
                 SageBackendHealthResponse(
                     status = "ok",
                     service = "sage-backend-proxy",
-                    model = "gemini-3.6-flash",
+                    model = "gemini-3.5-flash",
                     hasApiKey = true,
                     geminiConnected = true,
                     testVerified = true
@@ -91,7 +91,7 @@ class GeminiLiveConnectionTest {
                 SageBackendChatResponse(
                     success = true,
                     reply = "Gravity is a fundamental force of nature that pulls objects toward each other.",
-                    model = "gemini-3.6-flash"
+                    model = "gemini-3.5-flash"
                 )
             )
             exchange.responseHeaders.add("Content-Type", "application/json")

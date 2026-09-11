@@ -5,7 +5,7 @@ object GeminiConfig {
      * Primary Gemini AI model configuration.
      * Centralized in one place as specified in requirements.
      */
-    const val GEMINI_MODEL = "gemini-3.6-flash"
+    const val GEMINI_MODEL = "gemini-3.5-flash"
 
     /**
      * HTTPS Backend Proxy base URL.
