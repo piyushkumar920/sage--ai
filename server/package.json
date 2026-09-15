@@ -1,7 +1,7 @@
 {
-  "name": "sage-backend-proxy",
+  "name": "sage-backend-api",
   "version": "1.0.0",
-  "description": "Secure server-side API proxy for Sage AI tutor with Google Gemini",
+  "description": "Dedicated standalone Cloud Run API backend for Sage AI tutor with Google Gemini 3.5 Flash",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

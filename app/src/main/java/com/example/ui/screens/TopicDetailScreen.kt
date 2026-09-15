@@ -1,0 +1,522 @@
+package com.example.ui.screens
+
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material.icons.filled.Quiz
+import androidx.compose.material.icons.filled.School
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.data.roadmap.DevRoadmapNode
+import com.example.data.roadmap.TopicStatus
+import com.example.ui.theme.SageBackground
+import com.example.ui.theme.SageCardBorder
+import com.example.ui.theme.SageGold
+import com.example.ui.theme.SagePrimary
+import com.example.ui.theme.SagePrimaryLight
+import com.example.ui.theme.SagePrimaryStart
+import com.example.ui.theme.SageRaisedSurface
+import com.example.ui.theme.SageSuccess
+import com.example.ui.theme.SageSurface
+import com.example.ui.theme.SageTextMuted
+import com.example.ui.theme.SageTextPrimary
+import com.example.ui.theme.SageTextSecondary
+import com.example.ui.theme.SageWarning
+
+private data class TopicDetailStatusStyle(
+    val bg: Color,
+    val border: Color,
+    val color: Color,
+    val label: String
+)
+
+@Composable
+fun TopicDetailScreen(
+    node: DevRoadmapNode,
+    roadmapTitle: String,
+    status: TopicStatus,
+    onBack: () -> Unit,
+    onStartLearning: () -> Unit,
+    onAskSage: () -> Unit,
+    onTakeQuiz: () -> Unit,
+    onToggleComplete: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+
+    val style = when (status) {
+        TopicStatus.COMPLETED -> TopicDetailStatusStyle(
+            bg = SageSuccess.copy(alpha = 0.15f),
+            border = SageSuccess,
+            color = SageSuccess,
+            label = "COMPLETED"
+        )
+        TopicStatus.IN_PROGRESS -> TopicDetailStatusStyle(
+            bg = SagePrimary.copy(alpha = 0.2f),
+            border = SagePrimaryLight,
+            color = SagePrimaryLight,
+            label = "IN PROGRESS"
+        )
+        TopicStatus.NEEDS_REVIEW -> TopicDetailStatusStyle(
+            bg = SageWarning.copy(alpha = 0.2f),
+            border = SageWarning,
+            color = SageWarning,
+            label = "NEEDS REVIEW"
+        )
+        TopicStatus.NOT_STARTED -> TopicDetailStatusStyle(
+            bg = SageRaisedSurface,
+            border = SageCardBorder,
+            color = SageTextMuted,
+            label = "NOT STARTED"
+        )
+    }
+
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+            .background(SageBackground)
+            .padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Top Navigation Bar
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(SageSurface)
+                        .border(1.dp, SageCardBorder, CircleShape)
+                        .testTag("topic_detail_back_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = SageTextPrimary
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column {
+                    Text(
+                        text = roadmapTitle.uppercase(),
+                        color = SagePrimaryLight,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    )
+                    Text(
+                        text = node.title,
+                        color = SageTextPrimary,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
+        // Hero Card
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("topic_hero_card"),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = SageSurface),
+                border = androidx.compose.foundation.BorderStroke(1.dp, SageCardBorder)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = node.icon, fontSize = 28.sp)
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = node.category.replaceFirstChar { it.uppercase() },
+                                color = SageTextSecondary,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(style.bg)
+                                .border(1.dp, style.border, RoundedCornerShape(8.dp))
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = style.label,
+                                color = style.color,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = node.title,
+                        color = SageTextPrimary,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+
+                    if (node.description.isNotBlank()) {
+                        Text(
+                            text = node.description,
+                            color = SageTextSecondary,
+                            fontSize = 14.sp,
+                            lineHeight = 20.sp
+                        )
+                    }
+                }
+            }
+        }
+
+        // Action Buttons Grid (4 Working Buttons)
+        item {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                // Button 1: Start Learning (Primary Call to Action)
+                Button(
+                    onClick = onStartLearning,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .testTag("start_learning_button"),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = SagePrimary)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.School,
+                        contentDescription = null,
+                        tint = Color.White
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Start Learning (Structured AI Session)",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    // Button 2: Ask Sage (Discussion)
+                    OutlinedButton(
+                        onClick = onAskSage,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp)
+                            .testTag("ask_sage_button"),
+                        shape = RoundedCornerShape(14.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, SagePrimaryLight),
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = SageRaisedSurface)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AutoAwesome,
+                            contentDescription = null,
+                            tint = SagePrimaryLight,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Ask Sage",
+                            color = SagePrimaryLight,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    // Button 3: Take Quiz
+                    OutlinedButton(
+                        onClick = onTakeQuiz,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp)
+                            .testTag("take_quiz_button"),
+                        shape = RoundedCornerShape(14.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, SageGold.copy(alpha = 0.8f)),
+                        colors = ButtonDefaults.outlinedButtonColors(containerColor = SageRaisedSurface)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Quiz,
+                            contentDescription = null,
+                            tint = SageGold,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Take Quiz",
+                            color = SageGold,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                // Button 4: Mark Complete / Toggle Status
+                OutlinedButton(
+                    onClick = onToggleComplete,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(46.dp)
+                        .testTag("mark_complete_button"),
+                    shape = RoundedCornerShape(14.dp),
+                    border = androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        if (status == TopicStatus.COMPLETED) SageSuccess else SageCardBorder
+                    ),
+                    colors = ButtonDefaults.outlinedButtonColors(containerColor = SageSurface)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null,
+                        tint = if (status == TopicStatus.COMPLETED) SageSuccess else SageTextMuted,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (status == TopicStatus.COMPLETED) "Completed ✓ (Tap to Undo)" else "Mark as Complete",
+                        color = if (status == TopicStatus.COMPLETED) SageSuccess else SageTextSecondary,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+        }
+
+        // Section: What You'll Learn
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = SageSurface),
+                border = androidx.compose.foundation.BorderStroke(1.dp, SageCardBorder)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "WHAT YOU'LL LEARN",
+                        color = SagePrimaryLight,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    )
+                    Text(
+                        text = "• Core principles, lifecycle patterns, and foundational mechanics of ${node.title}.\n• Hands-on best practices, common pitfalls, and architecture tradeoffs.\n• Real-world scenario application verified through Sage's interactive tutor exercises.",
+                        color = SageTextPrimary,
+                        fontSize = 13.sp,
+                        lineHeight = 20.sp
+                    )
+                }
+            }
+        }
+
+        // Section: Why It Matters
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = SageSurface),
+                border = androidx.compose.foundation.BorderStroke(1.dp, SageCardBorder)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "WHY IT MATTERS",
+                        color = SageGold,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    )
+                    Text(
+                        text = "In the $roadmapTitle curriculum, ${node.title} bridges theoretical fundamentals with production engineering. Mastering it prevents architectural debt and ensures predictable reliability at scale.",
+                        color = SageTextPrimary,
+                        fontSize = 13.sp,
+                        lineHeight = 20.sp
+                    )
+                }
+            }
+        }
+
+        // Section: Prerequisites
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = SageSurface),
+                border = androidx.compose.foundation.BorderStroke(1.dp, SageCardBorder)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "PREREQUISITES & DEPENDENCIES",
+                        color = SageTextMuted,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    )
+                    if (node.children.isNotEmpty()) {
+                        Text(
+                            text = "Unlocks subsequent modules: ${node.children.joinToString(", ")}",
+                            color = SageTextSecondary,
+                            fontSize = 13.sp
+                        )
+                    } else {
+                        Text(
+                            text = "Foundational stage module in $roadmapTitle. Ready for direct study.",
+                            color = SageTextSecondary,
+                            fontSize = 13.sp
+                        )
+                    }
+                }
+            }
+        }
+
+        // Section: Recommended Resources
+        item {
+            Text(
+                text = "RECOMMENDED RESOURCES (${node.resources.size})",
+                color = SageTextSecondary,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp
+            )
+        }
+
+        if (node.resources.isEmpty()) {
+            item {
+                Text(
+                    text = "No external links attached. Sage AI interactive lessons cover this topic completely.",
+                    color = SageTextMuted,
+                    fontSize = 12.sp
+                )
+            }
+        } else {
+            items(node.resources) { resource ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            if (resource.url.isNotBlank()) {
+                                try {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(resource.url))
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {}
+                            }
+                        },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = SageSurface),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, SageCardBorder)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = resource.title,
+                                color = SageTextPrimary,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                            if (resource.type != null) {
+                                Text(
+                                    text = resource.type.uppercase(),
+                                    color = SagePrimaryLight,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+
+                        Icon(
+                            imageVector = Icons.Default.OpenInNew,
+                            contentDescription = "Open resource",
+                            tint = SagePrimaryLight,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(28.dp))
+        }
+    }
+}

@@ -1,0 +1,182 @@
+[
+  {
+    "id": "ar-vr",
+    "title": "AR / VR Developer",
+    "icon": "🥽",
+    "nodes": 22,
+    "resources": 10,
+    "difficulty": "Intermediate",
+    "time": "4-6 months"
+  },
+  {
+    "id": "backend",
+    "title": "Backend Developer",
+    "icon": "⚙️",
+    "nodes": 50,
+    "resources": 10,
+    "difficulty": "Intermediate",
+    "time": "4-6 months"
+  },
+  {
+    "id": "blockchain",
+    "title": "Blockchain / Web3 Developer",
+    "icon": "⛓️",
+    "nodes": 50,
+    "resources": 10,
+    "difficulty": "Intermediate",
+    "time": "4-6 months"
+  },
+  {
+    "id": "cloud-architect",
+    "title": "Cloud Architect",
+    "icon": "🏗️",
+    "nodes": 36,
+    "resources": 10,
+    "difficulty": "Intermediate",
+    "time": "4-6 months"
+  },
+  {
+    "id": "cybersecurity",
+    "title": "Cybersecurity",
+    "icon": "🔒",
+    "nodes": 50,
+    "resources": 10,
+    "difficulty": "Intermediate",
+    "time": "4-6 months"
+  },
+  {
+    "id": "data-engineer",
+    "title": "Data Engineer",
+    "icon": "🗃️",
+    "nodes": 50,
+    "resources": 10,
+    "difficulty": "Intermediate",
+    "time": "4-6 months"
+  },
+  {
+    "id": "devops",
+    "title": "DevOps / Cloud Engineer",
+    "icon": "☁️",
+    "nodes": 50,
+    "resources": 10,
+    "difficulty": "Intermediate",
+    "time": "4-6 months"
+  },
+  {
+    "id": "devsecops",
+    "title": "DevSecOps Engineer",
+    "icon": "🛡️",
+    "nodes": 42,
+    "resources": 10,
+    "difficulty": "Intermediate",
+    "time": "4-6 months"
+  },
+  {
+    "id": "embedded-iot",
+    "title": "Embedded / IoT Developer",
+    "icon": "🔌",
+    "nodes": 50,
+    "resources": 10,
+    "difficulty": "Intermediate",
+    "time": "4-6 months"
+  },
+  {
+    "id": "frontend",
+    "title": "Frontend Developer",
+    "icon": "🎨",
+    "nodes": 52,
+    "resources": 10,
+    "difficulty": "Intermediate",
+    "time": "4-6 months"
+  },
+  {
+    "id": "fullstack",
+    "title": "Full Stack Developer",
+    "icon": "🌐",
+    "nodes": 50,
+    "resources": 10,
+    "difficulty": "Intermediate",
+    "time": "4-6 months"
+  },
+  {
+    "id": "game-dev",
+    "title": "Game Developer",
+    "icon": "🎮",
+    "nodes": 50,
+    "resources": 10,
+    "difficulty": "Intermediate",
+    "time": "4-6 months"
+  },
+  {
+    "id": "low-code-no-code",
+    "title": "Low-Code / No-Code Developer",
+    "icon": "⚡",
+    "nodes": 32,
+    "resources": 10,
+    "difficulty": "Intermediate",
+    "time": "4-6 months"
+  },
+  {
+    "id": "ml-ai",
+    "title": "ML / AI Engineer",
+    "icon": "🧠",
+    "nodes": 50,
+    "resources": 10,
+    "difficulty": "Intermediate",
+    "time": "4-6 months"
+  },
+  {
+    "id": "mobile",
+    "title": "Mobile Developer",
+    "icon": "📱",
+    "nodes": 50,
+    "resources": 10,
+    "difficulty": "Intermediate",
+    "time": "4-6 months"
+  },
+  {
+    "id": "platform-engineer",
+    "title": "Platform Engineer",
+    "icon": "🔧",
+    "nodes": 31,
+    "resources": 10,
+    "difficulty": "Intermediate",
+    "time": "4-6 months"
+  },
+  {
+    "id": "product-manager",
+    "title": "Product Manager (Tech)",
+    "icon": "📋",
+    "nodes": 50,
+    "resources": 10,
+    "difficulty": "Intermediate",
+    "time": "4-6 months"
+  },
+  {
+    "id": "qa-engineer",
+    "title": "QA / Test Engineer",
+    "icon": "🧪",
+    "nodes": 42,
+    "resources": 10,
+    "difficulty": "Intermediate",
+    "time": "4-6 months"
+  },
+  {
+    "id": "sre",
+    "title": "Site Reliability Engineer (SRE)",
+    "icon": "🛡️",
+    "nodes": 25,
+    "resources": 10,
+    "difficulty": "Intermediate",
+    "time": "4-6 months"
+  },
+  {
+    "id": "technical-writer",
+    "title": "Technical Writer",
+    "icon": "✍️",
+    "nodes": 41,
+    "resources": 10,
+    "difficulty": "Intermediate",
+    "time": "4-6 months"
+  }
+]

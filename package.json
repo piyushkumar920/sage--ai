@@ -1,0 +1,16 @@
+{
+  "name": "sage-learning-app",
+  "version": "1.0.0",
+  "description": "Sage Learning Companion - Backend API and Android project",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node server/server.js",
+    "test": "node scripts/test_regression.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  }
+}

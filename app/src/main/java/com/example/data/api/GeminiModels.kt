@@ -57,7 +57,8 @@ data class GeminiErrorDetails(
  */
 @JsonClass(generateAdapter = true)
 data class SageBackendChatRequest(
-    @field:Json(name = "history") val history: List<SageHistoryItem>,
+    @field:Json(name = "message") val message: String? = null,
+    @field:Json(name = "history") val history: List<SageHistoryItem> = emptyList(),
     @field:Json(name = "mode") val mode: String = "normal",
     @field:Json(name = "systemPrompt") val systemPrompt: String? = null
 )
@@ -70,20 +71,30 @@ data class SageHistoryItem(
 
 @JsonClass(generateAdapter = true)
 data class SageBackendChatResponse(
+    @field:Json(name = "ok") val ok: Boolean? = null,
     @field:Json(name = "success") val success: Boolean = false,
     @field:Json(name = "reply") val reply: String? = null,
     @field:Json(name = "model") val model: String? = null,
     @field:Json(name = "error") val error: String? = null,
-    @field:Json(name = "code") val code: String? = null
+    @field:Json(name = "code") val code: String? = null,
+    @field:Json(name = "requestId") val requestId: String? = null,
+    @field:Json(name = "timestamp") val timestamp: String? = null
 )
 
 @JsonClass(generateAdapter = true)
 data class SageBackendHealthResponse(
+    @field:Json(name = "ok") val ok: Boolean? = null,
     @field:Json(name = "status") val status: String? = null,
     @field:Json(name = "service") val service: String? = null,
+    @field:Json(name = "api") val api: String? = null,
+    @field:Json(name = "backend") val backend: String? = null,
+    @field:Json(name = "gemini") val gemini: String? = null,
     @field:Json(name = "model") val model: String? = null,
+    @field:Json(name = "configuredModel") val configuredModel: String? = null,
     @field:Json(name = "hasApiKey") val hasApiKey: Boolean? = null,
     @field:Json(name = "geminiConnected") val geminiConnected: Boolean? = null,
-    @field:Json(name = "testVerified") val testVerified: Boolean? = null
+    @field:Json(name = "testVerified") val testVerified: Boolean? = null,
+    @field:Json(name = "requestId") val requestId: String? = null,
+    @field:Json(name = "timestamp") val timestamp: String? = null
 )
 

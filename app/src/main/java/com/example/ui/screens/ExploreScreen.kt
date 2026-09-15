@@ -22,12 +22,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -44,18 +48,22 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.roadmap.DevRoadmapSummary
 import com.example.ui.theme.SageBackground
 import com.example.ui.theme.SageCardBorder
+import com.example.ui.theme.SageGold
 import com.example.ui.theme.SagePrimary
 import com.example.ui.theme.SagePrimaryLight
 import com.example.ui.theme.SagePrimaryStart
 import com.example.ui.theme.SageRaisedSurface
+import com.example.ui.theme.SageSuccess
 import com.example.ui.theme.SageSurface
 import com.example.ui.theme.SageTextMuted
 import com.example.ui.theme.SageTextPrimary
 import com.example.ui.theme.SageTextSecondary
 
 data class ExploreDomainItem(
+    val roadmapId: String,
     val emoji: String,
     val category: String,
     val title: String,
@@ -64,6 +72,9 @@ data class ExploreDomainItem(
 
 @Composable
 fun ExploreScreen(
+    summaries: List<DevRoadmapSummary>,
+    roadmapPercentages: Map<String, Int> = emptyMap(),
+    onOpenRoadmap: (String) -> Unit,
     onStartTrack: (String) -> Unit,
     onCustomTrack: () -> Unit,
     modifier: Modifier = Modifier
@@ -73,73 +84,96 @@ fun ExploreScreen(
 
     val categories = listOf(
         "All",
-        "Technology & Engineering",
-        "Creative Arts",
-        "Business & Strategy",
-        "Science & Math"
+        "Engineering",
+        "AI & Data",
+        "Systems & Cloud",
+        "Product & QA"
     )
 
     val allTracks = remember {
         listOf(
             ExploreDomainItem(
-                emoji = "\uD83E\uDDE0", // brain
-                category = "TECHNOLOGY & ENGINEERING",
+                roadmapId = "ml-ai",
+                emoji = "🧠",
+                category = "AI & Data",
                 title = "Machine Learning & AI",
                 description = "Neural networks, supervised learning, gradient descent & LLMs"
             ),
             ExploreDomainItem(
-                emoji = "\uD83C\uDF10", // globe
-                category = "TECHNOLOGY & ENGINEERING",
+                roadmapId = "fullstack",
+                emoji = "🌐",
+                category = "Engineering",
                 title = "Web Development",
-                description = "Modern frontend, backend architectures, APIs & full-stack"
+                description = "Modern frontend, backend architectures, REST & GraphQL APIs"
             ),
             ExploreDomainItem(
-                emoji = "\uD83D\uDC0D", // snake
-                category = "TECHNOLOGY & ENGINEERING",
+                roadmapId = "data-engineer",
+                emoji = "🐍",
+                category = "AI & Data",
                 title = "Python & Data Science",
-                description = "Pandas, NumPy, statistical modeling & data pipelines"
+                description = "Python pipelines, SQL, Pandas, data warehousing & analytics"
             ),
             ExploreDomainItem(
-                emoji = "\uD83D\uDEE1\uFE0F", // shield
-                category = "TECHNOLOGY & ENGINEERING",
+                roadmapId = "cybersecurity",
+                emoji = "🔒",
+                category = "Systems & Cloud",
                 title = "Cybersecurity",
-                description = "Network defense, cryptography, threat modeling & penetration testing"
+                description = "Network defense, vulnerability assessments & threat modeling"
             ),
             ExploreDomainItem(
-                emoji = "\u2601\uFE0F", // cloud
-                category = "TECHNOLOGY & ENGINEERING",
-                title = "Cloud Computing (GCP / AWS)",
-                description = "Serverless, containers, IAM, microservices & infrastructure as code"
+                roadmapId = "frontend",
+                emoji = "🎨",
+                category = "Engineering",
+                title = "Frontend Engineering",
+                description = "JavaScript, TypeScript, React, state management & web performance"
             ),
             ExploreDomainItem(
-                emoji = "\uD83C\uDFA8", // palette
-                category = "CREATIVE ARTS",
-                title = "Design Systems & UI/UX",
-                description = "Visual hierarchy, typography, design systems & creative coding"
+                roadmapId = "backend",
+                emoji = "⚙️",
+                category = "Engineering",
+                title = "Backend Architecture",
+                description = "Node.js, databases, caching, concurrency & microservices"
             ),
             ExploreDomainItem(
-                emoji = "\uD83D\uDCCA", // chart
-                category = "BUSINESS & STRATEGY",
-                title = "Product Strategy & Metrics",
-                description = "User research, prioritization frameworks, unit economics & roadmaps"
+                roadmapId = "mobile",
+                emoji = "📱",
+                category = "Engineering",
+                title = "Mobile App Development",
+                description = "Android, Kotlin, Jetpack Compose, iOS & cross-platform"
             ),
             ExploreDomainItem(
-                emoji = "\u269B\uFE0F", // atom
-                category = "SCIENCE & MATH",
-                title = "Quantum Computing",
-                description = "Qubits, quantum superposition, quantum gates & algorithms"
+                roadmapId = "devops",
+                emoji = "☁️",
+                category = "Systems & Cloud",
+                title = "DevOps & Cloud Engineering",
+                description = "CI/CD pipelines, Docker, Kubernetes, Terraform & AWS/GCP"
+            ),
+            ExploreDomainItem(
+                roadmapId = "qa-engineer",
+                emoji = "🧪",
+                category = "Product & QA",
+                title = "QA & Test Engineering",
+                description = "Automated testing, unit, integration, and E2E frameworks"
+            ),
+            ExploreDomainItem(
+                roadmapId = "product-manager",
+                emoji = "📋",
+                category = "Product & QA",
+                title = "Product Management",
+                description = "Agile roadmaps, metrics, user research & system design"
             )
         )
     }
 
     val filteredTracks = remember(searchQuery, selectedCategory) {
         allTracks.filter { track ->
-            val matchesCategory = selectedCategory == "All" || track.category.equals(selectedCategory, ignoreCase = true)
-            val matchesQuery = searchQuery.isBlank() ||
+            val matchesSearch = searchQuery.isBlank() ||
                     track.title.contains(searchQuery, ignoreCase = true) ||
-                    track.description.contains(searchQuery, ignoreCase = true) ||
-                    track.category.contains(searchQuery, ignoreCase = true)
-            matchesCategory && matchesQuery
+                    track.description.contains(searchQuery, ignoreCase = true)
+
+            val matchesCategory = selectedCategory == "All" || track.category.equals(selectedCategory, ignoreCase = true)
+
+            matchesSearch && matchesCategory
         }
     }
 
@@ -158,15 +192,14 @@ fun ExploreScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                Column {
                     Text(
-                        text = "Curated Domains",
+                        text = "EXPLORE CURRICULUM",
                         color = SagePrimaryLight,
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "Explore Learning Tracks",
                         color = SageTextPrimary,
@@ -175,20 +208,22 @@ fun ExploreScreen(
                     )
                 }
 
-                // "+ Custom" Button
                 Button(
                     onClick = onCustomTrack,
-                    colors = ButtonDefaults.buttonColors(containerColor = SagePrimary),
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.testTag("custom_track_button")
+                    modifier = Modifier
+                        .height(38.dp)
+                        .testTag("custom_track_button"),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = SageRaisedSurface)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Custom",
+                        contentDescription = null,
+                        tint = SagePrimaryLight,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Custom", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Text("Custom", color = SagePrimaryLight, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -200,12 +235,12 @@ fun ExploreScreen(
                 onValueChange = { searchQuery = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .testTag("explore_search_input"),
+                    .testTag("explore_search_field"),
                 placeholder = {
                     Text(
-                        text = "Search topics, skills, frameworks...",
+                        text = "Search roadmaps (e.g. Full Stack, AI, DevOps)...",
                         color = SageTextMuted,
-                        fontSize = 14.sp
+                        fontSize = 13.sp
                     )
                 },
                 leadingIcon = {
@@ -213,24 +248,23 @@ fun ExploreScreen(
                         imageVector = Icons.Default.Search,
                         contentDescription = "Search",
                         tint = SageTextSecondary,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 },
-                singleLine = true,
-                shape = RoundedCornerShape(14.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = SageSurface,
-                    unfocusedContainerColor = SageSurface,
-                    focusedBorderColor = SagePrimary,
-                    unfocusedBorderColor = SageCardBorder,
                     focusedTextColor = SageTextPrimary,
                     unfocusedTextColor = SageTextPrimary,
-                    cursorColor = SagePrimaryLight
-                )
+                    focusedBorderColor = SagePrimaryLight,
+                    unfocusedBorderColor = SageCardBorder,
+                    focusedContainerColor = SageSurface,
+                    unfocusedContainerColor = SageSurface
+                ),
+                shape = RoundedCornerShape(14.dp),
+                singleLine = true
             )
         }
 
-        // Horizontal Category Chips
+        // Category Filter Chips
         item {
             Row(
                 modifier = Modifier
@@ -242,21 +276,21 @@ fun ExploreScreen(
                     val isSelected = selectedCategory == category
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
+                            .clip(RoundedCornerShape(16.dp))
                             .background(if (isSelected) SagePrimary else SageSurface)
                             .border(
                                 1.dp,
                                 if (isSelected) SagePrimaryLight else SageCardBorder,
-                                RoundedCornerShape(20.dp)
+                                RoundedCornerShape(16.dp)
                             )
                             .clickable { selectedCategory = category }
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .padding(horizontal = 14.dp, vertical = 6.dp)
                             .testTag("category_chip_$category")
                     ) {
                         Text(
                             text = category,
                             color = if (isSelected) Color.White else SageTextSecondary,
-                            fontSize = 13.sp,
+                            fontSize = 12.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                         )
                     }
@@ -264,92 +298,281 @@ fun ExploreScreen(
             }
         }
 
-        // Track Cards List
+        // Section Title
+        item {
+            Text(
+                text = "FEATURED LEARNING PATHS (${filteredTracks.size})",
+                color = SageTextSecondary,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp
+            )
+        }
+
+        // Learning Track Cards List with [ Roadmap ] Button
         items(filteredTracks) { track ->
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("explore_card_${track.title}"),
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(18.dp),
                 colors = CardDefaults.cardColors(containerColor = SageSurface),
                 border = androidx.compose.foundation.BorderStroke(1.dp, SageCardBorder)
             ) {
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Emoji / Icon Avatar
-                    Box(
-                        modifier = Modifier
-                            .size(50.dp)
-                            .clip(CircleShape)
-                            .background(SageRaisedSurface)
-                            .border(1.dp, SageCardBorder, CircleShape),
-                        contentAlignment = Alignment.Center
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = track.emoji,
-                            fontSize = 24.sp
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(SageRaisedSurface)
+                                .border(1.dp, SageCardBorder, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = track.emoji, fontSize = 22.sp)
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = track.category.uppercase(),
+                                color = SagePrimaryLight,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
+                            )
+                            Text(
+                                text = track.title,
+                                color = SageTextPrimary,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = track.description,
+                        color = SageTextSecondary,
+                        fontSize = 13.sp,
+                        lineHeight = 17.sp
+                    )
+
+                    // Real Progress Display from Room Single Source of Truth
+                    val percent = roadmapPercentages[track.roadmapId] ?: if (track.roadmapId == "fullstack") 42 else 0
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Progress: $percent%",
+                                color = if (percent > 0) SageGold else SageTextMuted,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            if (percent > 0) {
+                                Text(
+                                    text = if (percent >= 100) "Completed" else "In Progress",
+                                    color = if (percent >= 100) SageSuccess else SagePrimaryLight,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                        LinearProgressIndicator(
+                            progress = { (percent / 100f).coerceIn(0f, 1f) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp)),
+                            color = SagePrimary,
+                            trackColor = SageRaisedSurface
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(14.dp))
-
-                    // Track Info
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(3.dp)
+                    // Action Area: [ Start ] and [ Roadmap ] BESIDE EVERY COURSE
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Text(
-                            text = track.category,
-                            color = SagePrimaryLight,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.sp
-                        )
+                        // [ Start ] or [ Continue ] Button
+                        Button(
+                            onClick = { onStartTrack(track.title) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp)
+                                .testTag("start_button_${track.roadmapId}"),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = SagePrimary,
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PlayArrow,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (percent > 0) "Continue" else "Start",
+                                color = Color.White,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
 
-                        Text(
-                            text = track.title,
-                            color = SageTextPrimary,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        // [ Roadmap ] Button - Clearly visible beside the course
+                        OutlinedButton(
+                            onClick = { onOpenRoadmap(track.roadmapId) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp)
+                                .testTag("roadmap_button_${track.roadmapId}"),
+                            shape = RoundedCornerShape(12.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.5.dp, SagePrimaryLight),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = SageRaisedSurface,
+                                contentColor = SageTextPrimary
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Map,
+                                contentDescription = "Roadmap",
+                                tint = SagePrimaryLight,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Roadmap",
+                                color = SageTextPrimary,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+        }
 
-                        Text(
-                            text = track.description,
-                            color = SageTextSecondary,
-                            fontSize = 12.sp,
-                            lineHeight = 16.sp
-                        )
+        // Section: ALL DEVROADMAPS (20 Curated Paths)
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = "DEVROADMAPS DIRECTORY (20 PATHS)",
+                    color = SagePrimaryLight,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+                Text(
+                    text = "Authentic curriculum roadmaps from github.com/rudra496/devroadmaps",
+                    color = SageTextMuted,
+                    fontSize = 11.sp
+                )
+            }
+        }
+
+        items(summaries) { summary ->
+            val summaryPercent = roadmapPercentages[summary.id] ?: if (summary.id == "fullstack") 42 else 0
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("summary_card_${summary.id}"),
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = SageSurface),
+                border = androidx.compose.foundation.BorderStroke(1.dp, SageCardBorder)
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = summary.icon, fontSize = 24.sp)
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = summary.title,
+                                color = SageTextPrimary,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "${summary.nodes} Topics • ${summary.difficulty} • Progress: $summaryPercent%",
+                                color = if (summaryPercent > 0) SageGold else SageTextSecondary,
+                                fontSize = 11.sp,
+                                fontWeight = if (summaryPercent > 0) FontWeight.SemiBold else FontWeight.Normal
+                            )
+                        }
                     }
 
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                    // "Start" Button
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(SageRaisedSurface)
-                            .border(1.dp, SagePrimary.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
-                            .clickable { onStartTrack(track.title) }
-                            .padding(horizontal = 14.dp, vertical = 8.dp)
-                            .testTag("start_track_${track.title}")
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(
-                            text = "Start",
-                            color = SagePrimaryLight,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Button(
+                            onClick = { onStartTrack(summary.title) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(38.dp)
+                                .testTag("directory_continue_${summary.id}"),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = SagePrimary)
+                        ) {
+                            Text(
+                                text = if (summaryPercent > 0) "Continue" else "Start",
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        OutlinedButton(
+                            onClick = { onOpenRoadmap(summary.id) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(38.dp)
+                                .testTag("directory_roadmap_${summary.id}"),
+                            shape = RoundedCornerShape(10.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, SagePrimaryLight),
+                            colors = ButtonDefaults.outlinedButtonColors(containerColor = SageRaisedSurface)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Map,
+                                contentDescription = null,
+                                tint = SagePrimaryLight,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Roadmap",
+                                color = SageTextPrimary,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }
         }
 
         item {
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(28.dp))
         }
     }
 }

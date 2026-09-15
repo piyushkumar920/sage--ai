@@ -30,11 +30,14 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,14 +48,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.data.local.TopicEntity
+import com.example.data.roadmap.DevRoadmapNode
+import com.example.data.roadmap.TopicStatus
 import com.example.ui.SageViewModel
+import com.example.ui.screens.ChatRoadmapScreen
 import com.example.ui.screens.ChatScreen
 import com.example.ui.screens.ConnectionTestScreen
+import com.example.ui.screens.DailyQuizScreen
 import com.example.ui.screens.DiagnosticScreen
 import com.example.ui.screens.ExploreScreen
 import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.ProgressScreen
+import com.example.ui.screens.QuizScreen
 import com.example.ui.screens.RoadmapDialog
+import com.example.ui.screens.RoadmapScreen
+import com.example.ui.screens.TopicDetailScreen
 import com.example.ui.screens.TopicDialog
 import com.example.ui.theme.SageBackground
 import com.example.ui.theme.SageCardBorder
@@ -90,8 +100,15 @@ fun SageApp(
 ) {
     var currentTab by remember { mutableStateOf(NavTab.HOME) }
     var inChatScreen by remember { mutableStateOf(false) }
-    var hasEnteredApp by remember { mutableStateOf(false) }
+    var hasEnteredApp by rememberSaveable { mutableStateOf(false) }
     var showDiagnosticsFromTest by remember { mutableStateOf(false) }
+
+    // Sub-screen navigation states
+    var inChatRoadmapScreen by remember { mutableStateOf(false) }
+    var viewingRoadmapId by remember { mutableStateOf<String?>(null) }
+    var viewingTopicNode by remember { mutableStateOf<DevRoadmapNode?>(null) }
+    var takingQuizNode by remember { mutableStateOf<DevRoadmapNode?>(null) }
+    var inDailyQuizScreen by remember { mutableStateOf(false) }
 
     var showRoadmapDialog by remember { mutableStateOf(false) }
     var roadmapTopic by remember { mutableStateOf<TopicEntity?>(null) }
@@ -105,6 +122,38 @@ fun SageApp(
     val isOnline by viewModel.isOnline.collectAsState()
     val currentMode by viewModel.currentMode.collectAsState()
 
+    // Auto-proceed into app when AI connects successfully
+    LaunchedEffect(connectionStatus.isSuccess) {
+        if (connectionStatus.isSuccess == true) {
+            delay(500)
+            hasEnteredApp = true
+        }
+    }
+
+    // Safety timeout: auto-enter app within 2.5s so user is never stuck on launch screen
+    LaunchedEffect(Unit) {
+        delay(2500)
+        if (!hasEnteredApp && !showDiagnosticsFromTest) {
+            hasEnteredApp = true
+        }
+    }
+
+    // Roadmap state
+    val activeRoadmapId by viewModel.activeRoadmapId.collectAsState()
+    val activeRoadmapDetail by viewModel.activeRoadmapDetail.collectAsState()
+    val activeRoadmapProgress by viewModel.activeRoadmapProgress.collectAsState()
+    val roadmapPercentages by viewModel.roadmapPercentages.collectAsState()
+    val activeWeakConcepts by viewModel.activeWeakConcepts.collectAsState()
+    val recentlyCompletedTopics by viewModel.recentlyCompletedTopics.collectAsState()
+    val averageQuizScore by viewModel.averageQuizScore.collectAsState()
+    val totalQuizzesCount by viewModel.totalQuizzesCount.collectAsState()
+
+    // Daily quiz state
+    val todayDailyQuiz by viewModel.todayDailyQuiz.collectAsState()
+    val dailyQuizHistory by viewModel.dailyQuizHistory.collectAsState()
+    val dailyQuizStats by viewModel.dailyQuizStats.collectAsState()
+
+    // First gate: Connection Test Screen
     if (!hasEnteredApp) {
         if (showDiagnosticsFromTest) {
             DiagnosticScreen(
@@ -115,15 +164,13 @@ fun SageApp(
                 lastLatencyMs = viewModel.lastLatencyMs,
                 isTesting = connectionStatus.isChecking,
                 backendUrl = viewModel.backendUrl,
-                apiKey = viewModel.apiKey,
                 onRunTest = { viewModel.testAiConnection() },
                 onSaveBackendUrl = { viewModel.saveBackendUrl(it) },
-                onSaveApiKey = { viewModel.saveApiKey(it) },
-                onClearApiKey = { viewModel.clearApiKey() },
                 onBack = {
                     showDiagnosticsFromTest = false
                     viewModel.testAiConnection()
-                }
+                },
+                onResetDefaults = { viewModel.resetToDefaults() }
             )
         } else {
             ConnectionTestScreen(
@@ -138,6 +185,149 @@ fun SageApp(
         return
     }
 
+    // Sub-Screen 0: Dedicated Chat Roadmap Screen
+    if (inChatRoadmapScreen) {
+        ChatRoadmapScreen(
+            activeRoadmapDetail = activeRoadmapDetail,
+            progressList = activeRoadmapProgress,
+            onBackToChat = { inChatRoadmapScreen = false },
+            onContinueLearning = { node ->
+                inChatRoadmapScreen = false
+                viewModel.startLearningRoadmapTopic(activeRoadmapId, node) {
+                    inChatScreen = true
+                }
+            },
+            onViewFullRoadmap = { rId ->
+                inChatRoadmapScreen = false
+                viewModel.selectRoadmap(rId)
+                viewingRoadmapId = rId
+            },
+            onPracticeWeakTopics = {
+                inChatRoadmapScreen = false
+                val firstWeak = activeWeakConcepts.firstOrNull()?.concept ?: "Core Concepts"
+                viewModel.practiceWeakConcept(firstWeak, activeRoadmapDetail?.title ?: "Curriculum") {
+                    inChatScreen = true
+                }
+            }
+        )
+        return
+    }
+
+    // Sub-Screen 1: Topic Quiz Screen
+    if (takingQuizNode != null) {
+        val quizNode = takingQuizNode!!
+        val currentRoadmapTitle = activeRoadmapDetail?.title ?: "Curriculum"
+        QuizScreen(
+            node = quizNode,
+            roadmapTitle = currentRoadmapTitle,
+            onLoadQuiz = { viewModel.loadQuizForTopic(quizNode) },
+            onSubmitResult = { score, total, weakList ->
+                viewModel.recordQuizSubmission(
+                    roadmapId = activeRoadmapId,
+                    topicId = quizNode.id,
+                    topicTitle = quizNode.title,
+                    score = score,
+                    total = total,
+                    weakList = weakList
+                )
+            },
+            onBack = { takingQuizNode = null },
+            onStartLearning = {
+                takingQuizNode = null
+                viewingTopicNode = null
+                viewingRoadmapId = null
+                viewModel.startLearningRoadmapTopic(activeRoadmapId, quizNode) {
+                    inChatScreen = true
+                }
+            }
+        )
+        return
+    }
+
+    // Sub-Screen 2: Topic Detail Screen
+    if (viewingTopicNode != null) {
+        val topicNode = viewingTopicNode!!
+        val progressList = activeRoadmapProgress
+        val currentStatusStr = progressList.find { it.nodeId == topicNode.id }?.status ?: "NOT_STARTED"
+        val status = when (currentStatusStr) {
+            "COMPLETED" -> TopicStatus.COMPLETED
+            "IN_PROGRESS" -> TopicStatus.IN_PROGRESS
+            "NEEDS_REVIEW" -> TopicStatus.NEEDS_REVIEW
+            else -> TopicStatus.NOT_STARTED
+        }
+
+        TopicDetailScreen(
+            node = topicNode,
+            roadmapTitle = activeRoadmapDetail?.title ?: "Curriculum",
+            status = status,
+            onBack = { viewingTopicNode = null },
+            onStartLearning = {
+                viewingTopicNode = null
+                viewingRoadmapId = null
+                viewModel.startLearningRoadmapTopic(activeRoadmapId, topicNode) {
+                    inChatScreen = true
+                }
+            },
+            onAskSage = {
+                viewingTopicNode = null
+                viewingRoadmapId = null
+                viewModel.askSageAboutTopic(activeRoadmapId, topicNode) {
+                    inChatScreen = true
+                }
+            },
+            onTakeQuiz = {
+                takingQuizNode = topicNode
+            },
+            onToggleComplete = {
+                viewModel.markTopicComplete(
+                    roadmapId = activeRoadmapId,
+                    nodeId = topicNode.id,
+                    nodeTitle = topicNode.title,
+                    category = topicNode.category
+                )
+            }
+        )
+        return
+    }
+
+    // Sub-Screen 3: Roadmap Screen (Opens the SPECIFIC roadmap for the selected course)
+    if (viewingRoadmapId != null) {
+        val roadmapToShow = viewModel.getRoadmapDetail(viewingRoadmapId!!) ?: activeRoadmapDetail
+        if (roadmapToShow != null) {
+            RoadmapScreen(
+                roadmapDetail = roadmapToShow,
+                progressList = activeRoadmapProgress,
+                onBack = { viewingRoadmapId = null },
+                onSelectNode = { node ->
+                    viewingTopicNode = node
+                }
+            )
+            return
+        }
+    }
+
+    // Sub-Screen 4: Daily Quiz Dashboard
+    if (inDailyQuizScreen) {
+        DailyQuizScreen(
+            dailyQuiz = todayDailyQuiz,
+            history = dailyQuizHistory,
+            stats = dailyQuizStats,
+            onSubmitAnswer = { selectedIndex ->
+                viewModel.submitDailyQuizAnswer(selectedIndex)
+            },
+            onBack = { inDailyQuizScreen = false },
+            onPracticeWeakConcept = {
+                inDailyQuizScreen = false
+                val firstWeak = activeWeakConcepts.firstOrNull()?.concept ?: "Core Concepts"
+                viewModel.practiceWeakConcept(firstWeak, activeRoadmapDetail?.title ?: "Curriculum") {
+                    inChatScreen = true
+                }
+            }
+        )
+        return
+    }
+
+    // Sub-Screen 5: Chat Screen
     if (inChatScreen) {
         ChatScreen(
             activeTopic = activeTopic,
@@ -151,8 +341,7 @@ fun SageApp(
             onModeChanged = { viewModel.setMode(it) },
             onOpenTopics = { showTopicDialog = true },
             onOpenRoadmap = {
-                roadmapTopic = activeTopic
-                showRoadmapDialog = true
+                inChatRoadmapScreen = true
             },
             onOpenDiagnostics = {
                 inChatScreen = false
@@ -162,6 +351,7 @@ fun SageApp(
             onNavigateBack = { inChatScreen = false }
         )
     } else {
+        // Main Tab Scaffold
         Scaffold(
             containerColor = SageBackground,
             contentWindowInsets = WindowInsets.navigationBars,
@@ -327,30 +517,51 @@ fun SageApp(
                     NavTab.HOME -> {
                         HomeScreen(
                             streakDays = viewModel.streakDays,
-                            onOpenTrack = { trackTitle ->
-                                viewModel.openTrack(trackTitle)
-                                inChatScreen = true
+                            activeRoadmapDetail = activeRoadmapDetail,
+                            progressList = activeRoadmapProgress,
+                            todayDailyQuiz = todayDailyQuiz,
+                            onOpenRoadmap = { roadmapId ->
+                                viewModel.selectRoadmap(roadmapId)
+                                viewingRoadmapId = roadmapId
                             },
-                            onOpenRoadmap = { trackTitle ->
-                                val topic = allTopics.find { it.title.equals(trackTitle, ignoreCase = true) }
-                                    ?: activeTopic
-                                roadmapTopic = topic
-                                showRoadmapDialog = true
+                            onContinueLearning = { node ->
+                                viewModel.startLearningRoadmapTopic(activeRoadmapId, node) {
+                                    inChatScreen = true
+                                }
                             },
-                            onNewTrack = {
-                                showTopicDialog = true
+                            onOpenDailyQuiz = {
+                                inDailyQuizScreen = true
                             },
-                            onDiscussChallenge = { question, selectedAnswer ->
-                                viewModel.discussChallenge(question, selectedAnswer)
-                                inChatScreen = true
+                            onStartNextTopic = { node ->
+                                viewingTopicNode = node
+                            },
+                            onExploreRoadmaps = {
+                                currentTab = NavTab.EXPLORE
+                            },
+                            isAiConnected = (connectionStatus.isSuccess == true),
+                            onOpenDiagnostics = {
+                                currentTab = NavTab.SETTINGS
                             }
                         )
                     }
 
                     NavTab.EXPLORE -> {
                         ExploreScreen(
+                            summaries = viewModel.allRoadmapSummaries,
+                            roadmapPercentages = roadmapPercentages,
+                            onOpenRoadmap = { roadmapId ->
+                                viewModel.selectRoadmap(roadmapId)
+                                viewingRoadmapId = roadmapId
+                            },
                             onStartTrack = { trackTitle ->
-                                viewModel.openTrack(trackTitle, "Hi Sage! I want to start learning $trackTitle. Can you assess where we should begin?")
+                                val roadmap = viewModel.allRoadmapSummaries.find { it.title.equals(trackTitle, ignoreCase = true) }
+                                if (roadmap != null) {
+                                    viewModel.selectRoadmap(roadmap.id)
+                                }
+                                viewModel.openTrack(
+                                    trackTitle,
+                                    "Hi Sage! I want to start learning $trackTitle. Can you assess where we should begin?"
+                                )
                                 inChatScreen = true
                             },
                             onCustomTrack = {
@@ -361,13 +572,28 @@ fun SageApp(
 
                     NavTab.PROGRESS -> {
                         ProgressScreen(
+                            activeRoadmapDetail = activeRoadmapDetail,
+                            progressList = activeRoadmapProgress,
                             streakDays = viewModel.streakDays,
-                            studyMinutes = 45,
-                            activeTracksCount = 2,
-                            checkpointsCompleted = "1/4",
-                            onPracticeConcept = { conceptName ->
-                                viewModel.practiceConcept(conceptName)
-                                inChatScreen = true
+                            longestStreak = viewModel.longestStreak,
+                            quizAverage = averageQuizScore,
+                            quizzesCompleted = totalQuizzesCount,
+                            recentlyCompleted = recentlyCompletedTopics,
+                            weakConcepts = activeWeakConcepts,
+                            onSelectTopic = { nodeId ->
+                                val node = activeRoadmapDetail?.nodes?.find { it.id == nodeId }
+                                if (node != null) {
+                                    viewingTopicNode = node
+                                }
+                            },
+                            onPracticeWeakConcept = { concept, topicCtx ->
+                                viewModel.practiceWeakConcept(concept, topicCtx) {
+                                    inChatScreen = true
+                                }
+                            },
+                            onOpenRoadmap = { roadmapId ->
+                                viewModel.selectRoadmap(roadmapId)
+                                viewingRoadmapId = roadmapId
                             }
                         )
                     }
@@ -381,12 +607,10 @@ fun SageApp(
                             lastLatencyMs = viewModel.lastLatencyMs,
                             isTesting = connectionStatus.isChecking,
                             backendUrl = viewModel.backendUrl,
-                            apiKey = viewModel.apiKey,
                             onRunTest = { viewModel.testAiConnection() },
                             onSaveBackendUrl = { viewModel.saveBackendUrl(it) },
-                            onSaveApiKey = { viewModel.saveApiKey(it) },
-                            onClearApiKey = { viewModel.clearApiKey() },
-                            onBack = null
+                            onBack = null,
+                            onResetDefaults = { viewModel.resetToDefaults() }
                         )
                     }
                 }

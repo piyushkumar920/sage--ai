@@ -12,7 +12,6 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.sun.net.httpserver.HttpServer
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -23,24 +22,21 @@ class GeminiLiveConnectionTest {
     private val moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build()
 
     @Test
-    fun testClientKeyResolutionAndConfiguration() {
-        println("=== VERIFYING API KEY RESOLUTION AND CONFIGURATION ===")
+    fun testClientConfigurationAndSecurity() {
+        println("=== VERIFYING PROXY ARCHITECTURE AND SECURITY MANDATES ===")
 
-        // 1. Verify GeminiClient resolves the effective API key from BuildConfig or custom provider
         val client = GeminiClient()
-        val effectiveKey = client.getEffectiveApiKey()
-        println("Resolved effective key: ${effectiveKey?.take(6)}...")
-        assertNotNull("Effective API key should be available via BuildConfig or provider", effectiveKey)
 
-        // 2. Verify custom API key override works
-        val customClient = GeminiClient(apiKeyProvider = { "custom-test-key-123" })
-        assertEquals("Custom key should override default", "custom-test-key-123", customClient.getEffectiveApiKey())
-
-        // 3. Verify client communicates with HTTPS backend proxy by default
+        // 1. Verify client communicates with HTTPS backend proxy by default
         val effectiveUrl = client.getEffectiveBackendUrl()
         println("Effective Backend Proxy URL: $effectiveUrl")
-        assertTrue("Backend URL must start with https:// or http://", effectiveUrl.startsWith("http"))
+        assertTrue("Backend URL must start with https://", effectiveUrl.startsWith("https://"))
+        assertTrue("Backend URL must target Cloud Run", effectiveUrl.contains(".run.app"))
         assertEquals("Configured model must be gemini-3.5-flash", "gemini-3.5-flash", GeminiConfig.GEMINI_MODEL)
+
+        // 2. Verify custom backend URL override works
+        val customClient = GeminiClient(backendUrlProvider = { "https://custom-proxy.example.com" })
+        assertEquals("Custom URL should override default", "https://custom-proxy.example.com/", customClient.getEffectiveBackendUrl())
     }
 
     @Test
@@ -89,7 +85,7 @@ class GeminiLiveConnectionTest {
 
         try {
             val localBackendUrl = "http://127.0.0.1:$port/"
-            val client = GeminiClient(backendUrlProvider = { localBackendUrl }, apiKeyProvider = { "" })
+            val client = GeminiClient(backendUrlProvider = { localBackendUrl })
 
             // 1. Connection Test: App -> Backend -> Health/Gemini
             val connectionResult = client.testConnection()
@@ -147,7 +143,9 @@ class GeminiLiveConnectionTest {
 
         try {
             val localBackendUrl = "http://127.0.0.1:$port/"
-            val client = GeminiClient(backendUrlProvider = { localBackendUrl }, apiKeyProvider = { "" })
+            val client = GeminiClient(
+                backendUrlProvider = { localBackendUrl }
+            )
             val dummyHistory = listOf(
                 GeminiContent(role = "user", parts = listOf(GeminiPart(text = "Hi")))
             )
@@ -173,45 +171,65 @@ class GeminiLiveConnectionTest {
     }
 
     @Test
-    fun testActualCloudRunLiveEndpoints() = runBlocking {
-        println("\n=== TESTING ACTUAL LIVE CLOUD RUN HTTPS ENDPOINTS ===")
-        val client = GeminiClient()
-        val backendUrl = client.getEffectiveBackendUrl()
-        println("Testing live URL: $backendUrl")
-        assertTrue("URL must be HTTPS", backendUrl.startsWith("https://"))
-        assertTrue("URL must be on Google Cloud Run (.run.app)", backendUrl.contains(".run.app"))
-        assertEquals("Must match verified Cloud Run URL", GeminiConfig.DEFAULT_BACKEND_URL, backendUrl)
+    fun testLocalNodeBackendProxy() = runBlocking {
+        println("\n=== TESTING LOCAL NODE.JS BACKEND PROXY WITH GEMINI 3.5 FLASH ===")
+        val client = GeminiClient(backendUrlProvider = { "http://127.0.0.1:3000/" })
 
-        // Test GET /api/health over HTTPS
+        // Test GET /api/health against running local server
         val connectionResult = client.testConnection()
-        println("Live HTTPS Connection Result: $connectionResult")
-        // Verify client safely returns a GeminiResult (Success or clean Error without crashing)
-        assertTrue(
-            "Live HTTPS test must return a valid GeminiResult",
-            connectionResult is GeminiResult.Success || connectionResult is GeminiResult.Error
-        )
+        println("Local Node Proxy Connection Result: $connectionResult")
+        if (connectionResult !is GeminiResult.Success) {
+            println("Local proxy on port 3000 not currently running in build environment - skipping live proxy test.")
+            return@runBlocking
+        }
 
-        // Test POST /api/chat over HTTPS with Gemini
+        // Test POST /api/chat against running local server with Gemini 3.5 Flash
         val history = listOf(
             GeminiContent(
                 role = "user",
-                parts = listOf(GeminiPart(text = "What is the capital of France? One word answer."))
+                parts = listOf(GeminiPart(text = "What is 2+2? Single digit answer only."))
             )
         )
         val chatResult = client.generateContent(
             history = history,
-            systemPrompt = GeminiConfig.SYSTEM_PROMPT,
+            systemPrompt = "Answer with just the number.",
             mode = "normal"
         )
-        println("Live HTTPS Chat Result: $chatResult")
+        println("Local Node Proxy Chat Result: $chatResult")
         assertTrue(
-            "Live HTTPS chat must return a valid GeminiResult: $chatResult",
-            chatResult is GeminiResult.Success || chatResult is GeminiResult.Error
+            "Chat through local proxy must succeed: $chatResult",
+            chatResult is GeminiResult.Success
         )
-        if (chatResult is GeminiResult.Success) {
-            val reply = chatResult.data
-            assertTrue("Reply must mention Paris: $reply", reply.contains("Paris", ignoreCase = true))
-        }
-        println("Verified: Android GeminiClient successfully handles live Cloud Run HTTPS endpoints!")
+        val reply = (chatResult as GeminiResult.Success).data
+        assertTrue("Reply must contain 4: $reply", reply.contains("4"))
+        println("Verified: Full end-to-end proxy call from Android GeminiClient to Node.js proxy to Gemini 3.5 Flash succeeded!")
+    }
+
+    @Test
+    fun testLiveCloudRunBackendHttps() = runBlocking {
+        println("\n=== TESTING LIVE HTTPS CLOUD RUN BACKEND ===")
+        val client = GeminiClient()
+        println("Calling default backend URL: ${client.getEffectiveBackendUrl()}")
+
+        val connectionResult = client.testConnection()
+        println("Cloud Run HTTPS Connection Result: $connectionResult")
+        assertTrue("Live Cloud Run HTTPS connection test must succeed", connectionResult is GeminiResult.Success)
+
+        val history = listOf(
+            GeminiContent(
+                role = "user",
+                parts = listOf(GeminiPart(text = "What is 3+3? Single digit answer only."))
+            )
+        )
+        val chatResult = client.generateContent(
+            history = history,
+            systemPrompt = "Answer with just the number.",
+            mode = "normal"
+        )
+        println("Cloud Run HTTPS Chat Result: $chatResult")
+        assertTrue("Live Cloud Run HTTPS chat must succeed: $chatResult", chatResult is GeminiResult.Success)
+        val reply = (chatResult as GeminiResult.Success).data
+        assertTrue("Reply must contain 6: $reply", reply.contains("6"))
+        println("Verified: Live production HTTPS Cloud Run service communicates seamlessly with Android!")
     }
 }

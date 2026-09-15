@@ -84,7 +84,7 @@ class SageRepository(
             }
             is GeminiResult.Error -> {
                 preferencesManager.lastRequestSuccess = false
-                preferencesManager.lastErrorMessage = result.message
+                preferencesManager.lastErrorMessage = result.diagnosticMessage
             }
         }
         result
@@ -93,7 +93,8 @@ class SageRepository(
     suspend fun sendMessage(
         topicId: Long,
         userText: String,
-        currentMode: String
+        currentMode: String,
+        curriculumContext: String? = null
     ): Result<String> = withContext(Dispatchers.IO) {
         val cleanText = userText.trim()
         if (cleanText.isEmpty()) {
@@ -148,8 +149,8 @@ class SageRepository(
             )
         }
 
-        // 4. Determine system prompt according to mode
-        val systemPrompt = buildSystemPromptForMode(currentMode, topic)
+        // 4. Determine system prompt according to mode and curriculum state
+        val systemPrompt = buildSystemPromptForMode(currentMode, topic, curriculumContext)
 
         // 5. Call Gemini API via Backend Proxy
         val startTime = System.currentTimeMillis()
@@ -188,7 +189,7 @@ class SageRepository(
                     )
                 )
                 preferencesManager.lastRequestSuccess = false
-                preferencesManager.lastErrorMessage = result.message
+                preferencesManager.lastErrorMessage = result.diagnosticMessage
                 Result.failure(Exception(result.message))
             }
         }
@@ -263,29 +264,47 @@ class SageRepository(
                         )
                     )
                     preferencesManager.lastRequestSuccess = false
-                    preferencesManager.lastErrorMessage = result.message
+                    preferencesManager.lastErrorMessage = result.diagnosticMessage
                     Result.failure(Exception(result.message))
                 }
             }
         }
 
-    private fun buildSystemPromptForMode(mode: String, topic: TopicEntity): String {
+    private fun buildSystemPromptForMode(mode: String, topic: TopicEntity, extraContext: String? = null): String {
         val basePrompt = GeminiConfig.SYSTEM_PROMPT
+        val roadmapContextClause = buildString {
+            if (topic.roadmapJson.isNotBlank()) {
+                append("\n\nCURRICULUM CONTEXT:\n").append(topic.roadmapJson)
+            }
+            if (!extraContext.isNullOrBlank()) {
+                append("\n\nUSER ROADMAP LEARNING PROGRESS & CONTEXT:\n").append(extraContext)
+            }
+        }
+
         val modeDirective = when (mode.uppercase()) {
             "LEARNING" -> """
-Active Mode: LEARNING MODE.
-Topic: ${topic.title}
-Guideline: Guide the user methodically through the 7-step learning journey. Ask one diagnostic question at a time. Adapt to their level, teach one concept clearly, and ask comprehension questions before moving forward.
+Active Mode: STRUCTURED AI LEARNING MODE.
+Curriculum Topic: ${topic.title}$roadmapContextClause
+Pedagogical Tutor Flow:
+You are an expert, encouraging tutor leading a structured learning session for the topic "${topic.title}".
+Methodology:
+1. Explain the core concept with clarity and precision.
+2. Give a simple, relatable example.
+3. Ask ONE focused comprehension question to check understanding.
+4. When the user responds, evaluate their answer, praise insights, and gently correct errors.
+5. Offer a practical mini-exercise or coding scenario.
+6. Prepare them for the topic quiz.
+Be conversational, structured, and engaging. Never give a massive static wall of text. Teach step-by-step.
             """.trimIndent()
             "SOCRATIC" -> """
 Active Mode: SOCRATIC MODE.
-Topic: ${topic.title}
+Curriculum Topic: ${topic.title}$roadmapContextClause
 Guideline: Do NOT give direct answers immediately. Challenge the user gently with insightful questions, prompts, and thought experiments so they arrive at the truth themselves.
             """.trimIndent()
             else -> """
 Active Mode: NORMAL MODE.
-Topic: ${topic.title}
-Guideline: Answer questions directly, accurately, clearly, and concisely without unnecessary procedural friction.
+Curriculum Topic: ${topic.title}$roadmapContextClause
+Guideline: Answer questions directly, accurately, clearly, and concisely without unnecessary procedural friction, keeping context of the user's roadmap.
             """.trimIndent()
         }
 

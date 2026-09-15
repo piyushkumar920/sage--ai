@@ -221,7 +221,7 @@ fun ConnectionTestScreen(
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = errorMessage?.ifEmpty { null }
-                                    ?: "Please check your internet connection or Gemini configuration.",
+                                    ?: "Please check your internet connection or server status.",
                                 color = SageTextSecondary,
                                 fontSize = 12.sp,
                                 textAlign = TextAlign.Center,
@@ -250,6 +250,33 @@ fun ConnectionTestScreen(
                                     text = "Try Again",
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(10.dp))
+                            OutlinedButton(
+                                onClick = onOpenDiagnostics,
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = SageGold
+                                ),
+                                border = BorderStroke(1.dp, SageGold.copy(alpha = 0.5f)),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(46.dp)
+                                    .testTag("fix_connection_button")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Build,
+                                    contentDescription = null,
+                                    tint = SageGold,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "Developer Diagnostics",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = SageGold
                                 )
                             }
                             Spacer(modifier = Modifier.height(10.dp))
@@ -298,7 +325,7 @@ fun ConnectionTestScreen(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "Developer Diagnostics & API Key Setup",
+                    text = "Developer Diagnostics",
                     color = SageGold,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold

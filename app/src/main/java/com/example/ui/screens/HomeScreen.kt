@@ -1,7 +1,5 @@
 package com.example.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,12 +18,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Quiz
+import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -34,13 +35,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,10 +45,12 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.SageAccent
+import com.example.data.local.DailyQuizRecordEntity
+import com.example.data.local.TopicProgressEntity
+import com.example.data.roadmap.DevRoadmapDetail
+import com.example.data.roadmap.DevRoadmapNode
 import com.example.ui.theme.SageBackground
 import com.example.ui.theme.SageCardBorder
-import com.example.ui.theme.SageError
 import com.example.ui.theme.SageGold
 import com.example.ui.theme.SagePrimary
 import com.example.ui.theme.SagePrimaryLight
@@ -63,57 +61,49 @@ import com.example.ui.theme.SageSurface
 import com.example.ui.theme.SageTextMuted
 import com.example.ui.theme.SageTextPrimary
 import com.example.ui.theme.SageTextSecondary
-
-data class LearningTrackItem(
-    val category: String,
-    val title: String,
-    val phaseTitle: String,
-    val currentPhaseIndex: Int,
-    val totalPhases: Int,
-    val progressPercent: Int
-)
+import com.example.ui.theme.SageWarning
 
 @Composable
 fun HomeScreen(
     streakDays: Int,
-    onOpenTrack: (String) -> Unit,
+    activeRoadmapDetail: DevRoadmapDetail?,
+    progressList: List<TopicProgressEntity>,
+    todayDailyQuiz: DailyQuizRecordEntity?,
     onOpenRoadmap: (String) -> Unit,
-    onNewTrack: () -> Unit,
-    onDiscussChallenge: (question: String, selectedAnswer: String) -> Unit,
+    onContinueLearning: (DevRoadmapNode) -> Unit,
+    onOpenDailyQuiz: () -> Unit,
+    onStartNextTopic: (DevRoadmapNode) -> Unit,
+    onExploreRoadmaps: () -> Unit,
+    isAiConnected: Boolean = true,
+    onOpenDiagnostics: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    var userStreak by remember { mutableIntStateOf(streakDays) }
-    var selectedOptionIndex by remember { mutableStateOf<Int?>(null) }
-    var challengeCompleted by remember { mutableStateOf(false) }
+    val roadmapDetail = activeRoadmapDetail
+    val roadmapTitle = roadmapDetail?.title ?: "Full Stack Developer"
+    val roadmapIcon = roadmapDetail?.icon ?: "🌐"
+    val roadmapId = roadmapDetail?.id ?: "fullstack"
 
-    val challengeQuestion = "A self-driving vision model achieves 99% accuracy in sunny testing, but crashes in heavy rain. What is the fundamental issue?"
-    val challengeOptions = listOf(
-        "Underfitting",
-        "Distribution Shift (Covariate Shift)",
-        "Vanishing Gradient",
-        "Learning Rate Too High"
-    )
-    val correctIndex = 1
+    val statusMap = remember(progressList) {
+        progressList.associate { it.nodeId to it.status }
+    }
 
-    val activeTracks = remember {
-        listOf(
-            LearningTrackItem(
-                category = "TECHNOLOGY & ENGINEERING",
-                title = "Machine Learning & AI",
-                phaseTitle = "Phase 1: Foundations & The Cost Compass",
-                currentPhaseIndex = 1,
-                totalPhases = 4,
-                progressPercent = 25
-            ),
-            LearningTrackItem(
-                category = "TECHNOLOGY & ENGINEERING",
-                title = "Python & Data Science",
-                phaseTitle = "Phase 1: Baseline & Diagnostic",
-                currentPhaseIndex = 1,
-                totalPhases = 4,
-                progressPercent = 25
-            )
-        )
+    val totalNodes = roadmapDetail?.nodes?.size ?: 50
+    val completedCount = progressList.count { it.status == "COMPLETED" }
+    val percentComplete = if (totalNodes > 0) (completedCount * 100) / totalNodes else 42
+
+    // Current Topic (in progress or first uncompleted)
+    val currentTopicNode = remember(roadmapDetail, progressList) {
+        roadmapDetail?.nodes?.find { statusMap[it.id] == "IN_PROGRESS" }
+            ?: roadmapDetail?.nodes?.find { statusMap[it.id] == "NEEDS_REVIEW" }
+            ?: roadmapDetail?.nodes?.find { statusMap[it.id] != "COMPLETED" }
+            ?: roadmapDetail?.nodes?.firstOrNull()
+    }
+
+    // Recommended Next Topic (uncompleted after current)
+    val recommendedNextNode = remember(roadmapDetail, progressList, currentTopicNode) {
+        roadmapDetail?.nodes?.find { node ->
+            node.id != currentTopicNode?.id && (statusMap[node.id] == null || statusMap[node.id] == "NOT_STARTED")
+        } ?: roadmapDetail?.nodes?.getOrNull(1)
     }
 
     LazyColumn(
@@ -121,9 +111,9 @@ fun HomeScreen(
             .fillMaxSize()
             .background(SageBackground)
             .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Top Header
+        // Header with Streak
         item {
             Spacer(modifier = Modifier.height(16.dp))
             Row(
@@ -133,38 +123,36 @@ fun HomeScreen(
             ) {
                 Column {
                     Text(
-                        text = "Good evening,",
-                        color = SageTextSecondary,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Normal
+                        text = "WELCOME BACK",
+                        color = SagePrimaryLight,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
                     )
                     Text(
-                        text = "Learner",
+                        text = "Sage AI Learning",
                         color = SageTextPrimary,
-                        fontSize = 28.sp,
+                        fontSize = 22.sp,
                         fontWeight = FontWeight.ExtraBold
                     )
                 }
 
-                // Streak Pill Badge
+                // 🔥 Current Streak Badge
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
                         .background(SageSurface)
-                        .border(1.dp, SageGold.copy(alpha = 0.4f), RoundedCornerShape(20.dp))
-                        .padding(horizontal = 14.dp, vertical = 8.dp)
-                        .testTag("streak_pill")
+                        .border(1.dp, SageGold.copy(alpha = 0.5f), RoundedCornerShape(20.dp))
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .testTag("home_streak_badge")
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "\uD83D\uDD25",
-                            fontSize = 15.sp
-                        )
+                        Text(text = "🔥", fontSize = 16.sp)
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "${userStreak}d Streak",
+                            text = "$streakDays Day Streak",
                             color = SageGold,
-                            fontSize = 14.sp,
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -172,320 +160,315 @@ fun HomeScreen(
             }
         }
 
-        // DAILY CHALLENGE Card
-        item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("daily_challenge_card"),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = SageSurface),
-                border = androidx.compose.foundation.BorderStroke(1.dp, SagePrimaryStart.copy(alpha = 0.5f))
-            ) {
-                Column(
-                    modifier = Modifier.padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+        if (!isAiConnected) {
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { onOpenDiagnostics() }
+                        .testTag("ai_offline_notice_card"),
+                    colors = CardDefaults.cardColors(containerColor = SageRaisedSurface),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, SageGold.copy(alpha = 0.5f))
                 ) {
-                    // Category Chip
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(28.dp)
-                                .clip(CircleShape)
-                                .background(SagePrimaryStart),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Lightbulb,
-                                contentDescription = "Challenge",
-                                tint = Color.White,
-                                modifier = Modifier.size(16.dp)
+                        Icon(
+                            imageVector = Icons.Default.AutoAwesome,
+                            contentDescription = null,
+                            tint = SageGold,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Offline Learning Mode Active",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = SageTextPrimary
+                            )
+                            Text(
+                                text = "Roadmaps, flashcards & quizzes are ready. Tap to connect AI.",
+                                fontSize = 11.sp,
+                                color = SageTextSecondary
                             )
                         }
-
-                        Text(
-                            text = "DAILY CHALLENGE",
-                            color = SagePrimaryLight,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.sp
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = null,
+                            tint = SageGold,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
-
-                    // Question Text
-                    Text(
-                        text = challengeQuestion,
-                        color = SageTextPrimary,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        lineHeight = 22.sp
-                    )
-
-                    // Options List
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        challengeOptions.forEachIndexed { index, optionText ->
-                            val isSelected = selectedOptionIndex == index
-                            val isAnswered = selectedOptionIndex != null
-                            val isThisCorrect = index == correctIndex
-
-                            val backgroundColor = when {
-                                !isAnswered -> SageRaisedSurface
-                                isSelected && isThisCorrect -> SageSuccess.copy(alpha = 0.15f)
-                                isSelected && !isThisCorrect -> SageError.copy(alpha = 0.15f)
-                                isThisCorrect -> SageSuccess.copy(alpha = 0.10f)
-                                else -> SageRaisedSurface.copy(alpha = 0.6f)
-                            }
-
-                            val borderColor = when {
-                                !isAnswered -> SageCardBorder
-                                isSelected && isThisCorrect -> SageSuccess
-                                isSelected && !isThisCorrect -> SageError
-                                isThisCorrect -> SageSuccess.copy(alpha = 0.5f)
-                                else -> SageCardBorder.copy(alpha = 0.5f)
-                            }
-
-                            val textColor = when {
-                                !isAnswered -> SageTextPrimary
-                                isSelected && isThisCorrect -> SageSuccess
-                                isSelected && !isThisCorrect -> SageError
-                                isThisCorrect -> SageSuccess
-                                else -> SageTextSecondary
-                            }
-
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(backgroundColor)
-                                    .border(1.dp, borderColor, RoundedCornerShape(12.dp))
-                                    .clickable(enabled = !challengeCompleted) {
-                                        selectedOptionIndex = index
-                                        challengeCompleted = true
-                                        if (index == correctIndex && userStreak == streakDays) {
-                                            userStreak += 1
-                                        }
-                                    }
-                                    .padding(horizontal = 16.dp, vertical = 14.dp)
-                                    .testTag("challenge_option_$index")
-                            ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = optionText,
-                                        color = textColor,
-                                        fontSize = 14.sp,
-                                        fontWeight = if (isSelected || isThisCorrect && isAnswered) FontWeight.Bold else FontWeight.Medium,
-                                        modifier = Modifier.weight(1f)
-                                    )
-
-                                    if (isAnswered) {
-                                        if (isThisCorrect) {
-                                            Icon(
-                                                imageVector = Icons.Default.Check,
-                                                contentDescription = "Correct",
-                                                tint = SageSuccess,
-                                                modifier = Modifier.size(18.dp)
-                                            )
-                                        } else if (isSelected) {
-                                            Icon(
-                                                imageVector = Icons.Default.Close,
-                                                contentDescription = "Incorrect",
-                                                tint = SageError,
-                                                modifier = Modifier.size(18.dp)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // Explanation and Sage Discussion action
-                    AnimatedVisibility(visible = challengeCompleted, enter = fadeIn()) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(SageRaisedSurface)
-                                .padding(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = "💡 Insight: Distribution shift (covariate shift) occurs when input features change dramatically from training time to inference time, causing brittle models to fail.",
-                                color = SageTextSecondary,
-                                fontSize = 13.sp,
-                                lineHeight = 18.sp
-                            )
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.End
-                            ) {
-                                Button(
-                                    onClick = {
-                                        val chosen = challengeOptions.getOrNull(selectedOptionIndex ?: 0) ?: ""
-                                        onDiscussChallenge(challengeQuestion, chosen)
-                                    },
-                                    colors = ButtonDefaults.buttonColors(containerColor = SagePrimary),
-                                    shape = RoundedCornerShape(10.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.AutoAwesome,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text("Discuss with Sage", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
-                        }
-                    }
                 }
             }
         }
 
-        // Active Learning Tracks Header
+        // Section 1: CURRENT ROADMAP CARD
         item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Active Learning Tracks",
-                    color = SageTextPrimary,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                TextButton(
-                    onClick = onNewTrack,
-                    modifier = Modifier.testTag("new_track_button")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "New Track",
-                        tint = SagePrimaryLight,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "New Track",
-                        color = SagePrimaryLight,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
-
-        // Active Learning Tracks Cards
-        items(activeTracks.size) { index ->
-            val track = activeTracks[index]
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onOpenTrack(track.title) }
-                    .testTag("active_track_card_$index"),
+                    .testTag("home_current_roadmap_card"),
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = SageSurface),
                 border = androidx.compose.foundation.BorderStroke(1.dp, SageCardBorder)
             ) {
                 Column(
-                    modifier = Modifier.padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    // Top row: category & Map button
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = track.category,
+                            text = "CURRENT ROADMAP",
+                            color = SagePrimaryLight,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.sp
+                        )
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(SageRaisedSurface)
+                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                        ) {
+                            Text(
+                                text = "$percentComplete% Complete",
+                                color = SageSuccess,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(text = roadmapIcon, fontSize = 28.sp)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = roadmapTitle,
+                                color = SageTextPrimary,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "$completedCount of $totalNodes topics completed",
+                                color = SageTextSecondary,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+
+                    LinearProgressIndicator(
+                        progress = { percentComplete / 100f },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp)
+                            .clip(RoundedCornerShape(4.dp)),
+                        color = SagePrimary,
+                        trackColor = SageRaisedSurface
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Button(
+                            onClick = { onOpenRoadmap(roadmapId) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp)
+                                .testTag("view_roadmap_button"),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = SagePrimary)
+                        ) {
+                            Icon(imageVector = Icons.Default.Map, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("View Roadmap", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        }
+
+                        OutlinedButton(
+                            onClick = onExploreRoadmaps,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp)
+                                .testTag("switch_roadmap_button"),
+                            shape = RoundedCornerShape(12.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, SageCardBorder),
+                            colors = ButtonDefaults.outlinedButtonColors(containerColor = SageSurface)
+                        ) {
+                            Text("Browse Paths", color = SageTextSecondary, fontSize = 13.sp)
+                        }
+                    }
+                }
+            }
+        }
+
+        // Section 2: CONTINUE LEARNING CARD
+        if (currentTopicNode != null) {
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("home_continue_learning_card"),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = SageSurface),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, SagePrimaryLight.copy(alpha = 0.5f))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(18.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "CONTINUE LEARNING",
+                                color = SageGold,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
+                            )
+                            Text(
+                                text = currentTopicNode.category.uppercase(),
+                                color = SageTextMuted,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(CircleShape)
+                                    .background(SageRaisedSurface)
+                                    .border(1.dp, SageCardBorder, CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = currentTopicNode.icon, fontSize = 22.sp)
+                            }
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = currentTopicNode.title,
+                                    color = SageTextPrimary,
+                                    fontSize = 17.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = currentTopicNode.description.ifBlank { "Core module in $roadmapTitle" },
+                                    color = SageTextSecondary,
+                                    fontSize = 12.sp,
+                                    maxLines = 1
+                                )
+                            }
+                        }
+
+                        Button(
+                            onClick = { onContinueLearning(currentTopicNode) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(46.dp)
+                                .testTag("continue_learning_button"),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = SagePrimary)
+                        ) {
+                            Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Continue Learning with Sage AI", color = Color.White, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+
+        // Section 3: TODAY'S QUIZ CARD
+        item {
+            val isQuizDone = todayDailyQuiz?.isCompleted == true
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("home_today_quiz_card"),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = SageSurface),
+                border = androidx.compose.foundation.BorderStroke(1.dp, SageCardBorder)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "TODAY'S QUIZ",
                             color = SagePrimaryLight,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 1.sp
                         )
 
-                        // "Map" action button
                         Box(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(SageRaisedSurface)
-                                .border(1.dp, SageCardBorder, RoundedCornerShape(12.dp))
-                                .clickable { onOpenRoadmap(track.title) }
-                                .padding(horizontal = 12.dp, vertical = 6.dp)
-                                .testTag("map_button_$index")
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(if (isQuizDone) SageSuccess.copy(alpha = 0.15f) else SageGold.copy(alpha = 0.15f))
+                                .padding(horizontal = 8.dp, vertical = 3.dp)
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.Map,
-                                    contentDescription = "Map",
-                                    tint = SagePrimaryLight,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "Map",
-                                    color = SageTextPrimary,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
+                            Text(
+                                text = if (isQuizDone) "Completed ✓" else "Ready Today",
+                                color = if (isQuizDone) SageSuccess else SageGold,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
 
-                    // Title
                     Text(
-                        text = track.title,
+                        text = todayDailyQuiz?.question ?: "Test your mastery on recent curriculum topics and weak concepts.",
                         color = SageTextPrimary,
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 2,
+                        lineHeight = 18.sp
                     )
 
-                    // Phase description
-                    Text(
-                        text = track.phaseTitle,
-                        color = SageTextSecondary,
-                        fontSize = 13.sp
-                    )
-
-                    // Linear progress indicator
-                    LinearProgressIndicator(
-                        progress = { track.progressPercent / 100f },
+                    Button(
+                        onClick = onOpenDailyQuiz,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(6.dp)
-                            .clip(RoundedCornerShape(3.dp)),
-                        color = SagePrimary,
-                        trackColor = SageRaisedSurface,
-                    )
-
-                    // Progress footer
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .height(46.dp)
+                            .testTag("take_daily_quiz_button"),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = SageRaisedSurface)
                     ) {
+                        Icon(imageVector = Icons.Default.Quiz, contentDescription = null, tint = SagePrimaryLight, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "Phase ${track.currentPhaseIndex} of ${track.totalPhases}",
-                            color = SageTextMuted,
-                            fontSize = 12.sp
-                        )
-
-                        Text(
-                            text = "${track.progressPercent}% Completed",
+                            text = if (isQuizDone) "View Daily Quiz Dashboard" else "Take Daily Quiz",
                             color = SagePrimaryLight,
-                            fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -493,8 +476,86 @@ fun HomeScreen(
             }
         }
 
+        // Section 4: RECOMMENDED NEXT TOPIC
+        if (recommendedNextNode != null) {
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("home_recommended_next_card"),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = SageSurface),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, SageCardBorder)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(18.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "RECOMMENDED NEXT",
+                                color = SageTextMuted,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.sp
+                            )
+                            Text(
+                                text = "Prerequisite Ready",
+                                color = SageSuccess,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = recommendedNextNode.icon, fontSize = 24.sp)
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = recommendedNextNode.title,
+                                    color = SageTextPrimary,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = recommendedNextNode.description.ifBlank { "Subsequent concept in $roadmapTitle" },
+                                    color = SageTextSecondary,
+                                    fontSize = 12.sp,
+                                    maxLines = 1
+                                )
+                            }
+                        }
+
+                        OutlinedButton(
+                            onClick = { onStartNextTopic(recommendedNextNode) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(44.dp)
+                                .testTag("start_recommended_topic_button"),
+                            shape = RoundedCornerShape(12.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, SagePrimaryLight),
+                            colors = ButtonDefaults.outlinedButtonColors(containerColor = SageSurface)
+                        ) {
+                            Text("Start ${recommendedNextNode.title}", color = SagePrimaryLight, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Icon(imageVector = Icons.Default.ArrowForward, contentDescription = null, tint = SagePrimaryLight, modifier = Modifier.size(16.dp))
+                        }
+                    }
+                }
+            }
+        }
+
         item {
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(28.dp))
         }
     }
 }

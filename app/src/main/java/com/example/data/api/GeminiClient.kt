@@ -1,5 +1,7 @@
 package com.example.data.api
 
+import com.squareup.moshi.JsonDataException
+import com.squareup.moshi.JsonEncodingException
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.OkHttpClient
@@ -16,31 +18,53 @@ sealed class GeminiResult<out T> {
     data class Success<T>(val data: T) : GeminiResult<T>()
     data class Error(
         val message: String,
+        val diagnosticMessage: String = message,
         val isNetworkError: Boolean = false,
         val isAuthError: Boolean = false,
         val isRateLimit: Boolean = false,
         val isBackendError: Boolean = false,
-        val isTimeout: Boolean = false
+        val isTimeout: Boolean = false,
+        val requestId: String? = null
     ) : GeminiResult<Nothing>()
 }
 
+/**
+ * Hardened Production Backend Client.
+ *
+ * Architecture:
+ * Android APK -> HTTPS -> Cloud Run / Backend Proxy -> Gemini 3.5 Flash -> JSON Response -> Android APK
+ *
+ * Zero Gemini credentials in Android APK.
+ * Enforces HTTPS, strictly validates Content-Type JSON, and handles connection failures gracefully.
+ */
 class GeminiClient(
-    private val backendUrlProvider: () -> String? = { null },
-    private val apiKeyProvider: () -> String? = { null }
+    private val backendUrlProvider: () -> String? = { null }
 ) {
     private val okHttpClient: OkHttpClient = OkHttpClient.Builder()
-        .connectTimeout(60, TimeUnit.SECONDS)
+        .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(60, TimeUnit.SECONDS)
-        .writeTimeout(60, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
         .addInterceptor { chain ->
-            val response = chain.proceed(chain.request())
-            val contentType = response.body?.contentType()?.toString()
-            if (response.code in 301..308) {
-                throw IOException("Server returned redirect HTTP ${response.code} (gateway authentication or invalid path)")
+            val request = chain.request()
+            val response = chain.proceed(request)
+            val contentType = response.body?.contentType()?.toString()?.lowercase() ?: ""
+            val rawCode = response.code
+
+            // Detect HTTP redirects which often lead to HTML login / warmup pages
+            if (rawCode in 301..308) {
+                val redirectLocation = response.header("Location") ?: "unknown"
+                throw IOException("REDIRECT_${rawCode}: HTTP $rawCode redirect to $redirectLocation (URL: ${request.url})")
             }
-            if (contentType != null && contentType.contains("text/html")) {
-                throw IOException("Server returned HTML instead of JSON (HTTP ${response.code})")
+
+            // Detect HTML responses returned when JSON was expected
+            if (contentType.contains("text/html")) {
+                val preview = try {
+                    val peek = response.peekBody(200).string().replace("\n", " ").replace("\r", " ").trim()
+                    if (peek.length > 80) peek.take(80) + "..." else peek
+                } catch (e: Exception) { "" }
+                throw IOException("HTML_RESPONSE: [HTTP $rawCode] Content-Type: $contentType | Preview: $preview")
             }
+
             response
         }
         .addInterceptor(HttpLoggingInterceptor().apply {
@@ -52,23 +76,14 @@ class GeminiClient(
         .addLast(KotlinJsonAdapterFactory())
         .build()
 
+    /**
+     * Resolves the active backend URL.
+     * In production, the URL is provided by GeminiConfig.DEFAULT_BACKEND_URL or validated HTTPS settings.
+     */
     fun getEffectiveBackendUrl(): String {
         val custom = backendUrlProvider()?.trim()
-        val base = if (!custom.isNullOrEmpty()) custom else GeminiConfig.DEFAULT_BACKEND_URL
-        return if (base.endsWith("/")) base else "$base/"
-    }
-
-    fun getEffectiveApiKey(): String? {
-        val custom = apiKeyProvider()?.trim()
-        if (custom != null) {
-            return if (custom.isNotEmpty()) custom else null
-        }
-        val buildKey = try {
-            com.example.BuildConfig.GEMINI_API_KEY
-        } catch (_: Throwable) {
-            null
-        }
-        return if (!buildKey.isNullOrBlank() && buildKey != "MY_GEMINI_API_KEY") buildKey else null
+        val url = if (!custom.isNullOrEmpty()) custom else GeminiConfig.DEFAULT_BACKEND_URL
+        return if (url.endsWith("/")) url else "$url/"
     }
 
     private fun createApiService(): GeminiApiService {
@@ -81,77 +96,46 @@ class GeminiClient(
             .create(GeminiApiService::class.java)
     }
 
-    private fun createGoogleApiService(): GeminiApiService {
-        return Retrofit.Builder()
-            .baseUrl("https://generativelanguage.googleapis.com/")
-            .client(okHttpClient)
-            .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .build()
-            .create(GeminiApiService::class.java)
-    }
-
+    /**
+     * Verifies connectivity with the hardened production backend and Gemini AI.
+     */
     suspend fun testConnection(): GeminiResult<Boolean> {
-        val directKey = getEffectiveApiKey()
-        if (directKey != null) {
-            return testDirectGoogleConnection(directKey)
-        }
-        return testBackendConnection()
+        return testBackendProxy()
     }
 
-    private suspend fun testDirectGoogleConnection(apiKey: String): GeminiResult<Boolean> {
-        return try {
-            val api = createGoogleApiService()
-            val probeRequest = GeminiRequest(
-                contents = listOf(
-                    GeminiContent(
-                        role = "user",
-                        parts = listOf(GeminiPart(text = GeminiConfig.CONNECTION_TEST_PROMPT))
-                    )
-                ),
-                generationConfig = GeminiGenerationConfig(maxOutputTokens = 64)
-            )
-
-            val models = listOf("gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-flash-latest", "gemini-3.6-flash")
-            var lastErr: GeminiResult.Error? = null
-            for (model in models) {
-                val response = api.generateContentDirect(model, apiKey, probeRequest)
-                if (response.isSuccessful) {
-                    val reply = response.body()?.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
-                    if (!reply.isNullOrBlank()) {
-                        return GeminiResult.Success(true)
-                    }
-                } else {
-                    lastErr = parseHttpError(response.code(), response.errorBody()?.string())
-                    if (response.code() == 404 || response.code() == 429 || response.code() == 503) {
-                        continue // try next candidate model
-                    }
-                    return lastErr
-                }
-            }
-            lastErr ?: GeminiResult.Error("Google Gemini API returned an empty response.")
-        } catch (e: Exception) {
-            handleException(e)
-        }
+    /**
+     * Sends prompt/chat history to the secure server-side Node.js proxy.
+     */
+    suspend fun generateContent(
+        history: List<GeminiContent>,
+        systemPrompt: String = GeminiConfig.SYSTEM_PROMPT,
+        mode: String = "normal"
+    ): GeminiResult<String> {
+        return chatViaBackend(history, systemPrompt, mode)
     }
 
-    private suspend fun testBackendConnection(): GeminiResult<Boolean> {
+    private suspend fun testBackendProxy(): GeminiResult<Boolean> {
         return try {
             val api = createApiService()
-            // 1. Try health check endpoint first
+
+            // 1. Primary: Server health endpoint with upstream Gemini verification
             val healthResponse = try {
                 api.checkHealth(checkGemini = true)
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                if (e is IOException && e.message?.contains("HTML_RESPONSE") == true) {
+                    throw e
+                }
                 null
             }
 
             if (healthResponse != null && healthResponse.isSuccessful) {
                 val body = healthResponse.body()
-                if (body?.geminiConnected == true || body?.status == "ok") {
+                if (body?.geminiConnected == true || body?.status == "ok" || body?.ok == true) {
                     return GeminiResult.Success(true)
                 }
             }
 
-            // 2. Fallback to end-to-end chat probe
+            // 2. Fallback: Direct lightweight chat probe
             val probeRequest = SageBackendChatRequest(
                 history = listOf(
                     SageHistoryItem(
@@ -160,16 +144,20 @@ class GeminiClient(
                     )
                 ),
                 mode = "normal",
-                systemPrompt = "You are a test probe. Reply with SAGE_CONNECTION_OK."
+                systemPrompt = "You are an automated health probe. Reply with SAGE_CONNECTION_OK."
             )
 
             val chatResponse = api.chatWithBackend(probeRequest)
             if (chatResponse.isSuccessful) {
                 val body = chatResponse.body()
-                if (body?.success == true && !body.reply.isNullOrBlank()) {
+                if ((body?.success == true || body?.ok == true) && !body.reply.isNullOrBlank()) {
                     GeminiResult.Success(true)
                 } else {
-                    GeminiResult.Error("Sage backend returned an empty response.")
+                    GeminiResult.Error(
+                        message = "AI service returned an unexpected response. Please try again.",
+                        diagnosticMessage = body?.error ?: "Sage backend returned an empty response.",
+                        requestId = body?.requestId
+                    )
                 }
             } else {
                 parseHttpError(chatResponse.code(), chatResponse.errorBody()?.string())
@@ -179,67 +167,7 @@ class GeminiClient(
         }
     }
 
-    suspend fun generateContent(
-        history: List<GeminiContent>,
-        systemPrompt: String = GeminiConfig.SYSTEM_PROMPT,
-        mode: String = "normal"
-    ): GeminiResult<String> {
-        val directKey = getEffectiveApiKey()
-        if (directKey != null) {
-            return generateDirectGoogleContent(directKey, history, systemPrompt, mode)
-        }
-        return generateBackendContent(history, systemPrompt, mode)
-    }
-
-    private suspend fun generateDirectGoogleContent(
-        apiKey: String,
-        history: List<GeminiContent>,
-        systemPrompt: String,
-        mode: String
-    ): GeminiResult<String> {
-        return try {
-            val api = createGoogleApiService()
-            val request = GeminiRequest(
-                contents = history.map { item ->
-                    GeminiContent(
-                        role = if (item.role == "model" || item.role == "assistant") "model" else "user",
-                        parts = item.parts.map { GeminiPart(text = it.text) }
-                    )
-                },
-                systemInstruction = GeminiSystemInstruction(
-                    parts = listOf(GeminiPart(text = "$systemPrompt\nCurrent Mode: $mode"))
-                ),
-                generationConfig = GeminiGenerationConfig(
-                    temperature = 0.7f,
-                    maxOutputTokens = 2048
-                )
-            )
-
-            val fallbackModels = listOf("gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-flash-latest", "gemini-3.6-flash")
-            var lastError: GeminiResult.Error? = null
-            for (model in fallbackModels) {
-                val response = api.generateContentDirect(model, apiKey, request)
-                if (response.isSuccessful) {
-                    val reply = response.body()?.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
-                    if (!reply.isNullOrBlank()) {
-                        return GeminiResult.Success(reply)
-                    }
-                } else {
-                    val err = parseHttpError(response.code(), response.errorBody()?.string())
-                    if (response.code() == 404 || response.code() == 429 || response.code() == 503) {
-                        lastError = err
-                        continue // try next model
-                    }
-                    return err
-                }
-            }
-            lastError ?: GeminiResult.Error("Gemini returned an empty response.")
-        } catch (e: Exception) {
-            handleException(e)
-        }
-    }
-
-    private suspend fun generateBackendContent(
+    private suspend fun chatViaBackend(
         history: List<GeminiContent>,
         systemPrompt: String,
         mode: String
@@ -263,11 +191,15 @@ class GeminiClient(
 
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null && body.success && !body.reply.isNullOrBlank()) {
+                if (body != null && (body.success || body.ok == true) && !body.reply.isNullOrBlank()) {
                     GeminiResult.Success(body.reply)
                 } else {
                     val errMsg = body?.error ?: "Sage backend returned an empty response."
-                    GeminiResult.Error(errMsg)
+                    GeminiResult.Error(
+                        message = "AI service temporarily unable to answer. Please try again.",
+                        diagnosticMessage = errMsg,
+                        requestId = body?.requestId
+                    )
                 }
             } else {
                 parseHttpError(response.code(), response.errorBody()?.string())
@@ -280,31 +212,43 @@ class GeminiClient(
     private fun parseHttpError(code: Int, errorBody: String?): GeminiResult.Error {
         return when (code) {
             400 -> GeminiResult.Error(
-                "Bad request to Sage backend: ${errorBody ?: "Invalid parameters"}",
+                message = "Invalid request sent to AI server.",
+                diagnosticMessage = "Bad request to backend (HTTP 400): ${errorBody ?: "Invalid parameters"}",
                 isBackendError = true
             )
             401, 403 -> GeminiResult.Error(
-                "Sage backend authentication or authorization error.",
+                message = "AI service access denied.",
+                diagnosticMessage = "Backend authentication or authorization error (HTTP $code).",
                 isAuthError = true
             )
             404 -> GeminiResult.Error(
-                "Sage backend endpoint not found (HTTP 404). Please verify backend URL in Diagnostics.",
+                message = "AI service route not found.",
+                diagnosticMessage = "Backend endpoint not found (HTTP 404). Please verify production backend deployment.",
                 isBackendError = true
             )
             429 -> GeminiResult.Error(
-                "Gemini rate limit exceeded. Please wait a moment before asking another question.",
+                message = "AI service is currently busy. Please wait a moment and try again.",
+                diagnosticMessage = "Gemini rate limit exceeded on server (HTTP 429).",
                 isRateLimit = true
             )
+            500 -> GeminiResult.Error(
+                message = "AI service encountered an internal error. Please retry shortly.",
+                diagnosticMessage = "Backend server error (HTTP 500): ${errorBody ?: "Internal error"}",
+                isBackendError = true
+            )
             502, 503 -> GeminiResult.Error(
-                "Sage backend or Gemini AI service is temporarily unavailable. Please retry shortly.",
+                message = "Couldn't reach Sage. Please check your internet connection.",
+                diagnosticMessage = "Backend or Gemini AI service unavailable (HTTP $code).",
                 isBackendError = true
             )
             504 -> GeminiResult.Error(
-                "Connection to Sage backend timed out. Please check your internet and retry.",
+                message = "Couldn't reach Sage. Please check your internet connection.",
+                diagnosticMessage = "Backend gateway timeout (HTTP 504).",
                 isTimeout = true
             )
             else -> GeminiResult.Error(
-                "AI backend request failed (HTTP $code): ${errorBody ?: "Unknown error"}",
+                message = "AI service request failed (HTTP $code).",
+                diagnosticMessage = "HTTP error $code: ${errorBody ?: "Unknown"}",
                 isBackendError = true
             )
         }
@@ -313,36 +257,52 @@ class GeminiClient(
     private fun handleException(e: Exception): GeminiResult.Error {
         return when (e) {
             is UnknownHostException -> GeminiResult.Error(
-                "You're offline or the backend domain could not be resolved. Please check your internet connection.",
+                message = "Couldn't reach Sage. Please check your internet connection.",
+                diagnosticMessage = "Domain resolution failed: ${e.message}",
                 isNetworkError = true
             )
             is ConnectException -> GeminiResult.Error(
-                "Unable to connect to Sage backend server. Please verify the backend is online.",
+                message = "Couldn't reach Sage. Please check your internet connection.",
+                diagnosticMessage = "Connection failed to backend: ${e.message}",
                 isBackendError = true
             )
             is SocketTimeoutException -> GeminiResult.Error(
-                "Connection to Sage backend timed out. Please check your network and retry.",
+                message = "Couldn't reach Sage. Please check your internet connection.",
+                diagnosticMessage = "Socket timeout: ${e.message}",
                 isTimeout = true,
                 isNetworkError = true
             )
+            is JsonDataException, is JsonEncodingException -> GeminiResult.Error(
+                message = "Received invalid response from server.",
+                diagnosticMessage = "Malformed JSON returned by backend: ${e.message}",
+                isBackendError = true
+            )
             is IOException -> {
-                val msg = e.localizedMessage ?: e.message ?: "Connection interrupted"
-                if (msg.contains("HTML instead of JSON", ignoreCase = true) || msg.contains("redirect HTTP", ignoreCase = true)) {
+                val msg = e.localizedMessage ?: e.message ?: "Connection error"
+                if (msg.startsWith("HTML_RESPONSE:")) {
                     GeminiResult.Error(
-                        "Backend returned web page instead of JSON. Please set your Gemini API key in Developer Diagnostics & API Key Setup for direct free-tier access.",
+                        message = "Couldn't reach Sage. Please check your internet connection.",
+                        diagnosticMessage = "API returned HTML instead of JSON — production routing/deployment problem.",
+                        isBackendError = true
+                    )
+                } else if (msg.startsWith("REDIRECT_")) {
+                    GeminiResult.Error(
+                        message = "Couldn't reach Sage. Please check your internet connection.",
+                        diagnosticMessage = msg,
                         isBackendError = true
                     )
                 } else {
                     GeminiResult.Error(
-                        "Network communication error: $msg",
+                        message = "Couldn't reach Sage. Please check your internet connection.",
+                        diagnosticMessage = "Network error: $msg",
                         isNetworkError = true
                     )
                 }
             }
             else -> GeminiResult.Error(
-                "Unexpected error: ${e.localizedMessage ?: e.javaClass.simpleName}"
+                message = "Unexpected error: ${e.localizedMessage ?: e.javaClass.simpleName}",
+                diagnosticMessage = "Unexpected: ${e.javaClass.name}: ${e.message}"
             )
         }
     }
 }
-

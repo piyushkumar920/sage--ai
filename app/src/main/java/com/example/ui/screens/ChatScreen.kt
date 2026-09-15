@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -36,12 +37,15 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Map
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -160,13 +164,37 @@ fun ChatScreen(
                     }
                 },
                 actions = {
+                    // Visible Top-Right Roadmap Button
+                    OutlinedButton(
+                        onClick = onOpenRoadmap,
+                        modifier = Modifier
+                            .height(36.dp)
+                            .testTag("chat_header_roadmap_button"),
+                        shape = RoundedCornerShape(10.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.5.dp, SageGold),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = SageGold.copy(alpha = 0.12f),
+                            contentColor = SageGold
+                        ),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "🗺 Roadmap",
+                            color = SageGold,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(6.dp))
+
                     // Streak Pill
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(RoundedCornerShape(10.dp))
                             .background(SageRaisedSurface)
-                            .border(1.dp, SageGold.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                            .border(1.dp, SageCardBorder, RoundedCornerShape(10.dp))
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -174,19 +202,6 @@ fun ChatScreen(
                             color = SageGold,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    // Roadmap button
-                    IconButton(
-                        onClick = onOpenRoadmap,
-                        modifier = Modifier.testTag("open_roadmap_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Map,
-                            contentDescription = "Roadmap",
-                            tint = SageGold,
-                            modifier = Modifier.size(20.dp)
                         )
                     }
 
@@ -199,7 +214,7 @@ fun ChatScreen(
                             imageVector = Icons.Default.Build,
                             contentDescription = "Diagnostics",
                             tint = SageTextSecondary,
-                            modifier = Modifier.size(19.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 },

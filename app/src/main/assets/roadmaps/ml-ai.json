@@ -1,0 +1,1243 @@
+{
+  "title": "ML / AI Engineer",
+  "description": "Master machine learning from fundamentals to cutting-edge AI systems.",
+  "icon": "🧠",
+  "categories": [
+    "fundamentals",
+    "intermediate",
+    "advanced",
+    "tools"
+  ],
+  "nodes": [
+    {
+      "id": "ml-python",
+      "title": "Python for ML",
+      "icon": "🐍",
+      "category": "fundamentals",
+      "description": "Python essentials for data science and ML.",
+      "resources": [
+        {
+          "title": "Python Docs",
+          "url": "https://docs.python.org/3/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "freeCodeCamp Python",
+          "url": "https://www.freecodecamp.org/learn/scientific-computing-with-python/",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-numpy"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-numpy",
+      "title": "NumPy",
+      "icon": "🔢",
+      "category": "fundamentals",
+      "description": "Numerical computing with arrays and linear algebra.",
+      "resources": [
+        {
+          "title": "NumPy Docs",
+          "url": "https://numpy.org/doc/stable/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "NumPy Tutorial",
+          "url": "https://www.youtube.com/watch?v=QUT1VHiLmmI",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-pandas"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-pandas",
+      "title": "Pandas",
+      "icon": "🐼",
+      "category": "fundamentals",
+      "description": "Data manipulation and analysis with DataFrames.",
+      "resources": [
+        {
+          "title": "Pandas Docs",
+          "url": "https://pandas.pydata.org/docs/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Pandas Tutorial",
+          "url": "https://www.youtube.com/watch?v=vmEHCJofslg",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-math"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-math",
+      "title": "Math for ML",
+      "icon": "📐",
+      "category": "fundamentals",
+      "description": "Linear algebra, calculus, statistics, and probability.",
+      "resources": [
+        {
+          "title": "Khan Academy Linear Algebra",
+          "url": "https://www.khanacademy.org/math/linear-algebra",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "3Blue1Brown Essence of Linear Algebra",
+          "url": "https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Khan Academy Statistics",
+          "url": "https://www.khanacademy.org/math/statistics-probability",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-preprocessing"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-preprocessing",
+      "title": "Data Preprocessing",
+      "icon": "🧹",
+      "category": "fundamentals",
+      "description": "Cleaning, transforming, and preparing data.",
+      "resources": [
+        {
+          "title": "Scikit-learn Preprocessing",
+          "url": "https://scikit-learn.org/stable/modules/preprocessing.html",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Towards Data Science Guide",
+          "url": "https://towardsdatascience.com/data-preprocessing-in-ml",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-visualization"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-visualization",
+      "title": "Data Visualization",
+      "icon": "📊",
+      "category": "fundamentals",
+      "description": "Matplotlib, Seaborn, and Plotly.",
+      "resources": [
+        {
+          "title": "Matplotlib Tutorial",
+          "url": "https://matplotlib.org/stable/tutorials/index.html",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Seaborn Tutorial",
+          "url": "https://seaborn.pydata.org/tutorial.html",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-feature-engineering"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-feature-engineering",
+      "title": "Feature Engineering",
+      "icon": "🔧",
+      "category": "intermediate",
+      "description": "Creating and selecting effective features.",
+      "resources": [
+        {
+          "title": "Feature Engineering Guide",
+          "url": "https://machinelearningmastery.com/discover-feature-engineering-how-to-engineer-features/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Kaggle Feature Engineering",
+          "url": "https://www.kaggle.com/learn/feature-engineering",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-sklearn"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-sklearn",
+      "title": "Scikit-learn",
+      "icon": "🧪",
+      "category": "intermediate",
+      "description": "Classic ML algorithms and pipelines.",
+      "resources": [
+        {
+          "title": "Scikit-learn Docs",
+          "url": "https://scikit-learn.org/stable/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Scikit-learn Tutorial",
+          "url": "https://scikit-learn.org/stable/tutorial/index.html",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-supervised"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-supervised",
+      "title": "Supervised Learning",
+      "icon": "📋",
+      "category": "intermediate",
+      "description": "Regression, classification, and evaluation metrics.",
+      "resources": [
+        {
+          "title": "Scikit-learn Supervised",
+          "url": "https://scikit-learn.org/stable/supervised_learning.html",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Kaggle ML Course",
+          "url": "https://www.kaggle.com/learn/intro-to-machine-learning",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-unsupervised"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-unsupervised",
+      "title": "Unsupervised Learning",
+      "icon": "🔍",
+      "category": "intermediate",
+      "description": "Clustering, dimensionality reduction, and anomalies.",
+      "resources": [
+        {
+          "title": "Scikit-learn Clustering",
+          "url": "https://scikit-learn.org/stable/modules/clustering.html",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Kaggle Unsupervised",
+          "url": "https://www.kaggle.com/learn/unsupervised-learning",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-ensemble"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-ensemble",
+      "title": "Ensemble Methods",
+      "icon": "👥",
+      "category": "intermediate",
+      "description": "Random forests, gradient boosting, and stacking.",
+      "resources": [
+        {
+          "title": "Scikit-learn Ensemble",
+          "url": "https://scikit-learn.org/stable/modules/ensemble.html",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "XGBoost Docs",
+          "url": "https://xgboost.readthedocs.io/",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-crossval"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-crossval",
+      "title": "Cross Validation",
+      "icon": "✂️",
+      "category": "intermediate",
+      "description": "K-fold, stratified, and model validation.",
+      "resources": [
+        {
+          "title": "Scikit-learn CV",
+          "url": "https://scikit-learn.org/stable/modules/cross_validation.html",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Cross Validation Guide",
+          "url": "https://machinelearningmastery.com/k-fold-cross-validation/",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-hyperparam"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-hyperparam",
+      "title": "Hyperparameter Tuning",
+      "icon": "🎯",
+      "category": "intermediate",
+      "description": "Grid search, random search, and Bayesian optimization.",
+      "resources": [
+        {
+          "title": "Scikit-learn Tuning",
+          "url": "https://scikit-learn.org/stable/modules/grid_search.html",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Optuna Docs",
+          "url": "https://optuna.readthedocs.io/",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-deep-learning"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-deep-learning",
+      "title": "Deep Learning Basics",
+      "icon": "🧠",
+      "category": "advanced",
+      "description": "Neural networks, activation functions, and backpropagation.",
+      "resources": [
+        {
+          "title": "3Blue1Brown Neural Networks",
+          "url": "https://www.youtube.com/playlist?list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Deep Learning AI Course",
+          "url": "https://www.deeplearning.ai/courses/deep-learning-specialization/",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-pytorch"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-pytorch",
+      "title": "PyTorch",
+      "icon": "🔥",
+      "category": "advanced",
+      "description": "Dynamic computation graphs and GPU acceleration.",
+      "resources": [
+        {
+          "title": "PyTorch Docs",
+          "url": "https://pytorch.org/docs/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "PyTorch Tutorials",
+          "url": "https://pytorch.org/tutorials/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "PyTorch Crash Course",
+          "url": "https://www.youtube.com/watch?v=V_xro1bcAuA",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-tensorflow"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-tensorflow",
+      "title": "TensorFlow & Keras",
+      "icon": "🧩",
+      "category": "advanced",
+      "description": "TensorFlow 2.0 and Keras API.",
+      "resources": [
+        {
+          "title": "TensorFlow Docs",
+          "url": "https://www.tensorflow.org/api_docs",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Keras Docs",
+          "url": "https://keras.io/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "TF Crash Course",
+          "url": "https://www.youtube.com/watch?v=tPYj3fFJGjk",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-cnn"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-cnn",
+      "title": "Convolutional Neural Networks",
+      "icon": "🖼️",
+      "category": "advanced",
+      "description": "Image classification and object detection.",
+      "resources": [
+        {
+          "title": "CNN Explained",
+          "url": "https://poloclub.github.io/cnn-explainer/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "TF CNN Tutorial",
+          "url": "https://www.tensorflow.org/tutorials/images/cnn",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-rnn"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-rnn",
+      "title": "Recurrent Neural Networks",
+      "icon": "🔄",
+      "category": "advanced",
+      "description": "Sequence modeling, LSTMs, and GRUs.",
+      "resources": [
+        {
+          "title": "Understanding LSTMs",
+          "url": "https://colah.github.io/posts/2015-08-Understanding-LSTMs/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "TF RNN Tutorial",
+          "url": "https://www.tensorflow.org/guide/keras/rnn",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-transformers"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-transformers",
+      "title": "Transformers",
+      "icon": "🤖",
+      "category": "advanced",
+      "description": "Attention mechanism and transformer architecture.",
+      "resources": [
+        {
+          "title": "The Illustrated Transformer",
+          "url": "https://jalammar.github.io/illustrated-transformer/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Hugging Face Course",
+          "url": "https://huggingface.co/learn/nlp-course",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-nlp"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-nlp",
+      "title": "Natural Language Processing",
+      "icon": "💬",
+      "category": "advanced",
+      "description": "Text processing, sentiment, and language models.",
+      "resources": [
+        {
+          "title": "NLP Course",
+          "url": "https://huggingface.co/learn/nlp-course",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Spacy Docs",
+          "url": "https://spacy.io/usage/spacy-101",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-cv"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-cv",
+      "title": "Computer Vision",
+      "icon": "👁️",
+      "category": "advanced",
+      "description": "Image processing, detection, and segmentation.",
+      "resources": [
+        {
+          "title": "OpenCV Docs",
+          "url": "https://docs.opencv.org/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "CV Tutorial",
+          "url": "https://cs231n.github.io/",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-gans"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-gans",
+      "title": "Generative Adversarial Networks",
+      "icon": "🎨",
+      "category": "advanced",
+      "description": "GANs for image generation and style transfer.",
+      "resources": [
+        {
+          "title": "GANs Explained",
+          "url": "https://developers.google.com/machine-learning/gan",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "GAN Zoo",
+          "url": "https://github.com/hindupuravinash/the-gan-zoo",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-rl"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-rl",
+      "title": "Reinforcement Learning",
+      "icon": "🎮",
+      "category": "advanced",
+      "description": "Agents, environments, and reward-based learning.",
+      "resources": [
+        {
+          "title": "RL Course",
+          "url": "https://www.deeplearning.ai/rl-course/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Gymnasium Docs",
+          "url": "https://gymnasium.farama.org/",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-mlops"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-mlops",
+      "title": "MLOps",
+      "icon": "⚙️",
+      "category": "tools",
+      "description": "ML lifecycle management and operations.",
+      "resources": [
+        {
+          "title": "MLOps Guide",
+          "url": "https://mlops.org/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "MLflow Docs",
+          "url": "https://mlflow.org/docs/latest/index.html",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-deployment"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-deployment",
+      "title": "Model Deployment",
+      "icon": "🚀",
+      "category": "tools",
+      "description": "Serving models with FastAPI, Docker, and cloud.",
+      "resources": [
+        {
+          "title": "TF Serving",
+          "url": "https://www.tensorflow.org/tfx/guide/serving",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "FastAPI ML",
+          "url": "https://fastapi.tiangolo.com/",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-hf"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-hf",
+      "title": "Hugging Face",
+      "icon": "🤗",
+      "category": "tools",
+      "description": "Pre-trained models and NLP libraries.",
+      "resources": [
+        {
+          "title": "Hugging Face Docs",
+          "url": "https://huggingface.co/docs",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Hugging Face Course",
+          "url": "https://huggingface.co/learn/nlp-course",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-llms"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-llms",
+      "title": "Large Language Models",
+      "icon": "📝",
+      "category": "advanced",
+      "description": "LLMs, fine-tuning, and prompt engineering.",
+      "resources": [
+        {
+          "title": "OpenAI API Docs",
+          "url": "https://platform.openai.com/docs",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Prompt Engineering Guide",
+          "url": "https://www.promptingguide.ai/",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-rag"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-rag",
+      "title": "RAG Systems",
+      "icon": "📚",
+      "category": "advanced",
+      "description": "Retrieval Augmented Generation with vector databases.",
+      "resources": [
+        {
+          "title": "LangChain Docs",
+          "url": "https://docs.langchain.com/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Pinecone Docs",
+          "url": "https://docs.pinecone.io/",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-vectordb"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-vectordb",
+      "title": "Vector Databases",
+      "icon": "🗄️",
+      "category": "advanced",
+      "description": "Pinecone, Chroma, Weaviate for embeddings.",
+      "resources": [
+        {
+          "title": "Pinecone Docs",
+          "url": "https://docs.pinecone.io/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Chroma DB",
+          "url": "https://www.trychroma.com/",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-ethics"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-ethics",
+      "title": "AI Ethics",
+      "icon": "⚖️",
+      "category": "tools",
+      "description": "Bias, fairness, interpretability, and responsibility.",
+      "resources": [
+        {
+          "title": "Google AI Ethics",
+          "url": "https://ai.google/responsibility/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "ML Fairness",
+          "url": "https://fairlearn.org/",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-time-series"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-time-series",
+      "title": "Time Series Analysis",
+      "icon": "📈",
+      "category": "intermediate",
+      "description": "Forecasting and time-based data.",
+      "resources": [
+        {
+          "title": "TF Time Series",
+          "url": "https://www.tensorflow.org/tutorials/structured_data/time_series",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Statsmodels",
+          "url": "https://www.statsmodels.org/stable/examples/index.html#time-series-analysis",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [
+        "ml-automl"
+      ],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-automl",
+      "title": "AutoML",
+      "icon": "🤖",
+      "category": "advanced",
+      "description": "Automated machine learning tools.",
+      "resources": [
+        {
+          "title": "Auto-sklearn",
+          "url": "https://automl.github.io/auto-sklearn/master/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "AutoKeras",
+          "url": "https://autokeras.com/",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-regression",
+      "title": "Regression Analysis",
+      "icon": "📈",
+      "category": "intermediate",
+      "description": "Linear and polynomial regression.",
+      "resources": [
+        {
+          "title": "Scikit-learn Regression",
+          "url": "https://scikit-learn.org/stable/modules/linear_model.html",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Kaggle Regression",
+          "url": "https://www.kaggle.com/learn/regression",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-classification",
+      "title": "Classification",
+      "icon": "🏷️",
+      "category": "intermediate",
+      "description": "Logistic regression, SVM, decision trees.",
+      "resources": [
+        {
+          "title": "Scikit-learn Classification",
+          "url": "https://scikit-learn.org/stable/supervised_learning.html#supervised-learning",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Classification Guide",
+          "url": "https://scikit-learn.org/stable/modules/svm.html",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-clustering",
+      "title": "Clustering",
+      "icon": "🔍",
+      "category": "intermediate",
+      "description": "K-means, DBSCAN, and hierarchical.",
+      "resources": [
+        {
+          "title": "Scikit-learn Clustering",
+          "url": "https://scikit-learn.org/stable/modules/clustering.html",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Kaggle Clustering",
+          "url": "https://www.kaggle.com/learn/unsupervised-learning",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-dimensionality",
+      "title": "Dimensionality Reduction",
+      "icon": "📉",
+      "category": "intermediate",
+      "description": "PCA, t-SNE, and UMAP.",
+      "resources": [
+        {
+          "title": "Scikit-learn PCA",
+          "url": "https://scikit-learn.org/stable/modules/decomposition.html",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "UMAP",
+          "url": "https://umap-learn.readthedocs.io/",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-bayesian",
+      "title": "Bayesian Methods",
+      "icon": "🎲",
+      "category": "advanced",
+      "description": "Bayesian inference and probabilistic models.",
+      "resources": [
+        {
+          "title": "Bayesian Methods Guide",
+          "url": "https://scikit-learn.org/stable/modules/naive_bayes.html",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "PyMC Docs",
+          "url": "https://www.pymc.io/",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-xgboost",
+      "title": "Gradient Boosting",
+      "icon": "🌳",
+      "category": "intermediate",
+      "description": "XGBoost, LightGBM, CatBoost.",
+      "resources": [
+        {
+          "title": "XGBoost Docs",
+          "url": "https://xgboost.readthedocs.io/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "LightGBM Docs",
+          "url": "https://lightgbm.readthedocs.io/",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-dvc",
+      "title": "DVC",
+      "icon": "📦",
+      "category": "tools",
+      "description": "Data Version Control for ML projects.",
+      "resources": [
+        {
+          "title": "DVC Docs",
+          "url": "https://dvc.org/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "DVC Tutorial",
+          "url": "https://dvc.org/doc/start",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-bento",
+      "title": "BentoML",
+      "icon": "🍱",
+      "category": "tools",
+      "description": "Model serving framework.",
+      "resources": [
+        {
+          "title": "BentoML Docs",
+          "url": "https://docs.bentoml.org/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "BentoML Tutorial",
+          "url": "https://docs.bentoml.org/en/latest/get-started/index.html",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-fastai",
+      "title": "FastAI",
+      "icon": "⚡",
+      "category": "intermediate",
+      "description": "High-level deep learning library.",
+      "resources": [
+        {
+          "title": "FastAI Course",
+          "url": "https://course.fast.ai/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "FastAI Docs",
+          "url": "https://docs.fast.ai/",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-optuna",
+      "title": "Optuna",
+      "icon": "🎯",
+      "category": "advanced",
+      "description": "Hyperparameter optimization framework.",
+      "resources": [
+        {
+          "title": "Optuna Docs",
+          "url": "https://optuna.readthedocs.io/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Optuna Tutorial",
+          "url": "https://optuna.readthedocs.io/en/stable/tutorial/index.html",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-wandb",
+      "title": "Weights & Biases",
+      "icon": "📊",
+      "category": "tools",
+      "description": "Experiment tracking and visualization.",
+      "resources": [
+        {
+          "title": "W&B Docs",
+          "url": "https://docs.wandb.ai/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "W&B Tutorial",
+          "url": "https://docs.wandb.ai/quickstart",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-imbalanced",
+      "title": "Imbalanced Learning",
+      "icon": "⚖️",
+      "category": "intermediate",
+      "description": "SMOTE, undersampling, class weights.",
+      "resources": [
+        {
+          "title": "imbalanced-learn",
+          "url": "https://imbalanced-learn.org/stable/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Kaggle Imbalanced",
+          "url": "https://www.kaggle.com/learn/classification",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-sklearn-pipelines",
+      "title": "Scikit-learn Pipelines",
+      "icon": "🔧",
+      "category": "intermediate",
+      "description": "Building ML pipelines with ColumnTransformer.",
+      "resources": [
+        {
+          "title": "Pipelines Guide",
+          "url": "https://scikit-learn.org/stable/modules/compose.html",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Pipeline Tutorial",
+          "url": "https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-bert",
+      "title": "BERT & NLP Models",
+      "icon": "📝",
+      "category": "advanced",
+      "description": "Transformer-based NLP models.",
+      "resources": [
+        {
+          "title": "Hugging Face BERT",
+          "url": "https://huggingface.co/transformers/model_doc/bert.html",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "BERT Explained",
+          "url": "https://jalammar.github.io/illustrated-bert/",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-yolo",
+      "title": "Object Detection (YOLO)",
+      "icon": "👁️",
+      "category": "advanced",
+      "description": "Real-time object detection.",
+      "resources": [
+        {
+          "title": "YOLO Docs",
+          "url": "https://docs.ultralytics.com/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "YOLOv8 Tutorial",
+          "url": "https://docs.ultralytics.com/modes/train/",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-stable-diffusion",
+      "title": "Stable Diffusion",
+      "icon": "🎨",
+      "category": "advanced",
+      "description": "Image generation with diffusion models.",
+      "resources": [
+        {
+          "title": "Diffusers Docs",
+          "url": "https://huggingface.co/docs/diffusers/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Stable Diffusion Guide",
+          "url": "https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-feature-store",
+      "title": "Feature Stores",
+      "icon": "🏪",
+      "category": "tools",
+      "description": "Managing features for ML models.",
+      "resources": [
+        {
+          "title": "Feast Docs",
+          "url": "https://docs.feast.dev/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "Feature Store Guide",
+          "url": "https://www.featurestore.org/",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [],
+      "difficulty": "Beginner"
+    },
+    {
+      "id": "ml-data-augmentation",
+      "title": "Data Augmentation",
+      "icon": "🔄",
+      "category": "intermediate",
+      "description": "Expanding training data with transformations.",
+      "resources": [
+        {
+          "title": "Albumentations",
+          "url": "https://albumentations.ai/",
+          "type": "docs",
+          "free": true
+        },
+        {
+          "title": "ImageDataGenerator",
+          "url": "https://www.tensorflow.org/api_docs/python/tf/keras/preprocessing/image/ImageDataGenerator",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": [],
+      "difficulty": "Beginner"
+    }
+  ]
+}

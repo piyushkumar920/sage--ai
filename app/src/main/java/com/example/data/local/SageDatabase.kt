@@ -6,8 +6,16 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [TopicEntity::class, MessageEntity::class],
-    version = 1,
+    entities = [
+        TopicEntity::class,
+        MessageEntity::class,
+        RoadmapProgressEntity::class,
+        TopicProgressEntity::class,
+        QuizResultEntity::class,
+        DailyQuizRecordEntity::class,
+        WeakConceptEntity::class
+    ],
+    version = 3,
     exportSchema = false
 )
 abstract class SageDatabase : RoomDatabase() {

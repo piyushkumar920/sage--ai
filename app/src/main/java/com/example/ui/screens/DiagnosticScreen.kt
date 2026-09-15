@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -22,11 +23,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.Error
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.icons.filled.VpnKey
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -55,8 +56,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.api.GeminiConfig
@@ -65,7 +64,6 @@ import com.example.ui.theme.SageCardBorder
 import com.example.ui.theme.SageError
 import com.example.ui.theme.SageGold
 import com.example.ui.theme.SagePrimary
-import com.example.ui.theme.SagePrimaryLight
 import com.example.ui.theme.SageRaisedSurface
 import com.example.ui.theme.SageSuccess
 import com.example.ui.theme.SageSurface
@@ -83,19 +81,22 @@ fun DiagnosticScreen(
     lastLatencyMs: Long,
     isTesting: Boolean,
     backendUrl: String,
-    apiKey: String = "",
     onRunTest: () -> Unit,
     onSaveBackendUrl: (String) -> Unit,
-    onSaveApiKey: ((String) -> Unit)? = null,
-    onClearApiKey: (() -> Unit)? = null,
-    onBack: (() -> Unit)? = null
+    onBack: (() -> Unit)? = null,
+    onResetDefaults: (() -> Unit)? = null
 ) {
     var urlInput by remember { mutableStateOf("") }
-    var urlSavedNotification by remember { mutableStateOf(false) }
+    var urlSavedNotification by remember { mutableStateOf<String?>(null) }
+    var urlValidationError by remember { mutableStateOf<String?>(null) }
 
-    var apiKeyInput by remember { mutableStateOf("") }
-    var showApiKey by remember { mutableStateOf(false) }
-    var apiKeySavedNotification by remember { mutableStateOf(false) }
+    val formattedLastError = when {
+        lastError.contains("HTML", ignoreCase = true) || lastError.contains("HTML_RESPONSE", ignoreCase = true) ->
+            "API returned HTML instead of JSON — production routing/deployment problem."
+        lastError.isBlank() || lastError.equals("None", ignoreCase = true) ->
+            "None"
+        else -> lastError
+    }
 
     Scaffold(
         topBar = {
@@ -110,7 +111,7 @@ fun DiagnosticScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Settings & Diagnostics",
+                            text = "Developer Diagnostics",
                             color = SageTextPrimary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp
@@ -119,7 +120,7 @@ fun DiagnosticScreen(
                 },
                 navigationIcon = {
                     if (onBack != null) {
-                        IconButton(onClick = onBack, modifier = Modifier.testTag("diagnostic_back_button")) {
+                        IconButton(onClick = onBack) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Back",
@@ -128,20 +129,33 @@ fun DiagnosticScreen(
                         }
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = SageSurface)
+                actions = {
+                    if (onResetDefaults != null) {
+                        OutlinedButton(
+                            onClick = onResetDefaults,
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier
+                                .padding(end = 8.dp)
+                                .testTag("reset_defaults_top_button")
+                        ) {
+                            Text("Reset", color = SageGold, fontSize = 12.sp)
+                        }
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = SageBackground)
             )
         },
         containerColor = SageBackground
-    ) { innerPadding ->
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(padding)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Section 24 Specs: Status Cards
+            // Live Status Card
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -150,49 +164,76 @@ fun DiagnosticScreen(
                     .testTag("diagnostic_status_card"),
                 colors = CardDefaults.cardColors(containerColor = SageSurface)
             ) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(
-                        text = "SYSTEM TELEMETRY",
-                        color = SageGold,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp
-                    )
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Production Backend Status",
+                            color = SageTextPrimary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp
+                        )
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(if (isAiConnected) SageSuccess.copy(alpha = 0.15f) else SageError.copy(alpha = 0.15f))
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = if (isAiConnected) "ONLINE" else "DISCONNECTED",
+                                color = if (isAiConnected) SageSuccess else SageError,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp
+                            )
+                        }
+                    }
 
                     DiagnosticRow(
-                        label = "Internet connection",
-                        value = if (isOnline) "CONNECTED" else "OFFLINE",
+                        label = "Network Connectivity",
+                        value = if (isOnline) "Connected (Internet OK)" else "Offline",
                         isSuccess = isOnline
                     )
 
                     DiagnosticRow(
-                        label = "AI service",
-                        value = if (isAiConnected) "CONNECTED" else "FAILED",
+                        label = "Backend Service",
+                        value = "Cloud Run Node.js API",
                         isSuccess = isAiConnected
+                    )
+
+                    DiagnosticRow(
+                        label = "Architecture",
+                        value = "HTTPS -> Cloud Run -> Node.js -> Gemini 3.5 Flash",
+                        isNeutral = true
+                    )
+
+                    DiagnosticRow(
+                        label = "Endpoint Route",
+                        value = "POST /api/chat",
+                        isNeutral = true
+                    )
+
+                    DiagnosticRow(
+                        label = "Expected Content-Type",
+                        value = "application/json",
+                        isNeutral = true
+                    )
+
+                    DiagnosticRow(
+                        label = "AI Model",
+                        value = GeminiConfig.GEMINI_MODEL,
+                        isNeutral = true
                     )
 
                     DiagnosticRow(
                         label = "Last request",
                         value = if (lastRequestSuccess) "SUCCESS" else "FAILED",
                         isSuccess = lastRequestSuccess
-                    )
-
-                    DiagnosticRow(
-                        label = "Backend proxy",
-                        value = if (isOnline) "ONLINE" else "OFFLINE",
-                        isSuccess = isOnline
-                    )
-
-                    DiagnosticRow(
-                        label = "Architecture",
-                        value = if (apiKey.isNotBlank()) "Google Gemini Direct API" else "HTTPS Backend Proxy",
-                        isSuccess = true
-                    )
-
-                    DiagnosticRow(
-                        label = "Model",
-                        value = GeminiConfig.GEMINI_MODEL,
-                        isNeutral = true
                     )
 
                     DiagnosticRow(
@@ -203,14 +244,14 @@ fun DiagnosticScreen(
 
                     DiagnosticRow(
                         label = "Last error",
-                        value = lastError.ifEmpty { "None" },
-                        isNeutral = lastError.isEmpty() || lastError.equals("None", ignoreCase = true),
-                        isSuccess = lastError.isEmpty() || lastError.equals("None", ignoreCase = true)
+                        value = formattedLastError,
+                        isNeutral = formattedLastError == "None",
+                        isSuccess = formattedLastError == "None"
                     )
                 }
             }
 
-            // Test AI connection button
+            // Test AI Connection Button
             Button(
                 onClick = onRunTest,
                 enabled = !isTesting,
@@ -221,180 +262,77 @@ fun DiagnosticScreen(
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
-                    .testTag("run_diagnostic_test_button")
+                    .height(50.dp)
+                    .testTag("run_connection_test_button")
             ) {
                 if (isTesting) {
                     CircularProgressIndicator(
-                        color = Color.White,
                         modifier = Modifier.size(20.dp),
+                        color = Color.White,
                         strokeWidth = 2.dp
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Testing AI Connection...")
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text("Verifying Backend & Gemini AI...", fontWeight = FontWeight.Bold)
                 } else {
-                    Icon(imageVector = Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Run Connection Test", fontWeight = FontWeight.Bold)
                 }
             }
 
-            // Gemini API Key Setup Card (Direct Connection)
+            // Production Architecture & Hardening Information
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .border(
-                        1.dp,
-                        if (apiKey.isNotBlank()) SageSuccess.copy(alpha = 0.5f) else SageCardBorder,
-                        RoundedCornerShape(16.dp)
-                    )
-                    .testTag("api_key_setup_card"),
-                colors = CardDefaults.cardColors(containerColor = SageSurface)
+                    .border(1.dp, SageCardBorder, RoundedCornerShape(16.dp)),
+                colors = CardDefaults.cardColors(containerColor = SageRaisedSurface)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.VpnKey,
-                                contentDescription = null,
-                                tint = if (apiKey.isNotBlank()) SageSuccess else SageGold,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Gemini API Key Setup",
-                                color = SageTextPrimary,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp
-                            )
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(
-                                    if (apiKey.isNotBlank()) SageSuccess.copy(alpha = 0.15f)
-                                    else SagePrimary.copy(alpha = 0.15f)
-                                )
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
-                            Text(
-                                text = if (apiKey.isNotBlank()) "DIRECT API ACTIVE" else "FREE TIER READY",
-                                color = if (apiKey.isNotBlank()) SageSuccess else SagePrimaryLight,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Security,
+                            contentDescription = null,
+                            tint = SageGold,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Hardened Architecture Guarantees",
+                            color = SageTextPrimary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp
+                        )
                     }
 
                     Text(
-                        text = if (apiKey.isNotBlank())
-                            "Direct Google Gemini API Key configured (${apiKey.take(4)}...${apiKey.takeLast(4)}). AI queries connect directly to Google without server proxy dependencies."
-                        else
-                            "Enter your Google AI Studio Gemini API Key for direct, 100% reliable connection on the Free Tier (no Cloud Run proxy or web login required).",
+                        text = "1. Server-Side Secret Isolation: Gemini credentials are never stored or transmitted by Android. They reside strictly inside the secure Cloud Run container.",
                         color = SageTextSecondary,
-                        fontSize = 11.sp,
-                        lineHeight = 16.sp
+                        fontSize = 12.sp,
+                        lineHeight = 17.sp
                     )
 
-                    OutlinedTextField(
-                        value = apiKeyInput,
-                        onValueChange = {
-                            apiKeyInput = it
-                            apiKeySavedNotification = false
-                        },
-                        placeholder = {
-                            Text(
-                                text = if (apiKey.isNotBlank()) "Replace current key..." else "Paste AI Studio API key (AIzaSy...)",
-                                color = SageTextMuted
-                            )
-                        },
-                        singleLine = true,
-                        visualTransformation = if (showApiKey) VisualTransformation.None else PasswordVisualTransformation(),
-                        trailingIcon = {
-                            IconButton(onClick = { showApiKey = !showApiKey }) {
-                                Icon(
-                                    imageVector = if (showApiKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    contentDescription = if (showApiKey) "Hide key" else "Show key",
-                                    tint = SageTextMuted,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                        },
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                        keyboardActions = KeyboardActions(onDone = {
-                            if (apiKeyInput.isNotBlank() && onSaveApiKey != null) {
-                                onSaveApiKey(apiKeyInput)
-                                apiKeySavedNotification = true
-                                apiKeyInput = ""
-                            }
-                        }),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = SageTextPrimary,
-                            unfocusedTextColor = SageTextPrimary,
-                            focusedBorderColor = SageGold,
-                            unfocusedBorderColor = SageCardBorder
-                        ),
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .testTag("custom_api_key_input")
+                    Text(
+                        text = "2. Deterministic JSON Contract: All /api/* endpoints strictly enforce application/json responses. Even in error states, JSON is returned—never HTML.",
+                        color = SageTextSecondary,
+                        fontSize = 12.sp,
+                        lineHeight = 17.sp
                     )
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
-                    ) {
-                        if (apiKey.isNotBlank() && onClearApiKey != null) {
-                            OutlinedButton(
-                                onClick = {
-                                    onClearApiKey()
-                                    apiKeySavedNotification = false
-                                },
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.testTag("clear_api_key_button")
-                            ) {
-                                Text("Remove Key", color = SageError, fontSize = 12.sp)
-                            }
-                        }
-
-                        Button(
-                            onClick = {
-                                if (apiKeyInput.isNotBlank() && onSaveApiKey != null) {
-                                    onSaveApiKey(apiKeyInput)
-                                    apiKeySavedNotification = true
-                                    apiKeyInput = ""
-                                }
-                            },
-                            enabled = apiKeyInput.isNotBlank(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = SageGold,
-                                contentColor = Color.Black
-                            ),
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier.testTag("save_api_key_button")
-                        ) {
-                            Text("Save API Key", fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                        }
-                    }
-
-                    if (apiKeySavedNotification) {
-                        Text(
-                            text = "✓ API Key saved. AI connection is now running in Direct Mode.",
-                            color = SageSuccess,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
+                    Text(
+                        text = "3. Auto-Healing Fallbacks: The backend automatically handles Gemini quota limits with graceful model fallbacks and exponential backoff.",
+                        color = SageTextSecondary,
+                        fontSize = 12.sp,
+                        lineHeight = 17.sp
+                    )
                 }
             }
 
-            // Secure Backend Proxy Configuration
+            // Backend Endpoint Override (Debug / Diagnostics only)
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -405,14 +343,14 @@ fun DiagnosticScreen(
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Default.VpnKey,
+                            imageVector = Icons.Default.CloudDone,
                             contentDescription = null,
                             tint = SagePrimary,
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Backend Server Configuration",
+                            text = "Production Backend URL",
                             color = SageTextPrimary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp
@@ -420,14 +358,15 @@ fun DiagnosticScreen(
                     }
 
                     Text(
-                        text = "Current Proxy: $backendUrl",
+                        text = "Active Endpoint:\n$backendUrl",
                         color = SageGold,
                         fontSize = 12.sp,
-                        fontFamily = FontFamily.Monospace
+                        fontFamily = FontFamily.Monospace,
+                        lineHeight = 16.sp
                     )
 
                     Text(
-                        text = "All Gemini AI requests are securely routed through your cloud backend proxy. The Gemini API key is managed as a server-side secret and never bundled into this Android APK.",
+                        text = "The app connects to the official Cloud Run backend by default. Overrides must be valid HTTPS URLs (localhost is not accepted in production mode).",
                         color = SageTextSecondary,
                         fontSize = 11.sp,
                         lineHeight = 16.sp
@@ -437,18 +376,34 @@ fun DiagnosticScreen(
                         value = urlInput,
                         onValueChange = {
                             urlInput = it
-                            urlSavedNotification = false
+                            urlSavedNotification = null
+                            urlValidationError = null
                         },
-                        placeholder = { Text("Enter HTTPS backend URL...", color = SageTextMuted) },
+                        placeholder = { Text("https://your-backend.run.app", color = SageTextMuted) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                         keyboardActions = KeyboardActions(onDone = {
-                            if (urlInput.isNotBlank()) {
-                                onSaveBackendUrl(urlInput)
-                                urlSavedNotification = true
+                            val trimmed = urlInput.trim()
+                            if (trimmed.isEmpty()) {
+                                onSaveBackendUrl("")
+                                urlSavedNotification = "Restored official production backend."
+                                urlInput = ""
+                            } else if (!trimmed.startsWith("https://", ignoreCase = true)) {
+                                urlValidationError = "Invalid URL: Only HTTPS endpoints are allowed."
+                            } else if (trimmed.contains("localhost", ignoreCase = true)) {
+                                urlValidationError = "Invalid URL: Localhost is not allowed for production mode."
+                            } else {
+                                onSaveBackendUrl(trimmed)
+                                urlSavedNotification = "Backend URL updated."
                                 urlInput = ""
                             }
                         }),
+                        isError = urlValidationError != null,
+                        supportingText = {
+                            if (urlValidationError != null) {
+                                Text(urlValidationError!!, color = SageError, fontSize = 11.sp)
+                            }
+                        },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedTextColor = SageTextPrimary,
                             unfocusedTextColor = SageTextPrimary,
@@ -468,7 +423,8 @@ fun DiagnosticScreen(
                         OutlinedButton(
                             onClick = {
                                 onSaveBackendUrl("")
-                                urlSavedNotification = true
+                                urlSavedNotification = "Restored official production backend."
+                                urlValidationError = null
                                 urlInput = ""
                             },
                             shape = RoundedCornerShape(8.dp),
@@ -479,9 +435,18 @@ fun DiagnosticScreen(
 
                         Button(
                             onClick = {
-                                if (urlInput.isNotBlank()) {
-                                    onSaveBackendUrl(urlInput)
-                                    urlSavedNotification = true
+                                val trimmed = urlInput.trim()
+                                if (trimmed.isEmpty()) {
+                                    onSaveBackendUrl("")
+                                    urlSavedNotification = "Restored official production backend."
+                                    urlInput = ""
+                                } else if (!trimmed.startsWith("https://", ignoreCase = true)) {
+                                    urlValidationError = "Invalid URL: Only HTTPS endpoints are allowed."
+                                } else if (trimmed.contains("localhost", ignoreCase = true)) {
+                                    urlValidationError = "Invalid URL: Localhost is not allowed for production mode."
+                                } else {
+                                    onSaveBackendUrl(trimmed)
+                                    urlSavedNotification = "Backend URL updated."
                                     urlInput = ""
                                 }
                             },
@@ -497,9 +462,9 @@ fun DiagnosticScreen(
                         }
                     }
 
-                    if (urlSavedNotification) {
+                    if (urlSavedNotification != null) {
                         Text(
-                            text = "✓ Backend URL updated. Tap 'Run Connection Test' above to verify.",
+                            text = "✓ $urlSavedNotification Tap 'Run Connection Test' above to verify.",
                             color = SageSuccess,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold
@@ -507,6 +472,8 @@ fun DiagnosticScreen(
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
@@ -515,15 +482,11 @@ fun DiagnosticScreen(
 fun DiagnosticRow(
     label: String,
     value: String,
-    isSuccess: Boolean = true,
+    isSuccess: Boolean = false,
     isNeutral: Boolean = false
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .background(SageRaisedSurface)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -532,22 +495,31 @@ fun DiagnosticRow(
             color = SageTextSecondary,
             fontSize = 13.sp
         )
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            val statusColor = when {
+                isNeutral -> SageTextPrimary
+                isSuccess -> SageSuccess
+                else -> SageError
+            }
+
             if (!isNeutral) {
                 Icon(
                     imageVector = if (isSuccess) Icons.Default.CheckCircle else Icons.Default.Error,
                     contentDescription = null,
-                    tint = if (isSuccess) SageSuccess else SageError,
+                    tint = statusColor,
                     modifier = Modifier.size(14.dp)
                 )
-                Spacer(modifier = Modifier.width(6.dp))
             }
+
             Text(
                 text = value,
-                color = if (isNeutral) SageTextPrimary else if (isSuccess) SageSuccess else SageError,
-                fontWeight = FontWeight.Bold,
+                color = statusColor,
+                fontWeight = FontWeight.SemiBold,
                 fontSize = 12.sp,
-                fontFamily = FontFamily.Monospace
+                fontFamily = if (label.contains("Route") || label.contains("Type") || label.contains("Latency")) FontFamily.Monospace else FontFamily.Default
             )
         }
     }
