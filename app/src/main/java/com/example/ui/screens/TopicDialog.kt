@@ -1,5 +1,9 @@
 package com.example.ui.screens
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -31,6 +35,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,17 +44,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.data.local.TopicEntity
+import com.example.ui.components.GlassButton
+import com.example.ui.components.GlassButtonVariant
+import com.example.ui.components.GlassCard
+import com.example.ui.components.GlassLevel
 import com.example.ui.components.ModeSelector
 import com.example.ui.theme.SageCardBorder
 import com.example.ui.theme.SageError
+import com.example.ui.theme.SageGlassBorder
+import com.example.ui.theme.SageGlassL2
 import com.example.ui.theme.SageGold
 import com.example.ui.theme.SagePrimary
+import com.example.ui.theme.SagePrimaryLight
 import com.example.ui.theme.SageRaisedSurface
 import com.example.ui.theme.SageSurface
 import com.example.ui.theme.SageTextMuted
@@ -69,14 +82,38 @@ fun TopicDialog(
     var newTitle by remember { mutableStateOf("") }
     var newMode by remember { mutableStateOf("NORMAL") }
 
+    var dialogEntered by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { dialogEntered = true }
+
+    val dialogScale by animateFloatAsState(
+        targetValue = if (dialogEntered) 1f else 0.94f,
+        animationSpec = spring(dampingRatio = 0.76f, stiffness = 500f),
+        label = "dialog_scale"
+    )
+    val dialogY by animateFloatAsState(
+        targetValue = if (dialogEntered) 0f else 16f,
+        animationSpec = spring(dampingRatio = 0.76f, stiffness = 500f),
+        label = "dialog_y"
+    )
+    val dialogAlpha by animateFloatAsState(
+        targetValue = if (dialogEntered) 1f else 0f,
+        animationSpec = tween(220, easing = FastOutSlowInEasing),
+        label = "dialog_alpha"
+    )
+
     Dialog(onDismissRequest = onDismiss) {
-        Card(
+        GlassCard(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
-                .border(1.dp, SageCardBorder, RoundedCornerShape(20.dp))
+                .graphicsLayer {
+                    scaleX = dialogScale
+                    scaleY = dialogScale
+                    translationY = dialogY.dp.toPx()
+                    alpha = dialogAlpha
+                }
                 .testTag("topic_dialog"),
-            colors = CardDefaults.cardColors(containerColor = SageSurface)
+            level = GlassLevel.L4,
+            shape = RoundedCornerShape(24.dp)
         ) {
             Column(
                 modifier = Modifier.padding(20.dp)
@@ -147,14 +184,14 @@ fun TopicDialog(
                             horizontalArrangement = Arrangement.End,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Button(
+                            GlassButton(
+                                text = "Cancel",
                                 onClick = { isCreating = false },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = SageTextSecondary)
-                            ) {
-                                Text("Cancel")
-                            }
+                                variant = GlassButtonVariant.Ghost
+                            )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Button(
+                            GlassButton(
+                                text = "Create",
                                 onClick = {
                                     if (newTitle.isNotBlank()) {
                                         onCreateTopic(newTitle, newMode)
@@ -163,12 +200,9 @@ fun TopicDialog(
                                     }
                                 },
                                 enabled = newTitle.isNotBlank(),
-                                colors = ButtonDefaults.buttonColors(containerColor = SagePrimary, contentColor = Color.White),
-                                shape = RoundedCornerShape(10.dp),
+                                variant = GlassButtonVariant.Primary,
                                 modifier = Modifier.testTag("create_topic_confirm_button")
-                            ) {
-                                Text("Create")
-                            }
+                            )
                         }
                     }
                 } else {
@@ -181,12 +215,12 @@ fun TopicDialog(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(if (isSelected) SagePrimary.copy(alpha = 0.15f) else SageRaisedSurface)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(if (isSelected) SagePrimary.copy(alpha = 0.28f) else SageGlassL2)
                                     .border(
                                         width = 1.dp,
-                                        color = if (isSelected) SagePrimary else SageCardBorder,
-                                        shape = RoundedCornerShape(12.dp)
+                                        color = if (isSelected) SagePrimaryLight else SageGlassBorder,
+                                        shape = RoundedCornerShape(14.dp)
                                     )
                                     .clickable {
                                         onSelectTopic(topic)
@@ -245,21 +279,16 @@ fun TopicDialog(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    Button(
+                    GlassButton(
+                        text = "Start New Topic",
                         onClick = { isCreating = true },
+                        icon = Icons.Default.Add,
+                        variant = GlassButtonVariant.Primary,
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("add_topic_button"),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = SagePrimary,
-                            contentColor = Color.White
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = "Start New Topic", fontWeight = FontWeight.SemiBold)
-                    }
+                        shape = RoundedCornerShape(14.dp)
+                    )
                 }
             }
         }

@@ -1,5 +1,9 @@
 package com.example.ui.screens
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -26,17 +30,27 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.data.local.TopicEntity
+import com.example.ui.components.GlassCard
+import com.example.ui.components.GlassLevel
 import com.example.ui.theme.SageCardBorder
+import com.example.ui.theme.SageGlassBorder
+import com.example.ui.theme.SageGlassL2
 import com.example.ui.theme.SageGold
 import com.example.ui.theme.SagePrimary
 import com.example.ui.theme.SageRaisedSurface
@@ -63,14 +77,38 @@ fun RoadmapDialog(
         "Step 7: Session Summary" to "Recap key understandings, gaps to revisit, and next milestones."
     )
 
+    var dialogEntered by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { dialogEntered = true }
+
+    val dialogScale by animateFloatAsState(
+        targetValue = if (dialogEntered) 1f else 0.94f,
+        animationSpec = spring(dampingRatio = 0.76f, stiffness = 500f),
+        label = "dialog_scale"
+    )
+    val dialogY by animateFloatAsState(
+        targetValue = if (dialogEntered) 0f else 16f,
+        animationSpec = spring(dampingRatio = 0.76f, stiffness = 500f),
+        label = "dialog_y"
+    )
+    val dialogAlpha by animateFloatAsState(
+        targetValue = if (dialogEntered) 1f else 0f,
+        animationSpec = tween(220, easing = FastOutSlowInEasing),
+        label = "dialog_alpha"
+    )
+
     Dialog(onDismissRequest = onDismiss) {
-        Card(
+        GlassCard(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
-                .border(1.dp, SageCardBorder, RoundedCornerShape(20.dp))
+                .graphicsLayer {
+                    scaleX = dialogScale
+                    scaleY = dialogScale
+                    translationY = dialogY.dp.toPx()
+                    alpha = dialogAlpha
+                }
                 .testTag("roadmap_dialog"),
-            colors = CardDefaults.cardColors(containerColor = SageSurface)
+            level = GlassLevel.L4,
+            shape = RoundedCornerShape(24.dp)
         ) {
             Column(
                 modifier = Modifier.padding(20.dp)
@@ -120,9 +158,9 @@ fun RoadmapDialog(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(SageRaisedSurface)
-                                .border(1.dp, SageCardBorder, RoundedCornerShape(12.dp))
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(SageGlassL2)
+                                .border(1.dp, SageGlassBorder, RoundedCornerShape(14.dp))
                                 .padding(12.dp),
                             verticalAlignment = Alignment.Top
                         ) {

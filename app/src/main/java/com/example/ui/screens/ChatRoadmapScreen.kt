@@ -59,8 +59,17 @@ import androidx.compose.ui.unit.sp
 import com.example.data.local.TopicProgressEntity
 import com.example.data.roadmap.DevRoadmapDetail
 import com.example.data.roadmap.DevRoadmapNode
+import com.example.ui.components.AmbientGlowBackground
+import com.example.ui.components.GlassButton
+import com.example.ui.components.GlassButtonVariant
+import com.example.ui.components.GlassCard
+import com.example.ui.components.GlassLevel
 import com.example.ui.theme.SageBackground
 import com.example.ui.theme.SageCardBorder
+import com.example.ui.theme.SageGlassBorder
+import com.example.ui.theme.SageGlassL1
+import com.example.ui.theme.SageGlassL2
+import com.example.ui.theme.SageGlassL3
 import com.example.ui.theme.SageGold
 import com.example.ui.theme.SagePrimary
 import com.example.ui.theme.SagePrimaryLight
@@ -133,44 +142,50 @@ fun ChatRoadmapScreen(
         roadmap?.nodes?.filter { statusMap[it.id] != "COMPLETED" } ?: emptyList()
     }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = SageBackground,
-        topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            text = "Your Learning Progress",
-                            color = SageTextPrimary,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 17.sp
-                        )
-                        Text(
-                            text = "Chat Roadmap & Real-time Progress",
-                            color = SagePrimaryLight,
-                            fontSize = 11.sp
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBackToChat,
-                        modifier = Modifier.testTag("chat_roadmap_back_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back to Chat",
-                            tint = SageTextPrimary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = SageSurface
+    AmbientGlowBackground(modifier = modifier) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            containerColor = Color.Transparent,
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Column {
+                            Text(
+                                text = "Your Learning Progress",
+                                color = SageTextPrimary,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 17.sp
+                            )
+                            Text(
+                                text = "Chat Roadmap & Real-time Progress",
+                                color = SagePrimaryLight,
+                                fontSize = 11.sp
+                            )
+                        }
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = onBackToChat,
+                            modifier = Modifier.testTag("chat_roadmap_back_button")
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back to Chat",
+                                tint = SageTextPrimary
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = SageGlassL3
+                    ),
+                    modifier = Modifier.border(
+                        width = 1.dp,
+                        color = SageGlassBorder,
+                        shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
+                    ).clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp))
                 )
-            )
-        }
-    ) { innerPadding ->
+            }
+        ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -183,13 +198,12 @@ fun ChatRoadmapScreen(
             // 1. CURRENT ROADMAP PROGRESS CARD
             // ==========================================
             item {
-                Card(
+                GlassCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("chat_roadmap_overview_card"),
-                    colors = CardDefaults.cardColors(containerColor = SageRaisedSurface),
-                    shape = RoundedCornerShape(16.dp),
-                    border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(SageCardBorder))
+                    level = GlassLevel.L2,
+                    shape = RoundedCornerShape(18.dp)
                 ) {
                     Column(modifier = Modifier.padding(18.dp)) {
                         Row(
@@ -339,11 +353,10 @@ fun ChatRoadmapScreen(
 
             if (studiedInChatList.isEmpty()) {
                 item {
-                    Card(
+                    GlassCard(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = SageSurface),
-                        shape = RoundedCornerShape(12.dp),
-                        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(SageCardBorder))
+                        level = GlassLevel.L1,
+                        shape = RoundedCornerShape(14.dp)
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
@@ -391,13 +404,13 @@ fun ChatRoadmapScreen(
                         letterSpacing = 1.sp
                     )
                     Spacer(modifier = Modifier.height(6.dp))
-                    Card(
+                    GlassCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("chat_roadmap_next_up_card"),
-                        colors = CardDefaults.cardColors(containerColor = SageRaisedSurface),
-                        shape = RoundedCornerShape(14.dp),
-                        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(SageGold.copy(alpha = 0.5f)))
+                        level = GlassLevel.L3,
+                        glowBorder = true,
+                        shape = RoundedCornerShape(16.dp)
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Row(
@@ -424,6 +437,7 @@ fun ChatRoadmapScreen(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(6.dp))
                                         .background(SageGold.copy(alpha = 0.15f))
+                                        .border(1.dp, SageGold.copy(alpha = 0.3f), RoundedCornerShape(6.dp))
                                         .padding(horizontal = 6.dp, vertical = 2.dp)
                                 ) {
                                     Text(
@@ -444,30 +458,17 @@ fun ChatRoadmapScreen(
                             )
 
                             Spacer(modifier = Modifier.height(12.dp))
-                            Button(
+                            GlassButton(
+                                text = "Start Learning with Sage",
                                 onClick = { onContinueLearning(nextRecommendedNode) },
+                                icon = Icons.Default.PlayArrow,
+                                variant = GlassButtonVariant.Primary,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(40.dp)
+                                    .height(42.dp)
                                     .testTag("chat_roadmap_study_next_button"),
-                                shape = RoundedCornerShape(10.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = SagePrimary,
-                                    contentColor = Color.White
-                                )
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.PlayArrow,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "Start Learning with Sage",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
+                                shape = RoundedCornerShape(12.dp)
+                            )
                         }
                     }
                 }
@@ -501,18 +502,14 @@ fun ChatRoadmapScreen(
             items(unlearnedPreview) { node ->
                 val status = statusMap[node.id] ?: "NOT_STARTED"
                 val isCurrent = node.id == currentTopicNode?.id
-                Card(
+                GlassCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { onContinueLearning(node) }
                         .testTag("still_to_learn_item_${node.id}"),
-                    colors = CardDefaults.cardColors(containerColor = SageSurface),
-                    shape = RoundedCornerShape(10.dp),
-                    border = CardDefaults.outlinedCardBorder().copy(
-                        brush = androidx.compose.ui.graphics.SolidColor(
-                            if (isCurrent) SageGold.copy(alpha = 0.6f) else SageCardBorder
-                        )
-                    )
+                    level = if (isCurrent) GlassLevel.L3 else GlassLevel.L1,
+                    shape = RoundedCornerShape(12.dp),
+                    glowBorder = isCurrent
                 ) {
                     Row(
                         modifier = Modifier
@@ -581,11 +578,10 @@ fun ChatRoadmapScreen(
                     letterSpacing = 1.sp
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                Card(
+                GlassCard(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = SageRaisedSurface),
-                    shape = RoundedCornerShape(14.dp),
-                    border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(SageCardBorder))
+                    level = GlassLevel.L2,
+                    shape = RoundedCornerShape(16.dp)
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         roadmap?.nodes?.take(10)?.forEachIndexed { index, node ->
@@ -632,96 +628,53 @@ fun ChatRoadmapScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     // 1. [ Continue Learning ]
-                    Button(
+                    GlassButton(
+                        text = "Continue Learning (${currentTopicNode?.title ?: "Current Topic"})",
                         onClick = {
                             if (currentTopicNode != null) {
                                 onContinueLearning(currentTopicNode)
                             }
                         },
+                        icon = Icons.Default.PlayArrow,
+                        variant = GlassButtonVariant.Primary,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(46.dp)
+                            .height(48.dp)
                             .testTag("chat_roadmap_action_continue"),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = SagePrimary,
-                            contentColor = Color.White
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.PlayArrow,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Continue Learning (${currentTopicNode?.title ?: "Current Topic"})",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
-                        )
-                    }
+                        shape = RoundedCornerShape(14.dp)
+                    )
 
                     // 2. [ View Full Roadmap ]
-                    OutlinedButton(
+                    GlassButton(
+                        text = "View Full Roadmap",
                         onClick = { onViewFullRoadmap(roadmapId) },
+                        icon = Icons.Default.Map,
+                        variant = GlassButtonVariant.Secondary,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(46.dp)
+                            .height(48.dp)
                             .testTag("chat_roadmap_action_view_full"),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = SageTextPrimary
-                        ),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, SagePrimaryLight)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Map,
-                            contentDescription = null,
-                            tint = SagePrimaryLight,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "View Full Roadmap",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
-                            color = SageTextPrimary
-                        )
-                    }
+                        shape = RoundedCornerShape(14.dp)
+                    )
 
                     // 3. [ Practice Weak Topics ]
-                    Button(
+                    GlassButton(
+                        text = "Practice Weak Topics",
                         onClick = onPracticeWeakTopics,
+                        icon = Icons.Default.Psychology,
+                        variant = GlassButtonVariant.Secondary,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(46.dp)
+                            .height(48.dp)
                             .testTag("chat_roadmap_action_practice_weak"),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = SageRaisedSurface,
-                            contentColor = SageGold
-                        ),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, SageGold.copy(alpha = 0.6f))
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Psychology,
-                            contentDescription = null,
-                            tint = SageGold,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Practice Weak Topics",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
-                            color = SageGold
-                        )
-                    }
+                        shape = RoundedCornerShape(14.dp)
+                    )
                 }
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }
+}
 }
 
 @Composable
@@ -753,14 +706,13 @@ private fun StudiedTopicCard(
         }
     }
 
-    Card(
+    GlassCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onContinue() }
             .testTag("studied_topic_card_${topic.nodeId}"),
-        colors = CardDefaults.cardColors(containerColor = SageSurface),
-        shape = RoundedCornerShape(12.dp),
-        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(SageCardBorder))
+        level = GlassLevel.L2,
+        shape = RoundedCornerShape(14.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
             Row(

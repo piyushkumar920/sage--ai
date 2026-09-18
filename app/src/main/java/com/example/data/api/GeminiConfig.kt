@@ -9,10 +9,11 @@ object GeminiConfig {
 
     /**
      * HTTPS Backend Proxy base URL.
+     * Official Production Backend: https://sage-backend-ai.onrender.com
      * The Android client communicates solely with this secure proxy.
      * All Gemini API keys are held strictly server-side.
      */
-    const val DEFAULT_BACKEND_URL = "https://ais-dev-d6gzhapi4dp4vsudrkx3qv-935845798432.asia-southeast1.run.app/"
+    const val DEFAULT_BACKEND_URL = "https://sage-backend-ai.onrender.com/"
 
     const val CONNECTION_TEST_PROMPT = "Reply with exactly: SAGE_CONNECTION_OK"
     const val CONNECTION_TEST_EXPECTED = "SAGE_CONNECTION_OK"

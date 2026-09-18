@@ -27,11 +27,26 @@ class PreferencesManager(context: Context) {
         private const val KEY_STUDY_MINUTES = "study_minutes"
     }
 
+    init {
+        // Safe production migration: clear out legacy Cloud Run, dev, or localhost URLs
+        val saved = prefs.getString(KEY_CUSTOM_BACKEND_URL, "") ?: ""
+        if (saved.isNotEmpty() && !saved.contains("sage-backend-ai.onrender.com", ignoreCase = true)) {
+            prefs.edit().remove(KEY_CUSTOM_BACKEND_URL).apply()
+        }
+    }
+
     var customBackendUrl: String
-        get() = prefs.getString(KEY_CUSTOM_BACKEND_URL, "") ?: ""
+        get() {
+            val url = prefs.getString(KEY_CUSTOM_BACKEND_URL, "") ?: ""
+            if (url.isNotEmpty() && !url.contains("sage-backend-ai.onrender.com", ignoreCase = true)) {
+                prefs.edit().remove(KEY_CUSTOM_BACKEND_URL).apply()
+                return ""
+            }
+            return url
+        }
         set(value) {
             val trimmed = value.trim()
-            if (trimmed.isEmpty() || (trimmed.startsWith("https://", ignoreCase = true) && !trimmed.contains("localhost", ignoreCase = true))) {
+            if (trimmed.isEmpty() || trimmed.contains("sage-backend-ai.onrender.com", ignoreCase = true)) {
                 prefs.edit().putString(KEY_CUSTOM_BACKEND_URL, trimmed).apply()
             }
         }
@@ -45,19 +60,19 @@ class PreferencesManager(context: Context) {
         set(value) = prefs.edit().putLong(KEY_ACTIVE_TOPIC_ID, value).apply()
 
     var activeRoadmapId: String
-        get() = prefs.getString(KEY_ACTIVE_ROADMAP_ID, "fullstack") ?: "fullstack"
+        get() = prefs.getString(KEY_ACTIVE_ROADMAP_ID, "curriculum_cse_aiml_CS101") ?: "curriculum_cse_aiml_CS101"
         set(value) = prefs.edit().putString(KEY_ACTIVE_ROADMAP_ID, value).apply()
 
     var activeRoadmapTitle: String
-        get() = prefs.getString(KEY_ACTIVE_ROADMAP_TITLE, "Full Stack Developer") ?: "Full Stack Developer"
+        get() = prefs.getString(KEY_ACTIVE_ROADMAP_TITLE, "CS101: Introduction to Programming and Problem Solving") ?: "CS101: Introduction to Programming and Problem Solving"
         set(value) = prefs.edit().putString(KEY_ACTIVE_ROADMAP_TITLE, value).apply()
 
     var currentTopicId: String
-        get() = prefs.getString(KEY_CURRENT_TOPIC_ID, "fs-js") ?: "fs-js"
+        get() = prefs.getString(KEY_CURRENT_TOPIC_ID, "curriculum_cse_aiml_CS101_mod_0") ?: "curriculum_cse_aiml_CS101_mod_0"
         set(value) = prefs.edit().putString(KEY_CURRENT_TOPIC_ID, value).apply()
 
     var currentTopicTitle: String
-        get() = prefs.getString(KEY_CURRENT_TOPIC_TITLE, "JavaScript Functions") ?: "JavaScript Functions"
+        get() = prefs.getString(KEY_CURRENT_TOPIC_TITLE, "Module 1: Basics of Computing & Number Representation") ?: "Module 1: Basics of Computing & Number Representation"
         set(value) = prefs.edit().putString(KEY_CURRENT_TOPIC_TITLE, value).apply()
 
     var lastRequestSuccess: Boolean

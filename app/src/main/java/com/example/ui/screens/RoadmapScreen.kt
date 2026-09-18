@@ -54,9 +54,15 @@ import com.example.data.local.TopicProgressEntity
 import com.example.data.roadmap.DevRoadmapDetail
 import com.example.data.roadmap.DevRoadmapNode
 import com.example.data.roadmap.TopicStatus
+import com.example.ui.components.AmbientGlowBackground
+import com.example.ui.components.GlassCard
+import com.example.ui.components.GlassChip
+import com.example.ui.components.GlassLevel
 import com.example.ui.theme.SageBackground
 import com.example.ui.theme.SageCardBorder
 import com.example.ui.theme.SageError
+import com.example.ui.theme.SageGlassBorder
+import com.example.ui.theme.SageGlassBorderLight
 import com.example.ui.theme.SageGold
 import com.example.ui.theme.SagePrimary
 import com.example.ui.theme.SagePrimaryLight
@@ -115,114 +121,138 @@ fun RoadmapScreen(
         }
     }
 
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .background(SageBackground)
-            .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        // Top Navigation Bar
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(
-                    onClick = onBack,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(SageSurface)
-                        .border(1.dp, SageCardBorder, CircleShape)
-                        .testTag("roadmap_back_button")
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = SageTextPrimary
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "LEARNING ROADMAP",
-                        color = SagePrimaryLight,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp
-                    )
-                    Text(
-                        text = "${roadmapDetail.icon} ${roadmapDetail.title}",
-                        color = SageTextPrimary,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
-
-        // Source Attribution Banner
-        item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        try {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/rudra496/devroadmaps"))
-                            context.startActivity(intent)
-                        } catch (e: Exception) {}
-                    },
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = SageRaisedSurface),
-                border = androidx.compose.foundation.BorderStroke(1.dp, SageCardBorder)
-            ) {
+    AmbientGlowBackground(modifier = modifier) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Top Navigation Bar
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 14.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.weight(1f)
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(SageRaisedSurface)
+                            .border(1.dp, SageGlassBorder, CircleShape)
+                            .testTag("roadmap_back_button")
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = null,
-                            tint = SagePrimaryLight,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Curated from devroadmaps (github.com/rudra496/devroadmaps)",
-                            color = SageTextSecondary,
-                            fontSize = 11.sp
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = SageTextPrimary
                         )
                     }
-                    Icon(
-                        imageVector = Icons.Default.OpenInNew,
-                        contentDescription = "View Repo",
-                        tint = SageTextMuted,
-                        modifier = Modifier.size(14.dp)
-                    )
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    val isCurriculum = roadmapDetail.id.startsWith("curriculum_")
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = if (isCurriculum) "OFFICIAL ACADEMIC SYLLABUS ROADMAP" else "LEARNING ROADMAP",
+                            color = if (isCurriculum) SageGold else SagePrimaryLight,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.sp
+                        )
+                        Text(
+                            text = "${roadmapDetail.icon} ${roadmapDetail.title}",
+                            color = SageTextPrimary,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
-        }
+
+            // Source Attribution / Academic Verification Banner
+            item {
+                val isCurriculum = roadmapDetail.id.startsWith("curriculum_")
+                GlassCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(enabled = !isCurriculum) {
+                            if (!isCurriculum) {
+                                try {
+                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/rudra496/devroadmaps"))
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {}
+                            }
+                        },
+                    level = GlassLevel.L1,
+                    shape = RoundedCornerShape(12.dp),
+                    borderColor = if (isCurriculum) SageSuccess.copy(alpha = 0.5f) else SageGlassBorder
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(
+                                imageVector = if (isCurriculum) Icons.Default.Check else Icons.Default.Info,
+                                contentDescription = null,
+                                tint = if (isCurriculum) SageSuccess else SagePrimaryLight,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (isCurriculum) {
+                                    "Official Curriculum Database • JIS College of Engineering • ${roadmapDetail.description.lines().firstOrNull() ?: "Academic Regulation"}"
+                                } else {
+                                    "Curated from devroadmaps (github.com/rudra496/devroadmaps)"
+                                },
+                                color = if (isCurriculum) SageTextPrimary else SageTextSecondary,
+                                fontSize = 11.sp,
+                                fontWeight = if (isCurriculum) FontWeight.SemiBold else FontWeight.Normal
+                            )
+                        }
+                        if (isCurriculum) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(SageSuccess.copy(alpha = 0.15f))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = "OFFICIAL",
+                                    color = SageSuccess,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.OpenInNew,
+                                contentDescription = "View Repo",
+                                tint = SageTextMuted,
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
+                    }
+                }
+            }
 
         // Progress Summary Card
         item {
-            Card(
+            GlassCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("roadmap_summary_card"),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = SageSurface),
-                border = androidx.compose.foundation.BorderStroke(1.dp, SageCardBorder)
+                level = GlassLevel.L2,
+                shape = RoundedCornerShape(20.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -326,22 +356,12 @@ fun RoadmapScreen(
             ) {
                 categories.forEach { category ->
                     val isSelected = selectedCategory.equals(category, ignoreCase = true)
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(if (isSelected) SagePrimary else SageSurface)
-                            .border(1.dp, if (isSelected) SagePrimaryLight else SageCardBorder, RoundedCornerShape(16.dp))
-                            .clickable { selectedCategory = category }
-                            .padding(horizontal = 14.dp, vertical = 6.dp)
-                            .testTag("stage_chip_$category")
-                    ) {
-                        Text(
-                            text = category,
-                            color = if (isSelected) Color.White else SageTextSecondary,
-                            fontSize = 12.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                        )
-                    }
+                    GlassChip(
+                        text = category,
+                        selected = isSelected,
+                        onClick = { selectedCategory = category },
+                        modifier = Modifier.testTag("stage_chip_$category")
+                    )
                 }
             }
         }
@@ -389,6 +409,7 @@ fun RoadmapScreen(
             Spacer(modifier = Modifier.height(28.dp))
         }
     }
+}
 }
 
 @Composable
@@ -463,17 +484,20 @@ fun RoadmapNodeCard(
         )
     }
 
-    Card(
+    val borderStroke = if (status == TopicStatus.IN_PROGRESS) {
+        androidx.compose.foundation.BorderStroke(1.dp, SagePrimaryLight)
+    } else {
+        null
+    }
+
+    GlassCard(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
             .testTag("roadmap_node_${node.id}"),
+        level = if (status == TopicStatus.IN_PROGRESS) GlassLevel.L2 else GlassLevel.L1,
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = SageSurface),
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp,
-            if (status == TopicStatus.IN_PROGRESS) SagePrimaryLight else SageCardBorder
-        )
+        border = borderStroke,
+        onClick = onClick
     ) {
         Row(
             modifier = Modifier

@@ -1,6 +1,7 @@
 package com.example.data.repository
 
 import android.content.Context
+import com.example.data.curriculum.CurriculumRepository
 import com.example.data.local.DailyQuizRecordEntity
 import com.example.data.local.PreferencesManager
 import com.example.data.local.QuizResultEntity
@@ -43,15 +44,24 @@ class RoadmapRepository(
     private val preferencesManager: PreferencesManager
 ) {
     private val loader = RoadmapLoader(context)
+    val curriculumRepository = CurriculumRepository(context)
 
     fun getSummaries(): List<DevRoadmapSummary> = loader.getSummaries()
 
-    fun getRoadmapDetail(roadmapId: String): DevRoadmapDetail? = loader.getRoadmapDetail(roadmapId)
+    fun getRoadmapDetail(roadmapId: String): DevRoadmapDetail? {
+        if (roadmapId.startsWith("curriculum_")) {
+            val course = curriculumRepository.getCourseByRoadmapId(roadmapId)
+            if (course != null) {
+                return curriculumRepository.toRoadmapDetail(course)
+            }
+        }
+        return loader.getRoadmapDetail(roadmapId)
+    }
 
     fun getActiveRoadmapId(): String = preferencesManager.activeRoadmapId
 
     suspend fun setActiveRoadmap(roadmapId: String) = withContext(Dispatchers.IO) {
-        val detail = loader.getRoadmapDetail(roadmapId) ?: return@withContext
+        val detail = getRoadmapDetail(roadmapId) ?: return@withContext
         preferencesManager.activeRoadmapId = roadmapId
         preferencesManager.activeRoadmapTitle = detail.title
 
@@ -73,8 +83,6 @@ class RoadmapRepository(
     suspend fun ensureInitializedProgress(roadmapId: String, detail: DevRoadmapDetail) = withContext(Dispatchers.IO) {
         val existing = dao.getTopicProgressForRoadmapOnce(roadmapId)
         if (existing.isEmpty() && detail.nodes.isNotEmpty()) {
-            // Seed initial progression logically based on real roadmap nodes
-            // First 2 nodes completed, 3rd in progress, rest not started
             val now = System.currentTimeMillis()
             detail.nodes.forEachIndexed { index, node ->
                 val status = when (index) {
@@ -118,8 +126,7 @@ class RoadmapRepository(
                     )
                 )
             }
-            // Seed a sample weak concept for learning feedback
-            if (detail.nodes.size > 1) {
+            if (detail.nodes.size > 1 && !roadmapId.startsWith("curriculum_")) {
                 dao.insertOrUpdateWeakConcept(
                     WeakConceptEntity(
                         concept = "Asynchronous Event Loop & Microtasks",
@@ -238,6 +245,18 @@ class RoadmapRepository(
                 result[summary.id] = 0
             }
         }
+
+        // Support active curriculum roadmaps
+        val activeId = preferencesManager.activeRoadmapId
+        if (activeId.startsWith("curriculum_")) {
+            val detail = getRoadmapDetail(activeId)
+            if (detail != null) {
+                val progress = dao.getTopicProgressForRoadmapOnce(activeId)
+                val completed = progress.count { it.status == "COMPLETED" }
+                result[activeId] = if (detail.nodes.isNotEmpty()) (completed * 100) / detail.nodes.size else 0
+            }
+        }
+
         result
     }
 
@@ -277,7 +296,7 @@ class RoadmapRepository(
         // If score < 70%, topic becomes NEEDS_REVIEW. Else COMPLETED.
         if (!isDailyQuiz) {
             val status = if (score >= 70) "COMPLETED" else "NEEDS_REVIEW"
-            val detail = loader.getRoadmapDetail(roadmapId)
+            val detail = getRoadmapDetail(roadmapId)
             val node = detail?.nodes?.find { it.id == topicId }
             setTopicStatus(
                 roadmapId = roadmapId,

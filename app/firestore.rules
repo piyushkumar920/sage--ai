@@ -1,0 +1,93 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Single source of truth for Sage Administrator Authorization
+    // Admin Firebase UID belongs to Piyush Kumar
+    function isAdmin() {
+      return signedIn()
+        && request.auth.uid == "SedsiyiYU7Pn2B8nQ3f7PqJsMTM2";
+    }
+
+    // Root user document
+    // - Normal users can read and write only their own document: users/{userId}
+    // - Admin can inspect and manage all user records
+    match /users/{userId} {
+      allow read, write:
+        if isAdmin()
+        || (signedIn() && request.auth.uid == userId);
+    }
+
+    // User Subcollections (academicProfile, progress, quizResults, preferences, syncMetadata, snapshots)
+    // - Normal users can read and write only their own subcollection documents
+    // - Admin can inspect, verify, and restore progress records and snapshots
+    match /users/{userId}/{document=**} {
+      allow read, write:
+        if isAdmin()
+        || (signedIn() && request.auth.uid == userId);
+    }
+
+    // Support Tickets:
+    // - Normal authenticated users can create tickets with their own userId
+    // - Normal users can read and update only their own tickets
+    // - Admin can read, update status/notes, and delete all support tickets
+    match /supportTickets/{ticketId} {
+      allow create:
+        if signedIn()
+        && request.resource.data.userId == request.auth.uid;
+
+      allow read:
+        if isAdmin()
+        || (signedIn()
+            && resource.data.userId == request.auth.uid);
+
+      allow update:
+        if isAdmin()
+        || (signedIn()
+            && resource.data.userId == request.auth.uid
+            && request.resource.data.userId == request.auth.uid);
+
+      allow delete:
+        if isAdmin();
+    }
+
+    // Compatibility support for snake_case ticket collection name if ever referenced
+    match /support_tickets/{ticketId} {
+      allow create:
+        if signedIn()
+        && (request.resource.data.userId == request.auth.uid || request.resource.data.uid == request.auth.uid);
+
+      allow read:
+        if isAdmin()
+        || (signedIn() && (resource.data.userId == request.auth.uid || resource.data.uid == request.auth.uid));
+
+      allow update:
+        if isAdmin()
+        || (signedIn() && (resource.data.userId == request.auth.uid || resource.data.uid == request.auth.uid));
+
+      allow delete:
+        if isAdmin();
+    }
+
+    // Administrative Audit Logs:
+    // Strictly restricted to Administrator UID: SedsiyiYU7Pn2B8nQ3f7PqJsMTM2
+    match /adminAuditLogs/{logId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /admin_audit_logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Default deny: All other paths are strictly forbidden
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

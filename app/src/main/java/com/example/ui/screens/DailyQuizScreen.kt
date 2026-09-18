@@ -46,9 +46,15 @@ import androidx.compose.ui.unit.sp
 import com.example.data.local.DailyQuizRecordEntity
 import com.example.data.repository.DailyQuizDashboardStats
 import com.example.data.repository.DailyQuizHistoryItem
+import com.example.ui.components.AmbientGlowBackground
+import com.example.ui.components.GlassButton
+import com.example.ui.components.GlassButtonVariant
+import com.example.ui.components.GlassCard
+import com.example.ui.components.GlassLevel
 import com.example.ui.theme.SageBackground
 import com.example.ui.theme.SageCardBorder
 import com.example.ui.theme.SageError
+import com.example.ui.theme.SageGlassBorder
 import com.example.ui.theme.SageGold
 import com.example.ui.theme.SagePrimary
 import com.example.ui.theme.SagePrimaryLight
@@ -58,6 +64,7 @@ import com.example.ui.theme.SageSuccess
 import com.example.ui.theme.SageSurface
 import com.example.ui.theme.SageTextMuted
 import com.example.ui.theme.SageTextPrimary
+import com.example.ui.theme.SageTextSecondary
 import com.example.ui.theme.SageTextSecondary
 import com.example.ui.theme.SageWarning
 import org.json.JSONArray
@@ -96,66 +103,65 @@ fun DailyQuizScreen(
         SimpleDateFormat("MMMM d, yyyy", Locale.US).format(Date())
     }
 
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .background(SageBackground)
-            .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        // Navigation Header
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(
-                    onClick = onBack,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(SageSurface)
-                        .border(1.dp, SageCardBorder, CircleShape)
-                        .testTag("daily_quiz_back_button")
+    AmbientGlowBackground(modifier = modifier) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Navigation Header
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = SageTextPrimary
-                    )
-                }
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(SageRaisedSurface)
+                            .border(1.dp, SageGlassBorder, CircleShape)
+                            .testTag("daily_quiz_back_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = SageTextPrimary
+                        )
+                    }
 
-                Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
 
-                Column {
-                    Text(
-                        text = "DAILY ASSESSMENT DASHBOARD",
-                        color = SagePrimaryLight,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.sp
-                    )
-                    Text(
-                        text = "Today's Challenge",
-                        color = SageTextPrimary,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Column {
+                        Text(
+                            text = "DAILY ASSESSMENT DASHBOARD",
+                            color = SagePrimaryLight,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.sp
+                        )
+                        Text(
+                            text = "Today's Challenge",
+                            color = SageTextPrimary,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
-        }
 
-        // Streak Banner Card
-        item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("daily_streak_banner"),
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = SageSurface),
-                border = androidx.compose.foundation.BorderStroke(1.dp, SageCardBorder)
-            ) {
+            // Streak Banner Card
+            item {
+                GlassCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("daily_streak_banner"),
+                    level = GlassLevel.L2,
+                    shape = RoundedCornerShape(18.dp)
+                ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -227,13 +233,12 @@ fun DailyQuizScreen(
 
         if (dailyQuiz != null) {
             item {
-                Card(
+                GlassCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("daily_quiz_card"),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = SageSurface),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, SageCardBorder)
+                    level = GlassLevel.L2,
+                    shape = RoundedCornerShape(20.dp)
                 ) {
                     Column(
                         modifier = Modifier
@@ -250,6 +255,7 @@ fun DailyQuizScreen(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(8.dp))
                                     .background(SageRaisedSurface)
+                                    .border(1.dp, SageGlassBorder, RoundedCornerShape(8.dp))
                                     .padding(horizontal = 8.dp, vertical = 4.dp)
                             ) {
                                 Text(
@@ -284,20 +290,18 @@ fun DailyQuizScreen(
                             val (bgColor, borderColor) = when {
                                 isCompleted && isCorrectOpt -> SageSuccess.copy(alpha = 0.2f) to SageSuccess
                                 isCompleted && isChosen && !isCorrectOpt -> SageError.copy(alpha = 0.2f) to SageError
-                                !isCompleted && isChosen -> SagePrimary.copy(alpha = 0.15f) to SagePrimaryLight
-                                else -> SageRaisedSurface to SageCardBorder
+                                !isCompleted && isChosen -> SagePrimary.copy(alpha = 0.25f) to SagePrimaryLight
+                                else -> SageRaisedSurface.copy(alpha = 0.6f) to SageGlassBorder
                             }
 
-                            Card(
+                            GlassCard(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable(enabled = !isCompleted) {
-                                        selectedOptionIndex = index
-                                    }
                                     .testTag("daily_quiz_option_$index"),
+                                level = GlassLevel.L1,
                                 shape = RoundedCornerShape(12.dp),
-                                colors = CardDefaults.cardColors(containerColor = bgColor),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, borderColor)
+                                borderColor = borderColor,
+                                onClick = if (!isCompleted) { { selectedOptionIndex = index } } else null
                             ) {
                                 Row(
                                     modifier = Modifier
@@ -309,7 +313,7 @@ fun DailyQuizScreen(
                                         modifier = Modifier
                                             .size(26.dp)
                                             .clip(CircleShape)
-                                            .background(if (isChosen || (isCompleted && isCorrectOpt)) borderColor else SageSurface)
+                                            .background(if (isChosen || (isCompleted && isCorrectOpt)) borderColor else SageRaisedSurface)
                                             .border(1.dp, borderColor, CircleShape),
                                         contentAlignment = Alignment.Center
                                     ) {
@@ -335,7 +339,8 @@ fun DailyQuizScreen(
 
                         // Submit Button or Evaluation
                         if (!dailyQuiz.isCompleted) {
-                            Button(
+                            GlassButton(
+                                text = "Submit Answer",
                                 onClick = {
                                     if (selectedOptionIndex >= 0) {
                                         onSubmitAnswer(selectedOptionIndex)
@@ -345,12 +350,8 @@ fun DailyQuizScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(48.dp)
-                                    .testTag("submit_daily_quiz_button"),
-                                shape = RoundedCornerShape(14.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = SagePrimary)
-                            ) {
-                                Text("Submit Answer", color = Color.White, fontWeight = FontWeight.Bold)
-                            }
+                                    .testTag("submit_daily_quiz_button")
+                            )
                         } else {
                             // After Answering: Evaluation Banner
                             val isCorrect = dailyQuiz.isCorrect == true
@@ -405,13 +406,12 @@ fun DailyQuizScreen(
 
         // History Card (Past Days List)
         item {
-            Card(
+            GlassCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("quiz_history_card"),
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = SageSurface),
-                border = androidx.compose.foundation.BorderStroke(1.dp, SageCardBorder)
+                level = GlassLevel.L2,
+                shape = RoundedCornerShape(18.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -476,13 +476,12 @@ fun DailyQuizScreen(
         }
 
         item {
-            Card(
+            GlassCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("daily_quiz_stats_card"),
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = SageSurface),
-                border = androidx.compose.foundation.BorderStroke(1.dp, SageCardBorder)
+                level = GlassLevel.L2,
+                shape = RoundedCornerShape(18.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -552,23 +551,21 @@ fun DailyQuizScreen(
 
         // Remediation Action
         item {
-            Button(
+            GlassButton(
+                text = "Practice Weak Concepts with Sage",
+                icon = Icons.Default.AutoAwesome,
                 onClick = onPracticeWeakConcept,
+                variant = GlassButtonVariant.Secondary,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)
-                    .testTag("practice_weak_concept_button"),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = SageRaisedSurface)
-            ) {
-                Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = SagePrimaryLight, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Practice Weak Concepts with Sage", color = SagePrimaryLight, fontWeight = FontWeight.Bold)
-            }
+                    .testTag("practice_weak_concept_button")
+            )
         }
 
         item {
             Spacer(modifier = Modifier.height(28.dp))
         }
+    }
     }
 }

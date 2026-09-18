@@ -1,0 +1,2427 @@
+{
+  "metadata": {
+    "institution": "JIS College of Engineering",
+    "department": "Department of Computer Application",
+    "programme": "Master of Computer Applications (MCA)",
+    "regulation": "R25",
+    "effective_session": "2025-26 admission batch",
+    "nep": "NEP 2020",
+    "source_file": "MCA-R25.pdf",
+    "source_pages": 132,
+    "source_note": "Uploaded MCA-R25 curriculum and syllabus is the source of truth. Preserve source terminology and elective alternatives; do not invent or silently substitute subjects."
+  },
+  "detailed_courses": [
+    {
+      "course_code": "MCA101",
+      "title": "Programming for Problem Solving using C",
+      "semester": "1",
+      "credit": 4.0,
+      "contact": "(3:1:0)",
+      "prerequisite": "The prerequisite for Programming for Problem Solving using C is basic knowledge of mathematics and logical reasoning skills.",
+      "source_start_page": 2,
+      "source_end_page": 3,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Fundamentals of Computer",
+          "hours": 8.0,
+          "content": "History of Computer, Generation of Computer, Classification of Computers, Basic structure of Computer System, Primary &amp; Secondary Memory, Processing Unit, Input &amp; Output devices. Number System: basic of Binary, Octal, Decimal and Hexadecimal number systems; Representation and interchanging of number in different number systems. Introduction to complements system, Representation of signed and unsigned numbers in singed magnitude singed 1’s complement system and signed 2’s complement system. Arithmetic– Addition and Subtraction (using1’s complement and, 2’scomplement). Representation of Characters-ASCII Code Basics of Compiler, Interpreter and Assembler Problem solving – Basic concept of Algorithm. Representation of algorithm using flow chart and pseudo code. Some basic examples."
+        },
+        {
+          "module": "Module 2",
+          "title": "Introduction to C Programming",
+          "hours": 7.0,
+          "content": "Overview of Procedural vs Structural language; History of C Programming Language. Variable and Data Types: The C characterize identifiers. And keywords, data type &amp; sizes, variable names, declaration, statements. Operators &amp; Expressions: Arithmetic operators, relational operators, logical operators, increment and decrement operators, bitwise operators, assignment operators, conditional operators, ternary operator, special operators-type conversion, C expressions, precedence and associativity. Input and Output: Standard input and output, formatted output–print f, formatted input scan f."
+        },
+        {
+          "module": "Module 3",
+          "title": "Branch and Loop",
+          "hours": 7.0,
+          "content": "Branching: Concept of Statement and Blocks in C, Simple if, if -else, nested if-else and if-else ladder. Switch Case, nested switch statement, break and continue statement; switch-case, concept of go to statement and Loops - while, for, and do while; Concept of nested loop."
+        },
+        {
+          "module": "Module 4",
+          "title": "Program Structures",
+          "hours": 6.0,
+          "content": "Function: Basics of Functions, function types, function prototypes, formal and actual parameter, function calling, functions returning values, functions not returning values. Recursion and Recursive Function, call by value and call by reference. Storage Class in C: Storage Class-auto, external, static and register storage class, scope rules and lifetime of variables C pre-processor: Pre-processing directive and macro, parameterized macro."
+        },
+        {
+          "module": "Module 5",
+          "title": "Array and Pointer",
+          "hours": 6.0,
+          "content": "Arrays: One dimensional array, Two-dimensional arrays, Passing an array to a function Pointers: Pointers, Pointer and Array, Pointer and functions. Strings: Character array and string, array of strings, Passing a string to a function, String related functions, Pointer and String. Dynamic memory allocation: Malloc, calloc, realloc and free with example."
+        },
+        {
+          "module": "Module 6",
+          "title": "Structures, Unions and Enum",
+          "hours": 3.0,
+          "content": "Basic of structures, arrays of structures, structures and pointers, bit fields. Basics of union and Enum, difference between structure and union."
+        },
+        {
+          "module": "Module-7",
+          "title": "File in C",
+          "hours": 3.0,
+          "content": "Files handling- opening and closing a file in different mode, formatted and unformatted files, command line arguments, f open, f close, f get c, f put c, f print f, f scan f function."
+        }
+      ]
+    },
+    {
+      "course_code": "MCA102",
+      "title": "Relational Database Management System",
+      "semester": "1",
+      "credit": 4.0,
+      "contact": "(3:1:0)",
+      "prerequisite": "",
+      "source_start_page": 4,
+      "source_end_page": 5,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Database Concepts and Data Modeling (8L)",
+          "hours": null,
+          "content": "Introduction to DBMS vs File Systems, Advantages of DBMS, Database Approach, DBMS Architecture: Logical & Physical, Three-level schema, Role of DBA, Data Dictionary and Indexing, Relational Model: Tuples, Domains, Relations, Keys (Super, Candidate, Primary, Foreign), Relational Constraints: Domain, Key, Integrity, and updates Relational Algebra: Basic operations (Selection, Projection, Union, Set Difference, Cartesian Product) Relational Calculus: Tuple Relational Calculus (TRC) and Domain Relational Calculus (DRC). Entity–Relationship Model: Entities, Attributes, Relationships, Conversion of ER diagram to relational schema."
+        },
+        {
+          "module": "Module 2",
+          "title": "Database Integrity and Normalization (7L)",
+          "hours": null,
+          "content": "Database Integrity: Entity and Referential Integrity, Redundancy and dependency issues, Functional Dependencies, Normalization: 1NF, 2NF, 3NF, BCNF, 4NF, 5NF, Multivalued Dependency, Lossless-Join and Dependency Preservation."
+        },
+        {
+          "module": "Module 3",
+          "title": "File Organization and Storage (4L)",
+          "hours": null,
+          "content": "Physical Database Design Issues, Storage Structures: Heap files, Sequential, Indexed, Hashed organizations, Indexing structures: Tree-based indexes, Multi-key file organization, Inverted and Multi-list file organization, Multiple access paths."
+        },
+        {
+          "module": "Module 4",
+          "title": "Structured Query Language (SQL) (7L)",
+          "hours": null,
+          "content": "SQL Fundamentals: DDL, DML, DCL, TCL, Queries with WHERE, ORDER BY, GROUP BY, Nested queries, Joins: Inner, Outer, and Self Joins, Views, Indexes, Sequences, Synonyms, Table handling operations."
+        },
+        {
+          "module": "Module 5",
+          "title": "Transaction Processing and Concurrency Control (8L)",
+          "hours": null,
+          "content": "Transactions and Concurrent Transactions, Serializable Schedules and Locking Protocols, Two-Phase Locking (2PL), Deadlock Detection and Prevention, Optimistic and Pessimistic Concurrency Control, Database Recovery: Failures, Backup & Recovery techniques, Database Security and Authorization."
+        },
+        {
+          "module": "Module 6",
+          "title": "PL/SQL Programming (6L)",
+          "hours": null,
+          "content": "Introduction to PL/SQL, Variables, Data types, and Basic blocks, Conditional and Iterative Constructs, Cursors and Exception Handling, Stored Procedures, Functions, Triggers, and Packages."
+        }
+      ]
+    },
+    {
+      "course_code": "MCA103",
+      "title": "Computer Organization and Architecture",
+      "semester": "1",
+      "credit": 4.0,
+      "contact": "(3:1:0)",
+      "prerequisite": "Concept of basic components of a digital computer, Basic concept of Fundamentals & Program structures.",
+      "source_start_page": 6,
+      "source_end_page": 7,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Digital Principles",
+          "hours": 4.0,
+          "content": "Digital signals, digital logic, digital computers, Von Neumann architecture; Boolean laws and theorems; K-Map (2–4 variables), don’t-care, SOP/POS."
+        },
+        {
+          "module": "Module 2",
+          "title": "Number Systems & Codes",
+          "hours": 4.0,
+          "content": "Decimal, binary, octal, hexadecimal; conversions; binary arithmetic; BCD addition/subtraction; octal/hex arithmetic; binary/decimal codes; error detecting/correcting codes; ASCII, EBCDIC, Excess-3, Gray code."
+        },
+        {
+          "module": "Module 3",
+          "title": "Combinational Circuits",
+          "hours": 4.0,
+          "content": "Half/full adders, subtractors, decoders, encoders, multiplexers, demultiplexers."
+        },
+        {
+          "module": "Module 4",
+          "title": "Sequential Circuits",
+          "hours": 4.0,
+          "content": "Latches and flip-flops (SR, D, JK, T, JK master-slave)."
+        },
+        {
+          "module": "Module 5",
+          "title": "Registers & Counters",
+          "hours": 4.0,
+          "content": "4-bit registers with parallel load; shift registers (bi-directional with parallel load); 4-bit synchronous/asynchronous binary counters."
+        },
+        {
+          "module": "Module 6",
+          "title": "Basic Computer Organization & Design",
+          "hours": 4.0,
+          "content": "Instruction codes; computer registers/instructions; timing and control; instruction cycle; memory- reference instructions; I/O interrupt; complete computer description; design of basic computer; accumulator logic."
+        },
+        {
+          "module": "Module 7",
+          "title": "Central Processing Unit",
+          "hours": 4.0,
+          "content": "General register organization; stack organization; instruction formats; addressing modes; data transfer/manipulation; program control; RISC vs CISC."
+        },
+        {
+          "module": "Module 8",
+          "title": "Pipeline & Vector Processing",
+          "hours": 4.0,
+          "content": "Parallel processing; pipelining; arithmetic pipeline; instruction pipeline; RISC pipeline."
+        },
+        {
+          "module": "Module 9",
+          "title": "Input–Output Organization",
+          "hours": 4.0,
+          "content": "Peripheral devices; I/O interface; asynchronous data transfer; modes of transfer; priority interrupt; DMA; I/O processor (IOP)."
+        },
+        {
+          "module": "Module 10",
+          "title": "Memory Organization",
+          "hours": 4.0,
+          "content": "Memory hierarchy: main/auxiliary/associative memory; cache memory; virtual memory; memory management hardware."
+        }
+      ]
+    },
+    {
+      "course_code": "MCA104",
+      "title": "Discrete Mathematics and Graph Theory",
+      "semester": "1",
+      "credit": 4.0,
+      "contact": "(3:1:0)",
+      "prerequisite": "The prerequisite for this course is a solid understanding of high school–level algebra and basic logical reasoning skills.",
+      "source_start_page": 8,
+      "source_end_page": 9,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Logic and Proofs",
+          "hours": 4.0,
+          "content": "Propositional logic, Propositional equivalences, Predicates and quantifiers, Nested quantifiers, Rules of inference"
+        },
+        {
+          "module": "Module 2",
+          "title": "Principles of Mathematical Induction",
+          "hours": 4.0,
+          "content": "The Well-Ordering Principle, Recursive definition, The Division algorithm: Prime Numbers, The Greatest Common Divisor: Euclidean Algorithm, The Fundamental Theorem of Arithmetic."
+        },
+        {
+          "module": "Module 3",
+          "title": "Sets and Sequence",
+          "hours": 10.0,
+          "content": "Sets, Relation and Function: Operations and Laws of Sets, Cartesian Products, Binary Relation, Partial Ordering Relation, Equivalence Relation, Image of a Set, Sum and Product of Functions, Bijective functions, Inverse and Composite Function, Size of a Set, Finite and infinite Sets, Countable and uncountable Sets, Cantor's diagonal argument and The Power Set theorem, Schroeder-Bernstein theorem. Fuzzy set, Basic properties of fuzzy set."
+        },
+        {
+          "module": "Module 4",
+          "title": "Counting and Combinatorics",
+          "hours": 8.0,
+          "content": "Counting, Sum and product rule, Principle of Inclusion Exclusion. Pigeon Hole Principle, Counting by Bijections. Double Counting. Linear Recurrence relations - methods of solutions. Generating Functions. Permutations and Combination"
+        },
+        {
+          "module": "Module 5",
+          "title": "Algebraic Structure",
+          "hours": 8.0,
+          "content": "Algebraic Structures with one Binary Operation, Semi Groups, Monoids, Groups, Congruence Relation and Quotient Structures, Free and Cyclic Monoids and Groups, Permutation Groups, Substructures, Normal Subgroups, Algebraic Structures with two Binary Operation, Rings, Integral Domain and Fields. Boolean Algebra and Boolean Ring, Identities of Boolean Algebra, Duality, Representation of Boolean Function, Disjunctive and Conjunctive Normal Form"
+        },
+        {
+          "module": "Module 6",
+          "title": "Graph and Tree",
+          "hours": 7.0,
+          "content": "Graphs and their properties, Degree, Connectivity, Path, Cycle, Sub Graph, Isomorphism, Eulerian and Hamiltonian Walks, Graph Colouring, Colouring maps and Planar Graphs, Colouring Vertices, Colouring Edges, List Colouring, Perfect Graph, definition properties and Example, rooted trees, trees and sorting, weighted trees and prefix codes, Bi-connected component and Articulation Points, Shortest distances"
+        }
+      ]
+    },
+    {
+      "course_code": "MCA105A",
+      "title": "Environment and Ecology",
+      "semester": "1",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "Basic understanding of natural sciences and general awareness of environmental issues",
+      "source_start_page": 10,
+      "source_end_page": 11,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Introduction to Environment",
+          "hours": 6.0,
+          "content": "Definition, scope, and importance of environment; Components of environment – biotic and abiotic; Environmental degradation and its causes."
+        },
+        {
+          "module": "Module 2",
+          "title": "Ecology and Ecosystem Concepts",
+          "hours": 8.0,
+          "content": "Elements of ecology; Ecological balance and consequences of change; Structure and function of ecosystems; Principles of environmental impact assessment (EIA)."
+        },
+        {
+          "module": "Module 3",
+          "title": "Air Pollution and Control",
+          "hours": 8.0,
+          "content": "Composition of atmosphere, energy balance, weather and climate; Sources and effects of air pollutants; Primary and secondary pollutants; Greenhouse effect; Ozone layer depletion; Air quality standards; Control measures."
+        },
+        {
+          "module": "Module 4",
+          "title": "Water Pollution and Control",
+          "hours": 8.0,
+          "content": "Hydrosphere and natural water composition; Water pollutants – sources and effects; River, lake, and groundwater pollution; Standards and control methods for water pollution."
+        },
+        {
+          "module": "Module 5",
+          "title": "Land Pollution and Waste Management",
+          "hours": 6.0,
+          "content": "Lithosphere and soil composition; Pollutants from municipal, industrial, commercial, and agricultural sources; Hazardous solid wastes; Collection and disposal methods; Waste recovery and conversion techniques."
+        },
+        {
+          "module": "Module 6",
+          "title": "Noise Pollution and Control",
+          "hours": 4.0,
+          "content": "Sources and effects of noise; Standards of noise levels; Noise control and mitigation techniques"
+        }
+      ]
+    },
+    {
+      "course_code": "MCA105B",
+      "title": "Management and Accountancy",
+      "semester": "1",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "The prerequisite for Management and Accountancy is a basic understanding of business fundamentals and elementary knowledge of mathematics.",
+      "source_start_page": 12,
+      "source_end_page": 13,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Introduction to Management",
+          "hours": 8.0,
+          "content": "Nature, meaning, and importance of management, Evolution of management thought – Classical, Neo-classical, and Modern approaches, Functions of management – Planning, Organizing, Staffing, Directing, Controlling. Roles and responsibilities of managers, Nature and purpose of planning, Types of planning – Strategic, Tactical, Operational, Steps in planning process, Decision-making process – Types, techniques, and tools, Management by Objectives (MBO)"
+        },
+        {
+          "module": "Module 2",
+          "title": "Principles of Accounting",
+          "hours": 8.0,
+          "content": "Nature and Scope of Accounting, Double Entry System of Accounting, Introduction to Basic Books of Accounts of Sole Proprietary Concern, Closing of Books of Accounts and Preparation of Trial Balance."
+        },
+        {
+          "module": "Module 3",
+          "title": "Final Accounts",
+          "hours": 4.0,
+          "content": "Trading, Profit and Loss Accounts and Balance Sheet of Sole Proprietary Concern with Normal Closing Entries. (with numerical problems)"
+        },
+        {
+          "module": "Module 4",
+          "title": "Ratio Analysis",
+          "hours": 8.0,
+          "content": "Meaning, Advantages, Limitations, Types of Ratio and Their Usefulness. (Theory only), Fund Flow Statement: Meaning of The Term Fund, Flow of Fund, Working Capital Cycle, Preparation and Inter-Preparation of Statement."
+        },
+        {
+          "module": "Module 5",
+          "title": "Costing",
+          "hours": 6.0,
+          "content": "Nature, Importance and Basic Principles. Budget and Budgetary Control: Nature and Scope, Importance Method of Finalization, and Master Budget, Functional Budgets."
+        },
+        {
+          "module": "Module 6",
+          "title": "Marginal Costing",
+          "hours": 6.0,
+          "content": "Nature, Scope, Importance, Construction of Break Even Chart, Limitations and Uses of Break Even Chart, Practical Applications of Marginal Costing."
+        }
+      ]
+    },
+    {
+      "course_code": "MCA105C",
+      "title": "Constitution of India",
+      "semester": "1",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "The prerequisite for Constitution of India is a basic understanding of civics, governance, and the fundamental structure of the Indian political system.",
+      "source_start_page": 14,
+      "source_end_page": 15,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "History of Making of the Indian Constitution",
+          "hours": 5.0,
+          "content": "History Drafting Committee, (Composition & Working)"
+        },
+        {
+          "module": "Module 2",
+          "title": "Philosophy of the Indian Constitution",
+          "hours": 5.0,
+          "content": "Preamble Salient Features"
+        },
+        {
+          "module": "Module 3",
+          "title": "Contours of Constitutional Rights & Duties",
+          "hours": 5.0,
+          "content": "Fundamental Rights, Right to Equality, Right to Freedom, Right against Exploitation, Right to Freedom of Religion, Cultural and Educational Rights, Right to Constitutional Remedies, Directive Principles of State Policy, Fundamental Duties."
+        },
+        {
+          "module": "Module 4",
+          "title": "Organs of Governance",
+          "hours": 5.0,
+          "content": "Parliament, Composition, Qualifications and Disqualifications, Powers and Functions, Executive, President, Governor, Council of Ministers, Judiciary, Appointment and Transfer of Judges, Qualifications, Powers and Functions"
+        },
+        {
+          "module": "Module 5",
+          "title": "Local Administration",
+          "hours": 5.0,
+          "content": "District’s Administration head: Role and Importance, Municipalities: Introduction, Mayor and role of Elected Representative, CEO of Municipal Corporation. Pachayati raj: Introduction, PRI: Zila Pachayat. Elected officials and their roles, CEO Zila Pachayat: Position and role. Block level: Organizational Hierarchy (Different departments), Village level: Role of Elected and Appointed officials, Importance of grass root democracy"
+        },
+        {
+          "module": "Module 6",
+          "title": "Election Commission",
+          "hours": 5.0,
+          "content": "Role and Functioning. Chief Election Commissioner and Election Commissioners. State Election Commission: Role and Functioning. Institute and Bodies for the welfare of SC/ST/OBC and women."
+        }
+      ]
+    },
+    {
+      "course_code": "MCA105D",
+      "title": "Stress Management through Yoga",
+      "semester": "1",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "The prerequisite for Stress Management through Yoga is a basic awareness of physical fitness and an interest in learning yoga practices for mental and emotional well-being.",
+      "source_start_page": 16,
+      "source_end_page": 17,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Physical Health and Physical Structure",
+          "hours": 3.0,
+          "content": "Purpose of Life – Philosophy of Life: - Three bodies: Maintenance of cell structure – Uniform circulation of bio-magnetism"
+        },
+        {
+          "module": "Module 2",
+          "title": "Rejuvenation of Life Force",
+          "hours": 8.0,
+          "content": "Life force – structure – life force circulation – purpose of kayakalpa exercise – Life without disease, youthfulness, postponing death – Philosophy of kaykalpa – physical body, sexual vital fluid, life force, Bio – magnetism, Mind, Old age and death – Necessity of Kayakalpa exercises - Kayakalpa practice – Aswini Mudra, Ojas breath – Benefits of KayaKalpa – Sex and Spirituality – Value of Sexual Development – Jeeva Samadhi – Intensifying the sexual vital fluid – Practices of Siddhars."
+        },
+        {
+          "module": "Module 3",
+          "title": "Streamlining of Mind and Bio- Magnetism",
+          "hours": 7.0,
+          "content": "Mind – Bio – magnetic wave –imprints – Five Kosas – Three stages of Mind – Greatness of Guru – Benefits of meditation – Mental frequency reduction – Physical transformations of bio-magnetism."
+        },
+        {
+          "module": "Module 4",
+          "title": "Meditation",
+          "hours": 6.0,
+          "content": "Purpose of Meditative life – Simplified Kundalini Yoga – Meditation on life force – Agna Explanation – Mooladhara activation – Thuriya Meditation –Thuriyatheetham meditation."
+        },
+        {
+          "module": "Module 5",
+          "title": "Special Meditations",
+          "hours": 6.0,
+          "content": "Panchabootha Navagraha meditation - Panchendria meditation - Nine Center meditation."
+        }
+      ]
+    },
+    {
+      "course_code": "MCA105E",
+      "title": "Values and Ethics in Profession",
+      "semester": "1",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "The prerequisite for Values and Ethics in Profession is a basic understanding of human values, social responsibility, and professional behaviour.",
+      "source_start_page": 18,
+      "source_end_page": 19,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Human values",
+          "hours": 6.0,
+          "content": "Morals, Values, and Ethics – Integrity –Trustworthiness – Work Ethics – Service-Learning – Civic Virtue – Respect for others – Living Peacefully – Caring – Sharing – Honesty –Courage – Value Time – Co-operation – Commitment – Empathy – Self-confidence – Spirituality- Character"
+        },
+        {
+          "module": "Module 2",
+          "title": "Principles for harmony",
+          "hours": 6.0,
+          "content": "Truthfulness – Customs and Traditions -Value Education – Human Dignity – Human Rights – Fundamental Duties – Aspirations and Harmony (I, We & Nature) – Gender Bias – Emotional Intelligence – Salovey – Mayer Model – Emotional Competencies – Conscientiousness"
+        },
+        {
+          "module": "Module 3",
+          "title": "Engineering ethics and social experimentation",
+          "hours": 9.0,
+          "content": "History of Ethics – Need of Engineering Ethics – Senses of Engineering Ethics- Profession and Professionalism ––Self Interest – Moral Autonomy – Utilitarianism – Virtue Theory – Uses of Ethical Theories – Deontology- Types of Inquiry –Kohlberg’s Theory – Gilligan’s Argument – Heinz’s Dilemma – Comparison with Standard Experiments –– Learning from the Past – Engineers as Managers – Consultants and Leaders – Balanced Outlook on Law – Role of Codes – Codes and Experimental Nature of Engineering."
+        },
+        {
+          "module": "Module 4",
+          "title": "Engineers’ responsibility towards safety and risk for sustainable development",
+          "hours": 6.0,
+          "content": "Voluntary v/s Involuntary Risk – Consequences – Risk Assessment –Accountability – Liability – Reversible Effects – Threshold Levels of Risk – Delayed v/s Immediate Risk – Safety and the Engineer –Designing for Safety – Risk-Benefit Analysis-Accidents."
+        },
+        {
+          "module": "Module 5",
+          "title": "Engineers’ duties and rights",
+          "hours": 8.0,
+          "content": "Concept of Duty – Professional Duties – Collegiality – Techniques for Achieving Collegiality – Senses of Loyalty – Consensus and Controversy – Professional and Individual Rights – Confidential and Proprietary Information – Conflict of Interest-Ethical egoism – Collective Bargaining – Confidentiality – Gifts and Bribes – Problem solving-Occupational Crimes- Industrial Espionage- Price Fixing-Whistle Blowing"
+        },
+        {
+          "module": "Module 6",
+          "title": "Global issues",
+          "hours": 5.0,
+          "content": "Media Ethics – Environmental Ethics – Endangering Lives – Bio Ethics – Computer Ethics – War Ethics – Research Ethics - Intellectual Property Rights"
+        }
+      ]
+    },
+    {
+      "course_code": "MCA105E",
+      "title": "Managerial Economics",
+      "semester": "1",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "The prerequisite for Managerial Economics is a basic understanding of microeconomics, mathematics, and analytical reasoning skills.",
+      "source_start_page": 20,
+      "source_end_page": 21,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Introduction to Economics",
+          "hours": 4.0,
+          "content": "Managerial Economics-Relationship with other disciplines -Firms: Types, Objectives and Scope of Economics, Managerial Decision Analysis"
+        },
+        {
+          "module": "Module 2",
+          "title": "Demand-Supply Framework & Equilibrium",
+          "hours": 8.0,
+          "content": "Demand and Supply: Determinants of demand, movements vs. shift in demand curve, Determinants of Supply, Movement along a supply curve vs. shift in supply curve; Market equilibrium and price determination. Elasticity of demand and supply, Application of demand and supply. Consumer Theory: Ordinal Utility theory: (Indifference curve approach): Consumer’s preferences; Indifference curves; Budget line; Consumer’s equilibrium."
+        },
+        {
+          "module": "Module 3",
+          "title": "Theory of Production and Costs",
+          "hours": 8.0,
+          "content": "concept of Production function, types of Production function, Laws of return to scale and variable Proportion, Cost Function, Types of Cost Function, Different Cost curves, Relation between Average and marginal cost, Relationship between Short Run costs and Long Run costs, Cost volume profit analysis and application"
+        },
+        {
+          "module": "Module 4",
+          "title": "Selected Macroeconomic Principles",
+          "hours": 8.0,
+          "content": "Introduction to Macroeconomic Variables – Circular Flow of Income – Closed and Open Economy Models - Saving-Investment Identity. National income and different technique to measure of national income inflation: Inflation – Causes, Measurement, Effect, Measures to Control Inflation."
+        },
+        {
+          "module": "Module 5",
+          "title": "Financial Accounting and Financial management",
+          "hours": 6.0,
+          "content": "Accounting Basic concept of Journal, Trading A/C, Profit& Loss A/C, Balance Sheet and the concept of time value of money (application of all factors of time value of money) & Capital budgeting technique."
+        },
+        {
+          "module": "Module 6",
+          "title": "Market Structure",
+          "hours": 6.0,
+          "content": "Classification of Different Markets (Concepts only) – Perfect Competition, Monopoly, Monopolistic Competition, Monopsony and Oligopoly. Perfect Competition: Assumption; Theory of a firm under perfect competition; Demand and Revenue; Equilibrium of the firm in the short run and long run. Monopoly: Short-run and long-run equilibrium of monopoly firm; Price discrimination."
+        }
+      ]
+    },
+    {
+      "course_code": "MCA191",
+      "title": "Programming for Problem Solving using C Lab",
+      "semester": "1",
+      "credit": 2.0,
+      "contact": "(0:0:4)",
+      "prerequisite": "Number system, Boolean Algebra",
+      "source_start_page": 22,
+      "source_end_page": 23,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Familiarization with some basic commands of DOS and Linux. File handling and Directory structures,",
+          "hours": null,
+          "content": "file permissions, creating and editing simple C program in different editor and IDE, compilation and execution of C program. Introduction to Code block."
+        },
+        {
+          "module": "Module 2",
+          "title": "Problem based on",
+          "hours": null,
+          "content": "a) Basic data types b) Different arithmetic operators. c) Printf( ) and scanf( ) functions."
+        },
+        {
+          "module": "Module 3",
+          "title": "Problem based on conditional statements using",
+          "hours": null,
+          "content": "a) if-else statements, b) different relational operators, c) different logical operators"
+        },
+        {
+          "module": "Module 4",
+          "title": "Problem based on",
+          "hours": null,
+          "content": "a) for loop b) while loop c) do-while loop"
+        },
+        {
+          "module": "Module 5",
+          "title": "Problem based on",
+          "hours": null,
+          "content": "a) How to write a menu driven program using switch-case statement b) How to write a function and passing values to a function c) How to write a recursive function."
+        },
+        {
+          "module": "Module 6",
+          "title": "Problem based on a) How to use array (both I-Dand2-D), b) How to pass an array to a function.",
+          "hours": null,
+          "content": ""
+        },
+        {
+          "module": "Module 7",
+          "title": "Problem based on manipulation of strings in different way.",
+          "hours": null,
+          "content": ""
+        },
+        {
+          "module": "Module 8",
+          "title": "Problem based on",
+          "hours": null,
+          "content": "a) How to handle compound variables in C b) How to handle file in C c) How to use command line argument in C"
+        }
+      ]
+    },
+    {
+      "course_code": "MCA192",
+      "title": "Relational Database Management System Lab",
+      "semester": "1",
+      "credit": 2.0,
+      "contact": "(0:0:4)",
+      "prerequisite": "Basic knowledge of database concepts, data models, and SQL.",
+      "source_start_page": 24,
+      "source_end_page": 25,
+      "modules": [
+        {
+          "module": "Unit 1",
+          "title": "Database Creation & DDL/DML",
+          "hours": null,
+          "content": "ERD to Relational Model implementation, Table creation, altering schema, applying constraints (Primary Key, Foreign Key, Unique, Not Null, Check), Using data dictionary views for verification, Creating Views and Materialized Views, DML operations: Insert, Update, Delete."
+        },
+        {
+          "module": "Unit 2",
+          "title": "Query Processing & Retrieval (DQL)",
+          "hours": null,
+          "content": "Basic Select queries with conditions, sorting, and pattern matching, Joins: Equi, Non-Equi, Natural, Self, Inner, Outer, Set Operations: Union, Intersect, Minus, Single row and group functions, Aggregation with Group By, Having, Rollup, and Cube, Nested Subqueries and Correlated Subqueries."
+        },
+        {
+          "module": "Unit 3",
+          "title": "PL/SQL Programming",
+          "hours": null,
+          "content": "Control structures: IF-THEN-ELSE, Loops, Stored Procedures and Functions, Cursors: Implicit, Explicit, Parameterized, Triggers: Before, After, instead of; row-level and statement-level, Transaction validation and rollback using triggers, Packages and Exception Handling."
+        },
+        {
+          "module": "Unit 4",
+          "title": "Mini Project",
+          "hours": null,
+          "content": "Design and implement a complete database system for a real-life application using SQL & PL/SQL concepts."
+        }
+      ]
+    },
+    {
+      "course_code": "MCA181",
+      "title": "Soft Skill and Interpersonal Development",
+      "semester": "1",
+      "credit": 2.0,
+      "contact": "(0:0:4)",
+      "prerequisite": "Basic ability of soft skills.",
+      "source_start_page": 26,
+      "source_end_page": 28,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Introduction to Soft Skills",
+          "hours": null,
+          "content": "The Skills of Interpersonal Communication. 2. Team Behavior. 3. Time Management Skills"
+        },
+        {
+          "module": "Module 2",
+          "title": "Verbal Ability - Reading",
+          "hours": null,
+          "content": "Enhancing reading speed and vocabulary enhancement through intensive practice of placement test- based reading passages."
+        },
+        {
+          "module": "Module 3",
+          "title": "Verbal Ability Test Patterns",
+          "hours": null,
+          "content": "Introducing Verbal Ability tests—Test Question Types: Synonyms and Antonyms, Error Spotting /Sentence Improvement, Analogies and Para Jumbles."
+        },
+        {
+          "module": "Module 4",
+          "title": "Group Discussion and Personal Interview",
+          "hours": null,
+          "content": "Basics of Group Discussion—Intensive practice on answering interview-based questions common in placement interviews."
+        }
+      ]
+    },
+    {
+      "course_code": "MCA201",
+      "title": "Python Programming",
+      "semester": "2",
+      "credit": 4.0,
+      "contact": "(3:1:0)",
+      "prerequisite": "",
+      "source_start_page": 29,
+      "source_end_page": 30,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Introduction to Python Programming",
+          "hours": 6.0,
+          "content": "History and features of Python, Installing Python, Writing and executing Python programs, Basic syntax, identifiers, keywords, and indentation rules. Variables, data types (numbers, strings, lists, tuples, dictionaries, sets), and type conversion, Input/Output operations, comments, and basic coding standards."
+        },
+        {
+          "module": "Module 2",
+          "title": "Control Structures and Functions",
+          "hours": 6.0,
+          "content": "Decision making: if, if-else, if-elif-else statements, Loops: for, while, nested loops, break, continue, pass, Functions: Defining functions, arguments (positional, keyword, default, variable-length), return values, Lambda functions, scope of variables (local, global, nonlocal), Recursion in Python."
+        },
+        {
+          "module": "Module 3",
+          "title": "Data Structures and String Handling",
+          "hours": 8.0,
+          "content": "Lists: Creation, indexing, slicing, operations, list comprehension, Tuples and Sets: Properties, operations, and use cases, Dictionaries: Key-value pairs, dictionary methods, nested dictionaries, String handling: String methods, slicing, formatting, regular expressions (RegEx), Iterators and Generators in Python."
+        },
+        {
+          "module": "Module 4",
+          "title": "File Handling and Exception Management",
+          "hours": 6.0,
+          "content": "File operations: Opening, reading, writing, appending, closing files, Handling text and binary files, Exception handling: try, except, else, finally, raise, Creating custom exceptions."
+        },
+        {
+          "module": "Module 5",
+          "title": "Object-Oriented Programming in Python",
+          "hours": 7.0,
+          "content": "Classes and objects, constructors (init method), Attributes and methods, class variables vs. instance variables, Inheritance: Single, multiple, and multilevel inheritance, Method overriding, polymorphism, encapsulation, abstraction, Special methods (str, len, operator overloading)."
+        },
+        {
+          "module": "Module 6",
+          "title": "Advanced Python and Applications",
+          "hours": 7.0,
+          "content": "Modules and Packages: Importing modules, math, random, date time, os, sys, Virtual environments and pip package management, Python standard libraries (collections, iter tools, func tools), Introduction to NumPy and Pandas for data analysis, Python in real-world applications: Web scraping, simple GUI (Tkinter), basics of Flask/Django, and automation scripts."
+        }
+      ]
+    },
+    {
+      "course_code": "MCA202",
+      "title": "Data Structures",
+      "semester": "2",
+      "credit": 4.0,
+      "contact": "(3:1:0)",
+      "prerequisite": "The prerequisite for Data Structures is a basic understanding of programming fundamentals and problem-solving using a high-level language such as C.",
+      "source_start_page": 31,
+      "source_end_page": 32,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Foundations of Data Structures & Linear Representation",
+          "hours": 7.0,
+          "content": "Introduction: Data, Data Type, Abstract Data Type (ADT), and Data Structure, Algorithms & Programs: Basics of pseudo-code, performance measurement, Algorithm Complexity: Time & Space analysis, Order Notations (Big-O, Ω, Θ),Memory Representations: Row-major, Column- major, Sparse matrices, Array Representation of Polynomials, Linked Lists: Singly, Doubly, Circular, Linked list representation of polynomial, Applications of Linked Lists in real systems (e.g., memory management)."
+        },
+        {
+          "module": "Module 2",
+          "title": "Stack, Queue & Recursion",
+          "hours": 7.0,
+          "content": "Stack: Implementations (array & linked list), applications (expression evaluation, undo/redo),Queue: Simple, Circular Queue, Dequeue (array & linked list implementations),Recursion: Principles, role of stack in recursion, tail vs non-tail recursion, Practical Use-cases: Parsing, backtracking, job scheduling,(NEW) Priority Queue & Applications in Operating Systems (process scheduling)."
+        },
+        {
+          "module": "Module 3",
+          "title": "Trees & Advanced Trees",
+          "hours": 9.0,
+          "content": "Tree Terminologies, Representation (array, linked list),Binary Trees: Traversals (pre, in, post), Expression Trees, Threaded Binary Tree: Concepts & Non-recursive traversals, Binary Search Trees: Operations (insertion, deletion, searching),Balanced Trees: AVL Trees (insert/delete with examples),B-Trees & B+ Trees (used in DBMS, indexing),(NEW) Introduction to Tries (Prefix Trees) for fast string searching, Applications of Trees in Compilers, Databases, and File Systems."
+        },
+        {
+          "module": "Module 4",
+          "title": "Graphs & Applications",
+          "hours": 7.0,
+          "content": "Graph Representations: Adjacency matrix, Adjacency list, Graph Traversals: BFS, DFS, Classification of Edges in DFS, Minimum Spanning Trees: Prim’s and Kruskal’s Algorithm, Shortest Path Algorithms: Dijkstra’s Algorithm, Introduction to Bellman-Ford, Real-world Applications: Social Networks, Navigation Systems, Web Crawling."
+        },
+        {
+          "module": "Module 5",
+          "title": "Searching, Sorting & Hashing",
+          "hours": 6.0,
+          "content": "Searching: Sequential, Binary, Interpolation Search, Sorting: Bubble Sort, Insertion Sort, Selection Sort, Merge Sort, Quick Sort, Heap Sort, Intro to Hybrid Sorting (e.g., TimSort – used in Python/Java), Hashing: Hash functions, Collision resolution (chaining, open addressing), Applications of Hashing in Databases, Compilers, Blockchain."
+        }
+      ]
+    },
+    {
+      "course_code": "MCA203",
+      "title": "Operating Systems",
+      "semester": "2",
+      "credit": 4.0,
+      "contact": "(3:1:0)",
+      "prerequisite": "",
+      "source_start_page": 33,
+      "source_end_page": 34,
+      "modules": []
+    },
+    {
+      "course_code": "MCA204",
+      "title": "Data Communication & Computer Networks",
+      "semester": "2",
+      "credit": 4.0,
+      "contact": "(3:1:0)",
+      "prerequisite": "The prerequisite for Data Communication & Computer Networks is a basic understanding of computer fundamentals, operating systems, and problem-solving skills in programming.",
+      "source_start_page": 35,
+      "source_end_page": 36,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Introduction",
+          "hours": 4.0,
+          "content": "Introduction to Data Communication, Components of Communication, Direction of data flow (simplex, half duplex, full duplex), Network topology, categories of network (LAN, MAN, WAN)."
+        },
+        {
+          "module": "Module 2",
+          "title": "Protocol and Standard",
+          "hours": 4.0,
+          "content": "Layered Task, The OSI model, TCP/ IP protocol suite, Comparison of OSI and TCP/IP model, Protocols used in various layers. Physical, Logical and Port Addressing."
+        },
+        {
+          "module": "Module 3",
+          "title": "Internetworking",
+          "hours": 10.0,
+          "content": "Internetworking concept, IPv4 and IPv6 Addressing, IPv4 protocol, IPv6 protocol, transition from IPV4 to IPV6, Address Mapping,(ARP and RARP), ICMP; Error Reporting, Unicast and Multicast Routing protocol, Distance Vector routing, Link state routing, Path vector routing, Transmission Control Protocol(TCP), User Datagram Protocol(UDP).Three way handshaking"
+        },
+        {
+          "module": "Module 4",
+          "title": "Quality of Service",
+          "hours": 6.0,
+          "content": "Data traffic, Congestion, Principle of congestion control (Open Loop and Close Loop), Quality of service, Leaky bucket and Token bucket Algorithm, Techniques to improve QoS, Integrated services, Differentiated service, QoS in Frame Relay, QoS in ATM"
+        },
+        {
+          "module": "Module 5",
+          "title": "Application Layer protocols",
+          "hours": 8.0,
+          "content": "Name Space, Domain Name System, Distribution of Name Space, Remote Logging, Electronic Mail and File Transfer, WWW, Web document and HTTP, Network Management, Simple Network Management Protocol (SNMP)"
+        },
+        {
+          "module": "Module 6",
+          "title": "Network Security",
+          "hours": 8.0,
+          "content": "Concept of Cryptography, Symmetric Key Cryptography, Diffie-Hellman key agreement, Man in the middle attack, DES, AES, Asymmetric Key Cryptography, RSA, Security Services, Digital Signature, Key Management, IP Security, SSL/TLS, PGP, Firewalls"
+        }
+      ]
+    },
+    {
+      "course_code": "MCAE205A",
+      "title": "Numerical and Statistical Analysis",
+      "semester": "2",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "Basic knowledge of mathematics (calculus, algebra) and introductory programming.",
+      "source_start_page": 37,
+      "source_end_page": 38,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Approximation in Numerical Computation",
+          "hours": 2.0,
+          "content": "Truncation and rounding errors; fixed and floating-point arithmetic; propagation of errors."
+        },
+        {
+          "module": "Module 2",
+          "title": "Interpolation & Approximation",
+          "hours": 4.0,
+          "content": "Newton forward/backward interpolation; Lagrange’s and Newton’s divided difference interpolation."
+        },
+        {
+          "module": "Module 3",
+          "title": "Numerical Integration",
+          "hours": 5.0,
+          "content": "Trapezoidal rule; Simpson’s 1/3 rule; Weddle’s integration; Gaussian quadrature; error terms."
+        },
+        {
+          "module": "Module 4",
+          "title": "Numerical Solution of Linear Equations",
+          "hours": 5.0,
+          "content": "Gauss elimination method; LU factorization method; Gauss-Seidel iterative method, SOR method."
+        },
+        {
+          "module": "Module 5",
+          "title": "Numerical Solution of Algebraic Equations",
+          "hours": 6.0,
+          "content": "Bisection method; Regula-Falsi method; Newton-Raphson method; Iteration method; Secant method."
+        },
+        {
+          "module": "Module 6",
+          "title": "Numerical Solution of Ordinary Differential Equations",
+          "hours": 6.0,
+          "content": "Euler’s method; Runge-Kutta methods; Taylor’s series method; Predictor-Corrector methods; finite difference method."
+        },
+        {
+          "module": "Module 7",
+          "title": "Introduction to Statistics & Probability",
+          "hours": 9.0,
+          "content": "Measures of central tendency and dispersion; probability concepts; distributions (Binomial, Poisson, Normal); moment generating functions; law of large numbers; Central Limit Theorem."
+        },
+        {
+          "module": "Module 8",
+          "title": "Least Square Curve Fitting",
+          "hours": 3.0,
+          "content": "Linear & non-linear curve fitting; correlation and regression basics."
+        }
+      ]
+    },
+    {
+      "course_code": "MCAE205B",
+      "title": "Computer Graphics",
+      "semester": "2",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "",
+      "source_start_page": 39,
+      "source_end_page": 40,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Introduction",
+          "hours": 7.0,
+          "content": "Overview of Computer Graphics, Computer Graphics Application and Software, Description of some graphics devices, Input Devices for Operator Interaction, Active and Passive Graphics Devices, Display Technologies, Storage Tube Graphics Displays, Calligraphic Refresh Graphics Displays, Raster Refresh (Raster-Scan) Graphics Displays, Cathode Ray Tube Basics, Color CRT Raster Scan Basics, Video Basics, The Video Controller, Random Scan Display Processor, LCD displays."
+        },
+        {
+          "module": "Module 2",
+          "title": "Graphics Primitives",
+          "hours": 6.0,
+          "content": "Points, Lines and Circles as primitives, Scan conversion algorithms for primitives, Output primitives: Points and lines, line drawing algorithms, mid-point circle and ellipse algorithms. Filled area primitives: Scan line polygon fill algorithm, boundary-fill and flood-fill algorithms."
+        },
+        {
+          "module": "Module 3",
+          "title": "2D Transformation and Viewing",
+          "hours": 8.0,
+          "content": "Transformations (translation, rotation, scaling), matrix representation, homogeneous coordinates, composite transformations, pivot point Transformations, reflection and shearing, viewing pipeline and coordinates system, window-to-viewport transformation, clipping including point clipping, line clipping(Cohen-Sutherland, Midpoint Subdivision line clipping algorithm), Sutherland- Hodgman Polygon Clipping. Weiler-Atherton Algorithm."
+        },
+        {
+          "module": "Module 4",
+          "title": "3D Transformations",
+          "hours": 5.0,
+          "content": "Translation, rotation, scaling shearing & reflection. Rotation about an arbitrary axis in space, Reflection through an arbitrary plane; General parallel projection transformation; clipping, viewport clipping, 3D viewing."
+        },
+        {
+          "module": "Module 5",
+          "title": "Curve",
+          "hours": 4.0,
+          "content": "Spline representations, Bezier curve and B-Spline curves, Bezier and B-Spline surfaces. Basic illumination models, polygon rendering methods. Illumination models: Basic Models, Displaying Light Intensities, halftone patterns and Dithering Techniques."
+        },
+        {
+          "module": "Module 6",
+          "title": "Hidden surfaces",
+          "hours": 5.0,
+          "content": "The Depth Buffer Algorithm, Properties that help in reducing efforts, Scan Line coherence algorithm Depth comparison, A- buffer & Z-buffer algorithm, back faces detection, BSP tree method, The Painter’s algorithm, scan-line algorithm; Hidden line elimination. Visible surface detection methods: Classification, back-face detection, depth-buffer, scan-line, depth sorting."
+        },
+        {
+          "module": "Module 7",
+          "title": "Color & shading models",
+          "hours": 5.0,
+          "content": "Light & Color Model, Shading Models for Polygons, Interpolative Shading Models, Texture, Reflectance properties of surfaces, Ambient, Specular and Diffuse reflections, Atmospheric attenutation, Phong’s model, Gouraud shading, some examples."
+        }
+      ]
+    },
+    {
+      "course_code": "MCAE205C",
+      "title": "Probability and Statistic",
+      "semester": "2",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "",
+      "source_start_page": 41,
+      "source_end_page": 42,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Probability and Random Variables",
+          "hours": 10.0,
+          "content": "Discrete and continuous random variables, probability mass function, probability density function and cumulative distribution functions, mathematical expectation, Moments, Moment generating functions, Binomial, Poisson and Normal distributions"
+        },
+        {
+          "module": "Module 2",
+          "title": "Two Dimensional Random Variables",
+          "hours": 9.0,
+          "content": "Joint distributions, Marginal and conditional distributions, Covariance, Correlation and linear regression, T-Transformation of random variables, Central limit theorem (for independent and identically distributed random variables)"
+        },
+        {
+          "module": "Module 3",
+          "title": "Sampling Theory & Estimation of Parameters",
+          "hours": 12.0,
+          "content": "Sampling Theory: Random Sampling, Parameter & Statistics, Standard error of statistic, Distributions of the sample mean and the sample variance for a Normal population, Central Limit Theorem, Chi-Square distributions, t distributions Estimation of Parameters: Unbiased and consistent estimators, Point estimation, Interval estimation, Maximum likelihood estimation of parameters (Binomial, Poisson and Normal), Confidence intervals and related problems."
+        },
+        {
+          "module": "Module 4",
+          "title": "Testing of Hypothesis",
+          "hours": 9.0,
+          "content": "Simple and Composite hypothesis, critical and acceptance regions, Level of significance, Type I and Type II errors, power of the test, the most powerful test and Neyman-Pearson Fundamental Lemma, one sample and two sample tests for means and proportions, 𝜒2 - test for goodness of fit and its applications."
+        }
+      ]
+    },
+    {
+      "course_code": "MCAE205D",
+      "title": "Introduction to Cyber Security",
+      "semester": "2",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "The prerequisite for Introduction to Cyber Security is a basic understanding of computer fundamentals, networks, and logical reasoning skills.",
+      "source_start_page": 43,
+      "source_end_page": 44,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Introduction",
+          "hours": 2.0,
+          "content": "Introduction to Cyber Space, Information Systems, Need for Cyber Security"
+        },
+        {
+          "module": "Module 2",
+          "title": "Cyber Attacks",
+          "hours": 3.0,
+          "content": "Introduction to Cyber Attacks, Classification of Cyber Attacks, Classification of Malware, Threats"
+        },
+        {
+          "module": "Module 3",
+          "title": "Intrusion Detection and Prevention",
+          "hours": 3.0,
+          "content": "Vulnerability Assessment Intrusion Detection Systems Intrusion Prevention Systems"
+        },
+        {
+          "module": "Module 4",
+          "title": "Authentication Methods",
+          "hours": 3.0,
+          "content": "Introduction to User Authentication Methods Biometric Authentication Methods, Biometric systems."
+        },
+        {
+          "module": "Module 5",
+          "title": "Security Models",
+          "hours": 3.0,
+          "content": "Different Security Models and Security Mechanisms Information Security and Network Security Operating System Security"
+        },
+        {
+          "module": "Module 6",
+          "title": "Online Security",
+          "hours": 3.0,
+          "content": "Web Security Email Security, Mobile Device Security, Cloud Security"
+        },
+        {
+          "module": "Module 7",
+          "title": "IoT & Social Media Security",
+          "hours": 4.0,
+          "content": "IoT Security, Cyber Physical System Security Social Media Security"
+        },
+        {
+          "module": "Module 8",
+          "title": "Security and Virtual Currency",
+          "hours": 4.0,
+          "content": "Virtual Currency, Block Chain Technology Security Auditing"
+        },
+        {
+          "module": "Module 9",
+          "title": "Cyber Crimes",
+          "hours": 5.0,
+          "content": "Introduction, Different Types of Cyber Crimes, Scams and Frauds, Analysis of Crimes, Human Behavior, Stylometry, Incident Handling, Investigation Methods, Criminal Profiling, Cyber Trails"
+        },
+        {
+          "module": "Module 10",
+          "title": "Digital Forensics",
+          "hours": 5.0,
+          "content": "Digital Forensics, History, Challenges, Branches of Digital Forensics, Digital Forensic Investigation Methods, Reporting, Management of Evidence"
+        },
+        {
+          "module": "Module 11",
+          "title": "Cyber Law",
+          "hours": 5.0,
+          "content": "Cyber laws, Cyber terrorism, Information Technology Act 2000 and Amendments, Evidentiary value of Email/ SMS, Cybercrimes and Offenses dealt with IPC, RBI Act and IPR Act in India, Jurisdiction of Cyber Crime, Cyber Security Awareness Tips"
+        }
+      ]
+    },
+    {
+      "course_code": "MCAE205E",
+      "title": "Introduction to IOT",
+      "semester": "2",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "Operating System, Wireless Sensor Networks, Computer Networks, Cryptography, Communication Technology, Python Programming Language, and Cloud computing.",
+      "source_start_page": 45,
+      "source_end_page": 46,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Wireless Sensor Network",
+          "hours": 4.0,
+          "content": "Network and Communication aspects, Wireless medium access issues, MAC protocol, Routing protocols, Sensor deployment and Node discovery, Data aggregation and dissemination, Topology, Connectivity, Single-hop and Multi-hop communications."
+        },
+        {
+          "module": "Module 3",
+          "title": "Fundamental of IoT",
+          "hours": 4.0,
+          "content": "The Internet of Things, Time for Convergence, Towards the IoT Universe, Internet of Things Vision, IoT Strategic Research and Innovation Directions, IoT Applications, Future Internet, Technologies, Infrastructure, Networks and Communication, Design challenges, Development challenges, Security challenges, Other challenges."
+        },
+        {
+          "module": "Module 3",
+          "title": "IoT and M2M",
+          "hours": 5.0,
+          "content": "Main design principles and needed capabilities, IoT architecture outline, standards, M2M and IoT Technology Fundamentals, Devices and gateways, Local and wide area networking, M2M Value Chains, IoT Value Chains, an emerging industrial structure for IoT, the international driven global value chain and global information monopolies. M2M to IoT Architectural Overview, Main design principles and needed capabilities, An IoT architecture outline, standards considerations."
+        },
+        {
+          "module": "Module 4",
+          "title": "IoT Architecture",
+          "hours": 6.0,
+          "content": "Introduction, Architecture Reference Model- Introduction, Reference Model and architecture, IoT reference Model, IoT Reference Architecture- Introduction, Functional View, Information View, Deployment and Operational View, Other Relevant architectural views."
+        },
+        {
+          "module": "Module 5",
+          "title": "IoT Privacy, Security and Governance",
+          "hours": 7.0,
+          "content": "Introduction, Overview of Governance, Privacy and Security Issues, Access Control, Authentication and Authorization, Distributed trust in IoT, Secure Platform design, Smart Approach. Data Aggregation for the IoT in smart cities, Intrusion detection and prevention, Security attacks and functional threats."
+        },
+        {
+          "module": "Module 6",
+          "title": "IoT Layers Architecture",
+          "hours": 6.0,
+          "content": "PHY/MAC Layer - 3GPP MTC, IEEE 802.11, IEEE 802.15, Wireless HART, Z-Wave, Bluetooth Low Energy, Zigbee Smart Energy, DASH7; Network Layer - IPv4, IPv6, 6LoWPAN, 6TiSCH, ND, DHCP, ICMP, RPL, CORPL, CARP; Transport Layer - TCP, MPTCP, UDP, DCCP, SCTP TLS, DTLS; Session Layer - HTTP, CoAP, XMPP, AMQP, MQTT; Service Layer - oneM2M, ETSI M2M, OMA, BBF."
+        },
+        {
+          "module": "Module 7",
+          "title": "IoT Applications for Value Creations",
+          "hours": 4.0,
+          "content": "Introduction, IoT applications for industry: Future Factory Concepts, Smart Objects, Smart Applications, Four Aspects in your Business to Master IoT, Big Data and Serialization, IoT for Retailing Industry, Oil and Gas Industry, Real-time monitoring and control of processes - Deploying smart machines, smart sensors, and smart controllers with proprietary communication and Internet technologies, Remote control operation of energy consuming devices."
+        }
+      ]
+    },
+    {
+      "course_code": "MCAE205F",
+      "title": "Automata Theory & Computational Complexity",
+      "semester": "2",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "The prerequisite for Automata Theory & Computational Complexity is a basic understanding of discrete mathematics, logic, and fundamental programming concepts.",
+      "source_start_page": 47,
+      "source_end_page": 48,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Introduction",
+          "hours": 6.0,
+          "content": "Fundamentals of formal languages: Alphabets, strings, and languages. Concept of grammars and production rules. Derivations in grammars and examples. Classification of languages and grammars – Chomsky hierarchy (Regular, Context-Free, Context-Sensitive, and Recursively Enumerable)."
+        },
+        {
+          "module": "Module 2",
+          "title": "Regular Languages and Finite Automata",
+          "hours": 8.0,
+          "content": "Regular expressions and languages, DFA and equivalence with REs, NFA and equivalence with DFA, Regular grammars and equivalence with finite automata, Properties of regular languages, pumping lemma, minimization of finite automata."
+        },
+        {
+          "module": "Module 3",
+          "title": "Context-Free Languages and Pushdown Automata",
+          "hours": 8.0,
+          "content": "CFGs and CFLs, Chomsky & Greibach normal forms, Nondeterministic PDA and equivalence with CFG, Parse trees, ambiguity, pumping lemma for CFLs, deterministic PDA, closure properties."
+        },
+        {
+          "module": "Module 4",
+          "title": "Turing Machines",
+          "hours": 10.0,
+          "content": "Basic TM model, Turing-recognizable and decidable languages, closure properties, Variants of TMs, nondeterministic TMs and equivalence with deterministic TMs, Unrestricted grammars and equivalence with TMs, TMs as enumerators, Context-Sensitive Languages, LBAs and relation with CSLs."
+        },
+        {
+          "module": "Module 5",
+          "title": "Decidability",
+          "hours": 4.0,
+          "content": "Decidability, decidable vs undecidable languages, Halting problem of TMs."
+        },
+        {
+          "module": "Module 6",
+          "title": "Complexity",
+          "hours": 4.0,
+          "content": "Growth rate of functions, Classes P & NP, Polynomial time reduction, NP completeness, Cook’s Theorem, SAT problem, Church–Turing Thesis."
+        }
+      ]
+    },
+    {
+      "course_code": "MCA291",
+      "title": "Python Programming Lab",
+      "semester": "2",
+      "credit": 2.0,
+      "contact": "(0:0:4)",
+      "prerequisite": "The prerequisite for Python Programming Lab is a basic understanding of programming fundamentals and logical problem-solving skills.",
+      "source_start_page": 49,
+      "source_end_page": 50,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Basics of Python",
+          "hours": 5.0,
+          "content": "Writing and executing simple Python programs, Practice with input/output, variables, and basic data types, Programs on operators, type conversion, and simple expressions."
+        },
+        {
+          "module": "Module 2",
+          "title": "Control Structures and Functions",
+          "hours": 5.0,
+          "content": "Programs using decision-making (if, if-else, if-elif-else), Loop-based problems (factorial, Fibonacci, prime numbers), Functions with different types of arguments, Programs on recursion and lambda functions."
+        },
+        {
+          "module": "Module 3",
+          "title": "Data Structures and String Handling",
+          "hours": 6.0,
+          "content": "Programs using lists (sorting, searching, list comprehension), Programs with tuples, sets, and dictionary operations, String manipulation (palindrome, word frequency, pattern matching), Simple applications of iterators and generators."
+        },
+        {
+          "module": "Module 4",
+          "title": "File Handling and Exception Management",
+          "hours": 6.0,
+          "content": "Programs to read/write text and binary files, Student record management system using files, Programs demonstrating exception handling (try, except, else, finally), Creating and handling user-defined exceptions."
+        },
+        {
+          "module": "Module 5",
+          "title": "Object-Oriented Programming in Python",
+          "hours": 7.0,
+          "content": "Programs on class and object creation, Constructor (init) and method demonstrations, Inheritance and polymorphism examples, Programs using operator overloading and encapsulation."
+        },
+        {
+          "module": "Module 6",
+          "title": "Advanced Python and Applications",
+          "hours": 7.0,
+          "content": "Programs using built-in libraries (math, random, datetime, os), Mini projects with NumPy and Pandas (data analysis tasks), GUI programs using Tkinter (simple calculator, notepad), Small real-world applications (web scraping, automation scripts)."
+        }
+      ]
+    },
+    {
+      "course_code": "MCA292",
+      "title": "Data Structure Lab",
+      "semester": "2",
+      "credit": 2.0,
+      "contact": "(0:0:4)",
+      "prerequisite": "The prerequisite for Data Structures lab is a basic understanding of programming fundamentals and problem-solving using a high-level language such as C.",
+      "source_start_page": 51,
+      "source_end_page": 52,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Implementation of data structure operations (Insertion, deletion, traversing, searching) on",
+          "hours": null,
+          "content": "array. Linear search, Binary search."
+        },
+        {
+          "module": "Module 2",
+          "title": "Implementation of stack, queue operation using array. Pop, Push, Insertion, deletion,",
+          "hours": null,
+          "content": "Implementation of circular Queue, post fix expression evaluation."
+        },
+        {
+          "module": "Module 3",
+          "title": "Implementation of linked lists: Single linked list, circular linked list, double linked list,",
+          "hours": null,
+          "content": "doubly circular linked list."
+        },
+        {
+          "module": "Module 4",
+          "title": "Implementation of stack and queue using linked list. Merging two linked list, Linked list",
+          "hours": null,
+          "content": "representation of a polynomial, polynomial addition, polynomial multiplication."
+        },
+        {
+          "module": "Module 5",
+          "title": "Tree: creating Binary Search tree, recursive and non-recursive traversal of BST, deletion",
+          "hours": null,
+          "content": "in BST, calculating height of a BST, building AVL tree."
+        },
+        {
+          "module": "Module 6",
+          "title": "Implementation of sorting techniques: selection, bubble, quick sort, insertion sort, merge",
+          "hours": null,
+          "content": "sort, heap sort,"
+        },
+        {
+          "module": "Module 7",
+          "title": "Implementation of priority queue. Hash table implementation.",
+          "hours": null,
+          "content": ""
+        },
+        {
+          "module": "Module 8",
+          "title": "Implementation of Graph: representation, searching, BFS, DFS.",
+          "hours": null,
+          "content": ""
+        }
+      ]
+    },
+    {
+      "course_code": "MCA293",
+      "title": "Operating System Lab (Unix)",
+      "semester": "2",
+      "credit": 2.0,
+      "contact": "(0:0:4)",
+      "prerequisite": "",
+      "source_start_page": 53,
+      "source_end_page": 55,
+      "modules": []
+    },
+    {
+      "course_code": "MCA301",
+      "title": "Software Engineering",
+      "semester": "3",
+      "credit": 4.0,
+      "contact": "(3:1:0)",
+      "prerequisite": "",
+      "source_start_page": 56,
+      "source_end_page": 57,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Introduction to Software Engineering(4L)",
+          "hours": null,
+          "content": "What is Software Engineering? Software Engineering Concepts, Software Engineering Development Activities, Managing Software Development, Feasibility Analysis, Technical Feasibility, Cost- Benefit Analysis, COCOMO model."
+        },
+        {
+          "module": "Module 2",
+          "title": "Object-Oriented Concept, Modeling (5L)",
+          "hours": null,
+          "content": "Object-Oriented Principals and Concepts: Classes and object, Modularity, Abstraction and Encapsulation; Object Relationship like Association, Aggregation and Composition; Inheritance, Polymorphism and Dynamic Binding Interfaces Model: Importance of Modeling, Object Oriented Modeling Identifying the Elements of an Object Model: Identifying classes and objects, Specifying the attributes Defining operations, Finalizing the object definition."
+        },
+        {
+          "module": "Module 3",
+          "title": "Introduction to UML, Basic and Advanced Structural Modeling (8L)",
+          "hours": null,
+          "content": "Overview of UML, Conceptual Model of UML, Architecture, S/W Development Life Cycle. Classes Relationship, Common mechanism, Diagrams, Class Diagram, Advanced classes, Advanced Relationship, Interface, Types and Roles, Packages, Object Diagram."
+        },
+        {
+          "module": "Module 4",
+          "title": "Basic and Advanced Behavioral Modeling and Architectural Modeling (8L)",
+          "hours": null,
+          "content": "Interactions, Use cases, Use Case Diagram, Sequence Diagram, Collaboration Diagram, Interaction Diagram, Activity Diagram, State Chart Diagram. Artifacts, Artifact Diagram, Implementation Diagram, Deployment Diagram."
+        },
+        {
+          "module": "Module 5",
+          "title": "Object-Oriented Design and Analysis (9L)",
+          "hours": null,
+          "content": "Generic components of Object-Oriented Design model, System Design process, Partitioning the Analysis Model, Concurrency and subsystem Allocation, Task Management component, Data Management Component, Resource Management Component, Inter Sub-system Communication. Iterative Development, Unified process & its Phases: Inception, Elaboration, Construction, Transition, Understanding requirements."
+        },
+        {
+          "module": "Module 6",
+          "title": "Software Testing (6L)",
+          "hours": null,
+          "content": "Introduction to faults and failures; basic testing concepts; concepts of verification and validation; black box and white box tests; white box test coverage – code coverage, condition coverage, branch coverage; basic concepts of black-box tests – equivalence classes, boundary value tests, usage of state tables; testing use cases; transaction based testing; testing for non-functional requirements – volume, performance and efficiency; concepts of inspection; Unit Testing, Integration Testing, System Testing and Acceptance Testing."
+        }
+      ]
+    },
+    {
+      "course_code": "MCA302",
+      "title": "Artificial Intelligence",
+      "semester": "3",
+      "credit": 4.0,
+      "contact": "(3:1:0)",
+      "prerequisite": "",
+      "source_start_page": 58,
+      "source_end_page": 59,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Introduction to Artificial Intelligence [3L]",
+          "hours": null,
+          "content": "Basic Concepts, History of Artificial Intelligence, Architecture of an Artificial Intelligent Agent, Applications of Artificial Intelligence"
+        },
+        {
+          "module": "Module 2",
+          "title": "Artificial Intelligence Problem Formulation as State-Space Exploration Problem for",
+          "hours": null,
+          "content": "Goal Searching [4L] Basic Concepts, State-Space Exploration Formulation for Water Jug Problem, Missionaries and Cannibals Problems, Farmer-Wolf-Goat-Cabbage Problem, 8-Puzzle Problem, Constraint Satisfaction Problem and Production System for Goal Searching. Blind Search Techniques for Goal Searching: Breadth First Search, Depth First Search, Depth Limited Search, Iterative Deepening Search, Uniform Cost Search, Bi-directional Search."
+        },
+        {
+          "module": "Module 3",
+          "title": "Heuristic Techniques for Goal Searching [8L]",
+          "hours": null,
+          "content": "Basic Concepts of Heuristic Techniques and Properties of Heuristic Functions, Hill Climbing Search. Best First Search, A* Search, Memory-bounded heuristic search: Iterative-deepening A* Search, Recursive Best First Search, Simplified Memory Bounded A* Search. Simulated Annealing Based Stochastic Search, Genetic Algorithm Based Evolutionary Search, Ant Colony Optimization, Particle Swarm Optimization"
+        },
+        {
+          "module": "Module 4",
+          "title": "Adversarial Search for Game Playing: [2L]",
+          "hours": null,
+          "content": "Basic Concepts, Minimax Search, Alpha-Beta Pruning."
+        },
+        {
+          "module": "Module 5",
+          "title": "Knowledge Representation and Inference using Propositional Logic and Predicate",
+          "hours": null,
+          "content": "Logic: [5L] Propositional Logic: Knowledge Representation and Inference using Propositional Logic Predicate Logic: Knowledge Representation, Inference and Answer Extraction using First Order Predicate Logic"
+        },
+        {
+          "module": "Module 6",
+          "title": "Slot-and-Filler Structure for Knowledge Representation [3L]",
+          "hours": null,
+          "content": "Weak Slot-and-Filler Structure for Knowledge Representation: Semantic Nets and Frames. Strong Slot-and-Filler Structure for Knowledge Representation: Conceptual Dependency and Script."
+        },
+        {
+          "module": "Module 7",
+          "title": "Reasoning under Uncertainty [11L]",
+          "hours": null,
+          "content": "Bayesian Inferencing and Bayesian Belief Network, Dempster-Shafer Theory, Overview of Fuzzy Logic and Inferencing, Overview of Hidden Markov Model. Planning: Basic Concepts, Problem of Blocks World, Components of a Planning System, Algorithms for Planning: Goal Stack, Nonlinear Planning Using Constraint Posting, Hierarchical Planning, Algorithms for Planning as State-Space Search, Heuristics for planning, Planning Graphs and GRAPHPLAN Algorithm. Introduction to Natural Language Processing: Basic Concepts, Steps of Natural Language Processing, Morphological, Syntactic and Semantic Analysis, Discourse Integration and Pragmatic Analysis, Applications of Natural Language Processing."
+        },
+        {
+          "module": "Module 8",
+          "title": "Introduction to Machine Learning [4L]",
+          "hours": null,
+          "content": "Basic concepts of Machine Learning Model, Supervised Learning, Unsupervised Learning, and Reinforced Learning, Overview of Artificial Neural Network"
+        }
+      ]
+    },
+    {
+      "course_code": "MCA303",
+      "title": "Object Oriented Programming with JAVA",
+      "semester": "3",
+      "credit": 4.0,
+      "contact": "(3:1:0)",
+      "prerequisite": "",
+      "source_start_page": 60,
+      "source_end_page": 61,
+      "modules": []
+    },
+    {
+      "course_code": "MCAE304A",
+      "title": "Basic Data Science",
+      "semester": "3",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "",
+      "source_start_page": 62,
+      "source_end_page": 63,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Introduction [4L]",
+          "hours": null,
+          "content": "Introduction to Data Science – Evolution of Data Science – Data Science Roles – Stages in Data Science Project – Applications of Data Science in various fields – Data Security Issues."
+        },
+        {
+          "module": "Module 2",
+          "title": "Data Collection and Data Pre-Processing [8L]",
+          "hours": null,
+          "content": "Data Collection Strategies – Data Pre-Processing Overview – Data Cleaning – Data Integration and Transformation – Data Reduction – Data Discretization."
+        },
+        {
+          "module": "Module 3",
+          "title": "Exploratory Data Analytics [8L]",
+          "hours": null,
+          "content": "Descriptive Statistics – Mean, Standard Deviation, Skewness and Kurtosis – Box Plots – Pivot Table – Heat Map – Correlation Statistics – ANOVA"
+        },
+        {
+          "module": "Module 4",
+          "title": "Model Development [8L]",
+          "hours": null,
+          "content": "Simple and Multiple Regression – Model Evaluation using Visualization – Residual Plot –Distribution Plot – Polynomial Regression and Pipelines – Measures for In-sample, Evaluation – Prediction and Decision Making."
+        },
+        {
+          "module": "Module 5",
+          "title": "Model Evaluation [8L]",
+          "hours": null,
+          "content": "Generalization Error – Out-of-Sample Evaluation Metrics – Cross Validation – Overfitting , Under Fitting and Model Selection – Prediction by using Ridge Regression – Testing, Multiple Parameters by using Grid Search. Textbooks: 1. Jojo Moolayil, “Smarter Decisions : The Intersection of IoT and Data Science”, PACKT, 2016. 2. Cathy O’Neil and Rachel Schutt , “Doing Data Science”, O'Reilly, 2015. 3. David Dietrich, Barry Heller, Beibei Yang, “Data Science and Big data Analytics”, EMC 2013"
+        }
+      ]
+    },
+    {
+      "course_code": "MCAE304B",
+      "title": "Image Processing",
+      "semester": "3",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "Knowledge on Computer Programming.",
+      "source_start_page": 64,
+      "source_end_page": 65,
+      "modules": []
+    },
+    {
+      "course_code": "MCAE304C",
+      "title": "Cloud Computing",
+      "semester": "3",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "Basic knowledge of programming, data structures, algorithms, operating systems, and computer networks.",
+      "source_start_page": 66,
+      "source_end_page": 67,
+      "modules": []
+    },
+    {
+      "course_code": "MCAE304D",
+      "title": "Web Technology",
+      "semester": "3",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "",
+      "source_start_page": 68,
+      "source_end_page": 69,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Understanding of Internet",
+          "hours": 3.0,
+          "content": "www, client-server, DNS, IP Protocol, HTTP, URL, Browser working principal, Web Hosting, W3C standard, Cloud Development."
+        },
+        {
+          "module": "Module 2",
+          "title": "Fundamental of Web Design HTML",
+          "hours": 6.0,
+          "content": "HTML: Introduction, Editor (VS Code/ Sublime), Element, Attribute, Head, Heading, Paragraph, Style, Formatting, Quotation, Comment, Color, CSS, Link, Image, Table, List, Block & Inline, Class, ID, Iframe , Script, File path, Layout, Code, Entity, Symbol, Emoji , Charset, Forms, Form Attributes, Elements, Input types, Input Attributes."
+        },
+        {
+          "module": "Module 3",
+          "title": "Fundamental of Web Design CSS",
+          "hours": 7.0,
+          "content": "Introduction, Selector, External-Internal-Inline CSS, Comments, Color, Background, Border, Margin, Padding, Height, Width, Box model, Outline, Text, Font, Icon, Link, List, Table,Display,Maxwidth,Position,Overflow,Float,Inline-bock,Align,Pseudo-class,Pseudo- element, Opacity, Navigation Bar, Dropdowns, Image gallery, Image sprites, Attributes Selector, Form, Counter, Units, Rounded corner, Border image, Gradient, Shadow, Text Effect, Web Fonts,Transition,Animation,Tooltip,StyleImage,Button,Pagination,Multiplecolumn,Media Query, Flexbox."
+        },
+        {
+          "module": "Module 4",
+          "title": "Advance Web Design",
+          "hours": 3.0,
+          "content": "CSS Responsive Design: Introduction,Viewport, Gridview, Mediaqueries, Responsive image, Responsive video. Bootstrap: Introduction, Container, Grid, Typography, Color, tables, Images, jumbotron,Alerts, Button, Button group, Badges, Progress bar, Spinner, Pagination, List group, Card, Dropdown, Collapse, Navs, Navbar , Forms, Input, Input group, Carousel, Modal, Tooltip, Popover, Toast, Scroll spy, Flex, Media object."
+        },
+        {
+          "module": "Module 5",
+          "title": "Java Script",
+          "hours": 6.0,
+          "content": "Introduction, output, variables, operator, Datatype, Function, Object, Event, String, String method, Number method, Array, Array method, Array iteration, Date & Date format, Date method, Math, Random, Comparison, Condition, For, While, break, This keyword, Function, Arrow function, Form validation, HTML DOM – Documents, Elements, HTML,CSS, Animation, Event, Even listener, Navigation, Nodes, Collection, Node list. Form Validations in JavaScript, JS Popup Boxes. Introduction to Angular JS: Expressions, Modules and Directives."
+        },
+        {
+          "module": "Module 6",
+          "title": "Advanced AI Techniques and Real-world Applications",
+          "hours": 6.0,
+          "content": "Web hosting Basics, Documents Interchange Standards, Components of Web Publishing, Document management, Web Page Design Considerations and Principles , Search and Meta Search Engines, WWW, Browser ,HTTP, Publishing Tools"
+        }
+      ]
+    },
+    {
+      "course_code": "MCAE304E",
+      "title": "Android Application Development",
+      "semester": "3",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "",
+      "source_start_page": 70,
+      "source_end_page": 71,
+      "modules": []
+    },
+    {
+      "course_code": "MCAE304F",
+      "title": "Web Enabled JAVA Programming",
+      "semester": "3",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "",
+      "source_start_page": 72,
+      "source_end_page": 73,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Core Java Overview (6L)",
+          "hours": null,
+          "content": "Object-oriented concepts, Exception Handling, Multi-Threading Introduction to JDBC: Overview of JDBC API, The Java.sql package, JDBC Drivers, Executing SQL commands using JDBC Drivers, static and dynamic Execution of SQL statements, Execution of Stored Procedures using JDBC. Introduction to Transactions and Transaction Methods, Introduction to JNDI, Introduction to Data Source and Connection pooling, Introduction to Web Applications, Web Servers Overview of J2EE Technologies."
+        },
+        {
+          "module": "Module 2",
+          "title": "Introduction to Java Servlets (6L)",
+          "hours": null,
+          "content": "Static and Dynamic contents, Servlet life Cycle and Life cycle methods, Servlet Request and Response Model, Deploying a Servlet, Servlet State Transitions, Servlet Config and Servlet Context, Servlet Redirection and Request Dispatch, Servlet Synchronization and Thread Model. Maintaining Client State: Cookies, URL rewriting, Hidden form fields, Session Tracking."
+        },
+        {
+          "module": "Module 3",
+          "title": "Introduction to JSP (8L)",
+          "hours": null,
+          "content": "JSP & Servlet as Web Components, Servlets vs. JSP, JSP Lifecycle, JSP Page Lifecycle Phases, General Rules of Syntax, JSP syntactic elements, JSP element syntax, Template content. JSP elements- directives, declarations, expressions, scriptlets, actions. JSP Standard Actions: jsp:useBean, jsp:getPreoperty, jsp:setProperty, jsp:include, jsp:forward, jsp:plugin, jsp:param, Java Server Pages Standard Tag Library (JSTL)."
+        },
+        {
+          "module": "Module 4",
+          "title": "Introduction to JSF Frameworks (12L)",
+          "hours": null,
+          "content": "A Simple Example, Sample Application Analysis, Development Environments for JSF, A Sample Application, Bean Scopes Configuring Beans, Navigation, Static Navigation, Dynamic Navigation, Standard JSF tags, Data tables, conversion and validation Overview of the Conversion and Validation Process, Using Standard Converters. Life Cycle Events, Value Change Events, Action Events, Event Listener Tags, Immediate Components, Passing Data from the UI to the Server, Custom Components, Classes for Implementing Custom components, Tags and Components, The Custom Component Developer’s Toolbox, Generating Markup, Processing Request Values, Using Converters, Implementing Custom Component Tags, The TLD File, The Tag Handler Class, Defining Tag Handlers in JSF 1.1."
+        },
+        {
+          "module": "Module 5",
+          "title": "Hibernate Framework (4L)",
+          "hours": null,
+          "content": "Overview of Hibernate Framework; Advantages of ORM over JDBC; Hibernate Architecture and Core Components; Setting Up Hibernate in a Java Application; Mapping Java Classes to Database Tables; Hibernate Configuration (XML and Annotations); Basic CRUD Operations: Save, Update, Delete, Retrieve Hibernate Query Language (HQL) Basics"
+        },
+        {
+          "module": "Module 6",
+          "title": "AJAX (6L)",
+          "hours": null,
+          "content": "Ajax Fundamentals, JavaScript Libraries, The Prototype Library, The Fade Anything Technique Library, Form Completion. Realtime Validation, Propagating Client-Side View State Direct Web Remoting, Ajax Components, Hybrid Components, Keeping JavaScript Out of Renderers, Transmitting JSP Tag Attributes to JavaScript Code, Ajax4jsf, Implementing Form Completion with Ajax4jsf, Implementing Real-time Validation with Ajax4jsf, Introduction to Java Web Services."
+        }
+      ]
+    },
+    {
+      "course_code": "MCAE304G",
+      "title": "Generative AI",
+      "semester": "3",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "Basics of Machine Learning, Programming in Python",
+      "source_start_page": 74,
+      "source_end_page": 74,
+      "modules": []
+    },
+    {
+      "course_code": "",
+      "title": "Machine Learning",
+      "semester": "",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "",
+      "source_start_page": 75,
+      "source_end_page": 77,
+      "modules": []
+    },
+    {
+      "course_code": "MCAE305B",
+      "title": "Data Warehousing and Data Mining",
+      "semester": "3",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "",
+      "source_start_page": 78,
+      "source_end_page": 79,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Introduction to Data Warehousing (6L)",
+          "hours": null,
+          "content": "Need for data warehousing, Operational vs. informational data stores, Architecture, characteristics, and database design, ETL process (sourcing, acquisition, cleanup, transformation), Metadata, access tools, and data marts, Data warehousing administration and management."
+        },
+        {
+          "module": "Module 2",
+          "title": "Online Analytical Processing (OLAP) (4L)",
+          "hours": null,
+          "content": "Importance of OLAP in business decision making, Multidimensional data model and OLAP guidelines, Multidimensional vs. multi-relational OLAP, Types and categorization of OLAP tools, Web-based OLAP applications."
+        },
+        {
+          "module": "Module 3",
+          "title": "Introduction to Data Mining (6L)",
+          "hours": null,
+          "content": "Motivation and scope of data mining, Data mining effectiveness and integration with business processes, Decision trees: concepts, algorithms, and applications, Role of decision trees in business scorecards."
+        },
+        {
+          "module": "Module 4",
+          "title": "Classification and Prediction (5L)",
+          "hours": null,
+          "content": "Cluster analysis: types of data, partitioning and hierarchical methods, Frequent pattern mining (transactional and temporal-based), Prediction models for business and scientific data."
+        },
+        {
+          "module": "Module 5",
+          "title": "Time-Series Analysis (4L)",
+          "hours": null,
+          "content": "Characteristics of time-series data, Periodicity and trend analysis, Similarity search in time-series data."
+        },
+        {
+          "module": "Module 6",
+          "title": "Web Mining (5L)",
+          "hours": null,
+          "content": "Web content, structure, and usage mining, Mining multimedia and web documents, Automatic classification of web pages, Distributed and big data mining approaches."
+        }
+      ]
+    },
+    {
+      "course_code": "MCAE305C",
+      "title": "Introduction to Big Data Analytics",
+      "semester": "3",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "Basic knowledge in data storage and retrieval, Knowledge in Quantitative Aptitude and Statistics, Proficiency in Algorithms and Computer Programming Skills.",
+      "source_start_page": 80,
+      "source_end_page": 81,
+      "modules": []
+    },
+    {
+      "course_code": "MCAE305D",
+      "title": "Cryptography",
+      "semester": "3",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "",
+      "source_start_page": 82,
+      "source_end_page": 83,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Introduction [4L]",
+          "hours": null,
+          "content": "Attacks on Computers & Computer Security Introduction, Need for Security, Security approaches, Principles of Security, Types of attack."
+        },
+        {
+          "module": "Module 2",
+          "title": "Cryptography [7L]",
+          "hours": null,
+          "content": "Cryptography: Concepts & Techniques Introduction, Plaintext & Cipher text, Substitution Techniques, Transposition Techniques, Encryption & Decryption, and Symmetric & Asymmetric key Cryptography, Key Range & Key Size."
+        },
+        {
+          "module": "Module 3",
+          "title": "Symmetric Key Algorithm [8L]",
+          "hours": null,
+          "content": "Symmetric Key Algorithm: Introduction, Algorithm types & Modes, Overview of Symmetric Key Cryptography, DES (Data Encryption Standard) algorithm, IDEA (International Data Encryption Algorithm) algorithm, RC5(Rivest Cipher 5) algorithm"
+        },
+        {
+          "module": "Module 4",
+          "title": "Asymmetric Key Algorithm [5L]",
+          "hours": null,
+          "content": "Asymmetric Key Algorithm, Digital Signature and RSA Introduction, Overview of Asymmetric key Cryptography, RSA algorithm, Digital Signature, Basic concepts of Message Digest and Hash Function (Algorithms on Message Digest and Hash function not required)."
+        },
+        {
+          "module": "Module 5",
+          "title": "Internet Security Protocols [5L]",
+          "hours": null,
+          "content": "Internet Security Protocols, User Authentication Basic Concepts, SSL protocol, Authentication Basics, Password, Authentication Token, Certificate based Authentication, Biometric Authentication."
+        },
+        {
+          "module": "Module 6",
+          "title": "Electronic Mail Security [4L]",
+          "hours": null,
+          "content": "Electronic Mail Security Basics of mail security, Pretty Good Privacy, S/MIME"
+        },
+        {
+          "module": "Module 7",
+          "title": "Firewall Introduction [3L]",
+          "hours": null,
+          "content": "Firewall Introduction, Types of firewalls, Firewall Configurations."
+        }
+      ]
+    },
+    {
+      "course_code": "MCAE305E",
+      "title": "Operation Research and Optimization Techniques",
+      "semester": "3",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "Basic knowledge of Linear Algebra, Calculus, and Fundamentals of Probability & Statistics.",
+      "source_start_page": 84,
+      "source_end_page": 85,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Linear Programming Problem (LPP)-I[8L]",
+          "hours": null,
+          "content": "Formulation of an LPP, Graphical Method of solution of an LPP, Convex Combination and Convex Set, Convex Hull and Convex Polyhedron, Canonical and Standard form of an LPP, Basic Solution of a system of linear equations, Simplex Method, Big-M Method, Concept of Duality, Mathematical formulation of duals."
+        },
+        {
+          "module": "Module 2",
+          "title": "Linear Programming Problem (LPP) – II [8L]",
+          "hours": null,
+          "content": "Transportation Problems (TP), Representation of Transportation Problems as LPP, Methods of finding initial basic feasible solution of TP: North-West Corner Rule, Matrix Minima Method, Vogel’s Approximation Method, Optimality test of the basic feasible solution, Assignment Problems, Hungarian Method."
+        },
+        {
+          "module": "Module 3",
+          "title": "Game Theory [7L]",
+          "hours": null,
+          "content": "Introduction, Strategies, The Minimax and Maximin Criterion, Existence of Saddle Point, Two person zero-sum Games, Games with Saddle Point – Pure Strategies, Games without a Saddle Point – Mixed Strategies, Symmetric Games, Dominance Principle, Graphical Method of Solution, Algebraic Method of Solution."
+        },
+        {
+          "module": "Module 4",
+          "title": "Non-Linear Programming Problem (NLPP) [7L]",
+          "hours": null,
+          "content": "Single-variable Optimization, Multivariate Optimization with no constraints: Semidefinite Case, Saddle Point, Multivariate Optimization with Equality Constraints: Method of Lagrange Multipliers, Multivariable Optimization with inequality constraints: Kuhn-Tucker Conditions."
+        }
+      ]
+    },
+    {
+      "course_code": "MCAE305F",
+      "title": "Pattern Recognition",
+      "semester": "3",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "Fundamentals of probability and linear algebra",
+      "source_start_page": 86,
+      "source_end_page": 87,
+      "modules": []
+    },
+    {
+      "course_code": "MCAE305G",
+      "title": "Information Retrieval",
+      "semester": "3",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "",
+      "source_start_page": 88,
+      "source_end_page": 89,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Overview of text retrieval systems (5L)",
+          "hours": null,
+          "content": "Boolean retrieval. The term vocabulary and postings list. Dictionaries and tolerant retrieval. Index construction and compression."
+        },
+        {
+          "module": "Module 2",
+          "title": "Retrieval models and implementation: Vector Space Models (4L)",
+          "hours": null,
+          "content": "Vector Space Model. TF-IDF Weight. Evaluation in information retrieval."
+        },
+        {
+          "module": "Module 3",
+          "title": "Query expansion and feedback (5L)",
+          "hours": null,
+          "content": "Relevance feedback, pseudo relevance feedback, Query Reformulation."
+        },
+        {
+          "module": "Module 4",
+          "title": "Probabilistic models; statistical language models (8L)",
+          "hours": null,
+          "content": "Okapi/BM25, Language models, KL-divergence, Smoothing."
+        },
+        {
+          "module": "Module 5",
+          "title": "Text classification & Text clustering (9L)",
+          "hours": null,
+          "content": "The text classification problem, Naive Bayes text classification, k- nearest neighbors, Support vector Machine, Feature Selection, Vector-space clustering, K-means algorithm, Hierarchical clustering, DBSCAN algorithm, PAM and PAMK, EM algorithm."
+        },
+        {
+          "module": "Module 6",
+          "title": "Web search basics, crawling, indexes, Link analysis (5L)",
+          "hours": null,
+          "content": "Web Characteristic, Crawling, Web As a graph, Page Rank, Hubs and Authorities."
+        },
+        {
+          "module": "Module 7",
+          "title": "IR applications (4L)",
+          "hours": null,
+          "content": "Information extraction, Question answering, Opinion summarization, Social Network."
+        }
+      ]
+    },
+    {
+      "course_code": "MCAE393",
+      "title": "Object Oriented Programming with JAVA Lab",
+      "semester": "3",
+      "credit": 2.0,
+      "contact": "(0:0:4)",
+      "prerequisite": "",
+      "source_start_page": 90,
+      "source_end_page": 91,
+      "modules": []
+    },
+    {
+      "course_code": "MCAE394A",
+      "title": "Basic Data Science Lab",
+      "semester": "3",
+      "credit": 2.0,
+      "contact": "(0:0:4)",
+      "prerequisite": "Fundamental concept of Statistics. Python programming language",
+      "source_start_page": 92,
+      "source_end_page": 93,
+      "modules": []
+    },
+    {
+      "course_code": "MCAE394B",
+      "title": "Image Processing Lab",
+      "semester": "3",
+      "credit": 2.0,
+      "contact": "(0:0:4)",
+      "prerequisite": "",
+      "source_start_page": 94,
+      "source_end_page": 95,
+      "modules": []
+    },
+    {
+      "course_code": "MCAE394C",
+      "title": "Cloud Computing Lab",
+      "semester": "3",
+      "credit": 2.0,
+      "contact": "(0:0:4)",
+      "prerequisite": "",
+      "source_start_page": 96,
+      "source_end_page": 97,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Virtual Machine",
+          "hours": null,
+          "content": "Creation of vpc, vnet, virtual machine, Private and Public IP configuration"
+        },
+        {
+          "module": "Module 2",
+          "title": "Application Development",
+          "hours": null,
+          "content": "Implementation of SOAP Web services in JAVA Applications. Use Azure to launch the web applications. Test Simple Application"
+        },
+        {
+          "module": "Module 3",
+          "title": "Security",
+          "hours": null,
+          "content": "Identity and access management, Multifactor Authentication."
+        },
+        {
+          "module": "Module 4",
+          "title": "Bot and AI service",
+          "hours": null,
+          "content": "Test AWS and AZURE Bot and AI services"
+        }
+      ]
+    },
+    {
+      "course_code": "MCAE394D",
+      "title": "Web Technology Lab",
+      "semester": "3",
+      "credit": 2.0,
+      "contact": "(0:0:4)",
+      "prerequisite": "Logic of programming language, basics of HTML and CSS",
+      "source_start_page": 98,
+      "source_end_page": 99,
+      "modules": []
+    },
+    {
+      "course_code": "MCAE394E",
+      "title": "Android Application Development Lab",
+      "semester": "3",
+      "credit": 2.0,
+      "contact": "(0:0:4)",
+      "prerequisite": "",
+      "source_start_page": 100,
+      "source_end_page": 101,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Writing First Application [6L]",
+          "hours": null,
+          "content": "Creating Android Project, Android Virtual Device Creation, Setup debugging environment,Workspace setup for development, Launching emulator,debugging on mobile devices."
+        },
+        {
+          "module": "Module 2",
+          "title": "Basic UI design [4L]",
+          "hours": null,
+          "content": "Basics about Views, Layouts, Resources,Input controls,Input Events,Toasts."
+        },
+        {
+          "module": "Module 3",
+          "title": "More UI Design[7L]",
+          "hours": null,
+          "content": "Layouts design Grid View and List View ,Action bar, Adapters, Menus: Option menu, context menu, sub menu, Pickers - Date and Time, Spinners."
+        },
+        {
+          "module": "Module 4",
+          "title": "Activity and Fragment[4L]",
+          "hours": null,
+          "content": "Activity, Fragment, Activity Life cycle and Fragment Lifecycle."
+        },
+        {
+          "module": "Module 5",
+          "title": "Intents [4L]",
+          "hours": null,
+          "content": "Implicit Intents, Explicit intents, communicating data among Activities."
+        },
+        {
+          "module": "Module 6",
+          "title": "Navigation Drawer[5L]",
+          "hours": null,
+          "content": "Panel that displays the app’s main navigation screens on the left edge of the screen"
+        },
+        {
+          "module": "Module 7",
+          "title": "Android Notifications [5L]",
+          "hours": null,
+          "content": "Toast, Dialogs(TimePicker,DatePicker, Progress, Alert),Notification Manager and Push Notification"
+        },
+        {
+          "module": "Module 8",
+          "title": "Introducing SQLite [5L]",
+          "hours": null,
+          "content": "SQLite Open Helper and creating a database-Opening and closing a database,Working with cursors Inserts, updates,and deletes Text Book 1. Android App Development For Dummies by Michael Burton 2. The Busy Coder’s Guide to Android Development by Mark L. Murphy References Book 3. Kotlin for Android Developers by Antonio Leiva 4. Android Programming: The Big Nerd Ranch Guide” by Bill Phillips, Chris Stewart, and Kristin Marsicno"
+        }
+      ]
+    },
+    {
+      "course_code": "MCAE394F",
+      "title": "Web Enabled JAVA Programming Lab",
+      "semester": "3",
+      "credit": 2.0,
+      "contact": "(0:0:4)",
+      "prerequisite": "Basic knowledge on Java and computer networking and database.",
+      "source_start_page": 102,
+      "source_end_page": 103,
+      "modules": []
+    },
+    {
+      "course_code": "MCAE394G",
+      "title": "Generative AI Lab",
+      "semester": "3",
+      "credit": 2.0,
+      "contact": "(0:0:4)",
+      "prerequisite": "Basics of Machine Learning, Programming in Python",
+      "source_start_page": 104,
+      "source_end_page": 106,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Introduction and Statistics I (Statistical Distribution Concepts and Requirements for",
+          "hours": null,
+          "content": "Generative AI)"
+        },
+        {
+          "module": "Module 2",
+          "title": "Statistics II (Statistical Distribution Comparison Methods and Challenges",
+          "hours": null,
+          "content": ""
+        },
+        {
+          "module": "Module 3",
+          "title": "Characteristics of Linear versus Non-linear Models.",
+          "hours": null,
+          "content": ""
+        },
+        {
+          "module": "Module 4",
+          "title": "Mathematical Concepts for Optimization (Gradient, Jacobian, Hessian, and Taylor Series).",
+          "hours": null,
+          "content": ""
+        },
+        {
+          "module": "Module 5",
+          "title": "Review the basics of Neural Networks (MLP, Activation Functions, Backpropagation, Cost",
+          "hours": null,
+          "content": "Functions)"
+        },
+        {
+          "module": "Module 6",
+          "title": "Review of Convolutional Neural Networks and Recurrent Neural Networks",
+          "hours": null,
+          "content": ""
+        },
+        {
+          "module": "Module 7",
+          "title": "Review of Seq2Seq, Attention Mechanisms, Positional Encoding, Transformer",
+          "hours": null,
+          "content": "Architecture."
+        },
+        {
+          "module": "Module 8",
+          "title": "Representation Learning Concepts, Self-Organized Maps, Boltzmann Machine, Restricted",
+          "hours": null,
+          "content": "Boltzmann Machine"
+        },
+        {
+          "module": "Module 9",
+          "title": "Autoencoders, Generative Adversarial Networks, GAN challenges, GAN Models",
+          "hours": null,
+          "content": ""
+        },
+        {
+          "module": "Module 10",
+          "title": "Large Language Models I (BERT models, GPT models, Post ChatGPT models)",
+          "hours": null,
+          "content": ""
+        },
+        {
+          "module": "Module 11",
+          "title": "Large Language Models II (Prompt engineering methods, NLP evaluations, LLM, RAG)",
+          "hours": null,
+          "content": ""
+        },
+        {
+          "module": "Module 12",
+          "title": "Text-to-Image Models",
+          "hours": null,
+          "content": ""
+        },
+        {
+          "module": "Module 13",
+          "title": "Neural Radiance Field, 3D Gaussian Splatting",
+          "hours": null,
+          "content": ""
+        },
+        {
+          "module": "Module 14",
+          "title": "Neural Network Regularization and Compression Approaches (Quantization,",
+          "hours": null,
+          "content": "Compression, Pruning, Low- Rank Adaptation)"
+        }
+      ]
+    },
+    {
+      "course_code": "MCA401",
+      "title": "Design and Analysis of Algorithm",
+      "semester": "4",
+      "credit": 4.0,
+      "contact": "(3:1:0)",
+      "prerequisite": "A solid understanding of basic programming concepts (preferably in C/C++/Java/Python). Knowledge of data structures, including arrays, linked lists, stacks, queues, trees, and graphs. Familiarity with mathematical foundations such as discrete mathematics, logic, and basic combinatorics. Understanding of complexity concepts like time and space efficiency at an elementary level. Problem-solving skills and the ability to analyze programs for correctness.",
+      "source_start_page": 107,
+      "source_end_page": 108,
+      "modules": []
+    },
+    {
+      "course_code": "MCAO402A",
+      "title": "Deep Learning",
+      "semester": "4",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "",
+      "source_start_page": 109,
+      "source_end_page": 110,
+      "modules": []
+    },
+    {
+      "course_code": "MCAO402B",
+      "title": "Bioinformatics",
+      "semester": "4",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "",
+      "source_start_page": 111,
+      "source_end_page": 112,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Introduction to Molecular Biology [10L]",
+          "hours": null,
+          "content": "Concepts of Cell, tissue, types of cell, components of cell, organelle. Functions of different organelles. Concepts of DNA: Basic Structure of DNA; Double Helix structure; Watson and crick model. Exons and Introns and Gene Concept. Concepts of RNA: Basic structure, Difference between RNA and DNA. Types of RNA. Concept of Protein: Basic components and structure. Introduction to Central Dogma: Transcription and Translation Introduction to Metabolic Pathways."
+        },
+        {
+          "module": "Module 2",
+          "title": "Sequence Databases [4L]",
+          "hours": null,
+          "content": "Introduction to Bioinformatics. Recent challenges in Bioinformatics. Protein Sequence Databases, DNA sequence databases. sequence database search programs like BLAST and FASTA. NCBI different modules: GenBank, OMIM, Taxonomy browser, PubMed"
+        },
+        {
+          "module": "Module 3",
+          "title": "DNA Sequence Analysis [10L]",
+          "hours": null,
+          "content": "DNA Mapping and Assembly: Size of Human DNA, Copying DNA: Polymerase Chain Reaction (PCR), Hybridization and Microarrays, Cutting DNA into Fragments, Sequencing Short DNA Molecules, Mapping Long DNA Molecules. DeBruijn Graph. Sequence Alignment: Introduction, local and global alignment, pair wise and multiple alignment, Dynamic Programming Concept. Alignment algorithms: Needleman and Wunsch algorithm, Smith-Waterman."
+        },
+        {
+          "module": "Module 4",
+          "title": "Introduction Probabilistic models used in Computational Biology [7L]",
+          "hours": null,
+          "content": "Probabilistic Models; Hidden Markov Model: Concepts, Architecture, Transition matrix, estimation matrix. Application of HMM in Bioinformatics: Genefinding, profile searches, multiple sequence alignment and regulatory site identification. Bayesian networks Model: Architecture, Principle, Application in Bioinformatics."
+        },
+        {
+          "module": "Module 5",
+          "title": "Biological Data Classification and Clustering [4L]",
+          "hours": null,
+          "content": "Assigning protein function and predicting splice sites: Decision Tree Textbooks: 1. Bio Informatics and Molecular Evolution by Paul G. Higgs and Teresa K. Attwood 2. Bio Informatics Computing by Bryan Bergeron"
+        }
+      ]
+    },
+    {
+      "course_code": "MCAO402C",
+      "title": "Information Theory & Coding",
+      "semester": "4",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "",
+      "source_start_page": 113,
+      "source_end_page": 114,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Introduction to Information theory: [6L]",
+          "hours": null,
+          "content": "Uncertainty and information Basic definition of information, zero memory source, entropy, channel model and channel matrix, mutual informations. information measures for continuous random variables, source coding theorem, Shannon - Fano coding, Huffman codes, Kraft Inequality"
+        },
+        {
+          "module": "Module 2",
+          "title": "Channel Capacity and Coding: [6L]",
+          "hours": null,
+          "content": "Channel coding, Information rate, channel capacity, information capacity theorem, The Shannon limit."
+        },
+        {
+          "module": "Module 3",
+          "title": "Linear and Block Codes For Error Correction: [5L]",
+          "hours": null,
+          "content": "Introduction to Linear and Block Codes, properties, Matrix description of linear block codes, parity check matrix, decoding of a linear block code, Standard array and syndrome detection, Error correction and detection capability of linear block code, Hamming codes, Block Diagram to generate a linear block code and its decoder"
+        },
+        {
+          "module": "Module 4",
+          "title": "Cyclic Codes: [7L]",
+          "hours": null,
+          "content": "Polynomials, division algorithm for polynomials, a method for generating cyclic codes, matrix description of cyclic codes, Decoding cyclic codes, Encoding and Decoding circuit, Golay codes"
+        },
+        {
+          "module": "Module 5",
+          "title": "BCH Codes: [8L]",
+          "hours": null,
+          "content": "Set, group, fields, Galois field Primitive elements, minimal polynomials, generator polynomials in terms of minimal polynomials , examples of BCH codes. Introduction to Reed Solomon Codes."
+        },
+        {
+          "module": "Module 6",
+          "title": "Convolutional Codes: [8L]",
+          "hours": null,
+          "content": "Encoding, state diagram, Tree codes, trellis codes, polynomial description of convolutional codes, distance notions for convolutional codes, the generating function, matrix representation of convolutional codes, decoding of convolutional codes: Viterbi decoding, distance and performance bounds for convolutional codes, examples of convolutional codes, Turbo codes, Turbo decoding."
+        }
+      ]
+    },
+    {
+      "course_code": "MCAO402D",
+      "title": "Blockchain Technology",
+      "semester": "4",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "",
+      "source_start_page": 115,
+      "source_end_page": 116,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Introduction to Blockchain : [4L]",
+          "hours": null,
+          "content": "Overview of blockchain, distributed ledger systems, history and evolution, key characteristics (immutability, transparency, decentralization), comparison with traditional databases."
+        },
+        {
+          "module": "Module 2",
+          "title": "Cryptographic Foundations: [5L]",
+          "hours": null,
+          "content": "Public key cryptography, hash functions, Merkle trees, digital signatures, zero-knowledge proofs."
+        },
+        {
+          "module": "Module 3",
+          "title": "Blockchain Architecture and Consensus : [7L]",
+          "hours": null,
+          "content": "Blockchain structure: blocks, transactions, nodes; Consensus mechanisms: Proof of Work (PoW), Proof of Stake (PoS), Delegated PoS, Practical Byzantine Fault Tolerance (PBFT), mining and validation processes."
+        },
+        {
+          "module": "Module 4",
+          "title": "Smart Contracts and DApps : [6L]",
+          "hours": null,
+          "content": "Introduction to Ethereum and Solidity, writing and deploying smart contracts, gas and transactions, decentralized applications, interoperability and cross-chain communication."
+        },
+        {
+          "module": "Module 5",
+          "title": "Applications of Blockchain : [5L]",
+          "hours": null,
+          "content": "Blockchain in finance (cryptocurrency, CBDCs), supply chain, healthcare, IoT, digital identity, e- governance; Case studies and industry adoption."
+        },
+        {
+          "module": "Module 6",
+          "title": "Challenges and Future Directions : [3L]",
+          "hours": null,
+          "content": "Scalability, security, privacy, regulatory and ethical issues, blockchain 3.0 and beyond, integration with emerging technologies (AI, IoT, quantum computing)."
+        }
+      ]
+    },
+    {
+      "course_code": "MCAO402E",
+      "title": "Intelligent Control",
+      "semester": "4",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "",
+      "source_start_page": 117,
+      "source_end_page": 118,
+      "modules": []
+    },
+    {
+      "course_code": "MCAO402F",
+      "title": "Design of Embedded Systems",
+      "semester": "4",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "",
+      "source_start_page": 119,
+      "source_end_page": 120,
+      "modules": []
+    },
+    {
+      "course_code": "MCAO402G",
+      "title": "Business Analytics",
+      "semester": "4",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "",
+      "source_start_page": 121,
+      "source_end_page": 122,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Foundations of Business Analytics: [6L]",
+          "hours": null,
+          "content": "Introduction to Business Analytics, Analytics on Spreadsheets. Data Definitions and Analysis Techniques. Elements, Variables, and Data categorization, Levels of Measurement, Data management and indexing, Introduction to statistical learning and R-Programming"
+        },
+        {
+          "module": "Module 2",
+          "title": "Product-Market Fit [5L]",
+          "hours": null,
+          "content": "Gap Analysis, Carrying Out Gap Analysis, steps in Gap Analysis, conducting a Representative Survey for Gap Analysis, Predicting Consumer Behaviour and Gap Analysis in Smartphone Market."
+        },
+        {
+          "module": "Module 3",
+          "title": "Analytical Modelling [6L]",
+          "hours": null,
+          "content": "Analytical Modelling by Factor and Cluster Analysis, Factor Analysis Concepts, Application of Factor Analysis Concepts of Cluster Analysis, Similarity Measures, Application of Cluster Analysis."
+        },
+        {
+          "module": "Module 4",
+          "title": "Analytical Modelling by Logistics Regression and Discriminant Analysis [7L]",
+          "hours": null,
+          "content": "Linear Discriminant Analysis Model, Predictive Modelling using Discriminant Analysis, Application of Linear Discriminant Analysis for Credit Scoring of Loan Applicants. Theoretical Formulation of Logistics Regression, Mathematical Interpretation of Logistics Regression, Indicator for Model Fit, Applying Logistics Regression, Application of Logistics Regression in Predicting Risk in Portfolio Management Testing the Reliability/Consistency of the Different Factors Measured."
+        },
+        {
+          "module": "Module 5",
+          "title": "Segmentation of primary target market by Heuristic Modelling: [5L]",
+          "hours": null,
+          "content": "Introduction to RFM Analysis, Enhancing Response Rates with RFM Analysis."
+        },
+        {
+          "module": "Module 6",
+          "title": "Segmentation of target market and Case Studies and Projects: [11L]",
+          "hours": null,
+          "content": "Segmentation of target market based on large databases using Decision Tree approach. Introduction to Chi-square Automatic Interaction Detection (CHAID), Predictive Modelling by CHAID. Case Studies and Projects: Understanding business scenarios, Feature engineering and visualization. Scalable and parallel computing with Hadoop and Map-Reduce, Sensitivity Analysis, Practice and analysis with R. Textbooks: 1. Business Analytics: An Application Focus, Purba Halady Rao, Prentice Hall. 2. Business Analytics, James R. Evans, Pearson."
+        }
+      ]
+    },
+    {
+      "course_code": "MCAO402H",
+      "title": "Robotics",
+      "semester": "4",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "Basic knowledge of programming languages such as C, C++ or Python. Familiarity with mathematics concepts including linear algebra, probability, and differential equations. Understanding of data structures, algorithms, and control systems at a fundamental level.",
+      "source_start_page": 123,
+      "source_end_page": 124,
+      "modules": []
+    },
+    {
+      "course_code": "MCAO402I",
+      "title": "Multimedia",
+      "semester": "4",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "",
+      "source_start_page": 125,
+      "source_end_page": 126,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Introduction: [4L]",
+          "hours": null,
+          "content": "Introduction to Multimedia • Definition and Concepts of Multimedia • Components of Multimedia • Multimedia Applications in Education, Entertainment, Business, Web, etc. Multimedia System Architecture • Types of Multimedia Data: Text, Graphics, Audio, Video, Animation."
+        },
+        {
+          "module": "Module 2",
+          "title": "Text and Graphics[4L]",
+          "hours": null,
+          "content": "• Text in Multimedia: Fonts, Unicode, Hypertext • Image Processing Basics • Graphic File Formats (BMP, JPEG, PNG, GIF, TIFF) • Vector Graphics vs Raster Graphics • Image Editing Tools (Adobe Photoshop, GIMP, CorelDRAW)"
+        },
+        {
+          "module": "Module 3",
+          "title": "Audio in Multimedia [4L]",
+          "hours": null,
+          "content": "• Audio Formats: WAV, MP3, MIDI, OGG • Digital Audio Basics: Sampling, Bit Depth, Channels • Audio Compression Techniques (Lossy vs Lossless) • Audio Editing Tools (Audacity, Adobe Audition) • Sound Effects and Background Music"
+        },
+        {
+          "module": "Module 4",
+          "title": ". Video and Animation[4L]",
+          "hours": null,
+          "content": "• Digital Video Basics: Frame Rate, Resolution, Compression • Video Formats: AVI, MP4, MOV, MPEG • Principles of Animation: Frame by Frame, Tweening, Keyframing • 2D vs 3D Animation • Animation Tools (Adobe Animate, Blender, Maya)"
+        },
+        {
+          "module": "Module 5",
+          "title": "Multimedia Authoring Tools [4L]",
+          "hours": null,
+          "content": "• Concepts of Multimedia Authoring • Popular Tools: Adobe Director, Adobe Animate, Flash, Unity3D • Interactive Multimedia Design • Timeline-based Authoring • Object-oriented Authoring"
+        },
+        {
+          "module": "Module 6",
+          "title": "Multimedia Data Compression [4L]",
+          "hours": null,
+          "content": "• Need for Compression • Lossy vs Lossless Compression • Image Compression (JPEG, PNG) • Audio Compression (MP3, AAC) • Video Compression (MPEG, H.264, WebM)"
+        },
+        {
+          "module": "Module 7",
+          "title": "Multimedia Networking [4L]",
+          "hours": null,
+          "content": "• Streaming Concepts (Audio/Video Streaming) • Protocols: RTP, RTSP, HTTP, HLS • Multimedia over IP Networks • Content Delivery Networks (CDNs) • Bandwidth Considerations and Quality of Service (QoS)"
+        },
+        {
+          "module": "Module 8",
+          "title": "Multimedia Storage and Retrieval [4L]",
+          "hours": null,
+          "content": "• Storage Media: Optical Discs, Hard Disks, SSDs • Database for Multimedia (Multimedia DBMS) • Metadata in Multimedia • Indexing & Retrieval Techniques • Content-Based Image Retrieval (CBIR)"
+        },
+        {
+          "module": "Module 9",
+          "title": "Virtual Reality (VR) and Augmented Reality (AR) Basics[4L]",
+          "hours": null,
+          "content": "• Introduction to VR and AR • Hardware Requirements (Headsets, Sensors) • Application Areas • Simple VR/AR Development Concepts"
+        },
+        {
+          "module": "Module 10",
+          "title": "Multimedia Project Work / Case Studies[4L]",
+          "hours": null,
+          "content": "• Multimedia Project Design • Case Studies in E-learning, Virtual Tours, Interactive Presentations • Final Project Implementation (Often includes practical applications)"
+        }
+      ]
+    },
+    {
+      "course_code": "MCAO402J",
+      "title": "Distributed System",
+      "semester": "4",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "Operating System, Computer Networking",
+      "source_start_page": 127,
+      "source_end_page": 128,
+      "modules": []
+    },
+    {
+      "course_code": "MCAO402K",
+      "title": "Big Data Analytics",
+      "semester": "4",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "",
+      "source_start_page": 129,
+      "source_end_page": 130,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Introduction to Basic Analytics [10L]",
+          "hours": null,
+          "content": "Introduction: Big data overview, Analyst’s perspective on data repositories, Current analytical architecture, Drivers of big data, Examples of big data analytics. Life Cycle of Data Analytics: Phase 1: Discovery, Phase 2: Data preparation, Phase 3: Model planning, Phase 4: Model building, Phase 5: Communication of results, Phase 6: Making operational. Basic Analytic Methods: Visualization, Dirty data, Data exploration versus presentation, Statistical methods for evaluation – hypothesis testing, difference of means, rank sum test, type I and type II errors, ANOVA."
+        },
+        {
+          "module": "Module 2",
+          "title": "Advanced Analytic Methods I [8L]",
+          "hours": null,
+          "content": "Clustering: Overview, K-means, Determining the number of clusters, Diagnostics. Association Rules: Overview, Apriori algorithm, Evaluation of candidate rules, Application of association rules, Validation and testing, Diagnostics. Regression: Linear regression - model description, Logistic regression – model description, Other regression models. Classification: Decision trees – overview, General algorithm, Decision tree algorithms, Evaluating a decision tree, Naïve Bayes – Bayes theorem, Naïve Bayes classifier, Diagnostics of classifiers."
+        },
+        {
+          "module": "Module 3",
+          "title": "Advanced Analytic Methods II [8L]",
+          "hours": null,
+          "content": "Time Series Analysis: Overview, Box-Jenkins methodology, Autocorrelation function (ACF), Autoregressive model, Moving average model, ARMA and ARIMA model, Building and evaluating an ARIMA model. Text Analysis: Steps in text analysis, Collecting raw text, Representing text, Term Frequency-Inverse Document Frequency (TFIDF), Categorizing documents by types, Determining sentiments. Map Reduce and Hadoop:Analytics for unstructured data – map reduce, Apache Hadoop, Hadoop Ecosystem – Pig, Hive, Hbase, Mahout."
+        },
+        {
+          "module": "Module 4",
+          "title": "Advanced Analytic Methods III [10L]",
+          "hours": null,
+          "content": "Technology and Tools: SQL essentials - Join, Set, Grouping extensions, Advanced SQL – Window functions, User-defined functions, Ordered aggregates, MADlib, NoSQL. Integration of Techniques: Communicating and operationalizing an analytic project. Creating final deliverables – Developing core materials, project goals, Main findings, Approach, Model description and model details, Recommendations, Providing technical specifications and code. Data visualization basics - Key points, evolution of a graph, common representation methods, how to clean up a graphic. Textbooks: 1. EMC Education Services (Editor), Data Science and Big Data Analytics. John Wiley & Sons, 2015. 2. Mike Barlow, Real-Time Big Data Analytics: Emerging Architecture. O’Reilly, 2013."
+        }
+      ]
+    },
+    {
+      "course_code": "MCAO402L",
+      "title": "Social Networks",
+      "semester": "4",
+      "credit": 3.0,
+      "contact": "(3:0:0)",
+      "prerequisite": "",
+      "source_start_page": 131,
+      "source_end_page": 132,
+      "modules": [
+        {
+          "module": "Module 1",
+          "title": "Introduction to Social Media and Networks",
+          "hours": 6.0,
+          "content": "Concept of social media and social networking. Types of social media platforms (Facebook, X/Twitter, LinkedIn, Instagram, YouTube, Reddit, etc.). Evolution of social media in the digital era. Role of social networks in business, society, and governance. Integration of social media in marketing strategies."
+        },
+        {
+          "module": "Module 2",
+          "title": "Social Media Goals and Strategy Formulation",
+          "hours": 5.0,
+          "content": "Setting objectives for social media campaigns. Introduction to S.M.A.R.T. (Specific, Measurable, Achievable, Relevant, Time-bound) goals. Planning social media strategies aligned with organizational objectives. Case studies of successful online campaigns."
+        },
+        {
+          "module": "Module 3",
+          "title": "Psychology of Social Media and Content Development",
+          "hours": 7.0,
+          "content": "Basics of consumer psychology and online behavior. Influence of social identity and group dynamics on social networks. Content creation principles for engagement (text, images, videos, memes, hashtags). Emotional triggers and storytelling techniques in campaigns. Designing campaigns that appeal to common people"
+        },
+        {
+          "module": "Module 4",
+          "title": "Word-of-Mouth (WOM) and Viral Marketing",
+          "hours": 6.0,
+          "content": "Concept and importance of word-of-mouth in digital marketing. Techniques for creating shareable content. Viral marketing principles and case studies. Role of influencers and opinion leaders in message propagation. Network effects and diffusion of innovations theory."
+        },
+        {
+          "module": "Module 5",
+          "title": "Measuring and Evaluating Social Media Campaigns",
+          "hours": 6.0,
+          "content": "Key Performance Indicators (KPIs) in social media (reach, engagement, impressions, conversions). Tools for campaign monitoring and analytics (Google Analytics, Facebook Insights, Twitter Analytics, etc.). ROI measurement in social media campaigns. Sentiment analysis and social listening tools. Ethical and privacy concerns in social media analytics"
+        }
+      ]
+    }
+  ],
+  "course_count": 64,
+  "courses_with_modules": 43,
+  "module_record_count": 277
+}

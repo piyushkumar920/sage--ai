@@ -1,11 +1,23 @@
 package com.example.ui.components
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -14,22 +26,32 @@ import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Psychology
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.SageCardBorder
+import com.example.ui.theme.SageGlassBorder
+import com.example.ui.theme.SageGlassBorderGlow
+import com.example.ui.theme.SageGlassL2
 import com.example.ui.theme.SageGold
 import com.example.ui.theme.SagePrimaryLight
-import com.example.ui.theme.SageRaisedSurface
 import com.example.ui.theme.SageTextPrimary
-import com.example.ui.theme.SageTextSecondary
 
 data class QuickActionItem(
     val label: String,
@@ -84,36 +106,79 @@ fun QuickActionChips(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         actions.forEach { action ->
-            FilterChip(
-                selected = false,
-                onClick = { onActionSelected(action.prompt) },
-                label = {
-                    Text(
-                        text = action.label,
-                        fontSize = 12.sp,
-                        color = SageTextPrimary
+            val interactionSource = remember { MutableInteractionSource() }
+            val isPressed by interactionSource.collectIsPressedAsState()
+
+            var chipEntered by remember { mutableStateOf(false) }
+            LaunchedEffect(Unit) { chipEntered = true }
+
+            val scale by animateFloatAsState(
+                targetValue = if (isPressed) 0.97f else 1f,
+                animationSpec = spring(dampingRatio = 0.72f, stiffness = 600f),
+                label = "chip_press"
+            )
+
+            val chipAlpha by animateFloatAsState(
+                targetValue = if (chipEntered) 1f else 0f,
+                animationSpec = tween(200, easing = FastOutSlowInEasing),
+                label = "chip_alpha"
+            )
+
+            val chipY by animateFloatAsState(
+                targetValue = if (chipEntered) 0f else 4f,
+                animationSpec = tween(200, easing = FastOutSlowInEasing),
+                label = "chip_y"
+            )
+
+            Box(
+                modifier = Modifier
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                        alpha = chipAlpha
+                        translationY = chipY.dp.toPx()
+                    }
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(SageGlassL2)
+                    .border(
+                        1.dp,
+                        Brush.linearGradient(
+                            listOf(
+                                Color.White.copy(alpha = 0.16f),
+                                SageGlassBorderGlow.copy(alpha = 0.25f),
+                                Color.White.copy(alpha = 0.05f)
+                            )
+                        ),
+                        RoundedCornerShape(16.dp)
                     )
-                },
-                leadingIcon = {
+                    .clickable(
+                        interactionSource = interactionSource,
+                        indication = null,
+                        onClick = { onActionSelected(action.prompt) }
+                    )
+                    .padding(horizontal = 13.dp, vertical = 7.dp)
+                    .testTag(action.tag),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
                     Icon(
                         imageVector = action.icon,
                         contentDescription = action.label,
                         tint = if (action.label == "My Roadmap") SageGold else SagePrimaryLight,
                         modifier = Modifier.size(14.dp)
                     )
-                },
-                colors = FilterChipDefaults.filterChipColors(
-                    containerColor = SageRaisedSurface,
-                    labelColor = SageTextPrimary
-                ),
-                border = FilterChipDefaults.filterChipBorder(
-                    enabled = true,
-                    selected = false,
-                    borderColor = SageCardBorder
-                ),
-                shape = RoundedCornerShape(14.dp),
-                modifier = Modifier.testTag(action.tag)
-            )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = action.label,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = SageTextPrimary
+                    )
+                }
+            }
         }
     }
 }

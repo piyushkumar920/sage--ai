@@ -4,8 +4,26 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,7 +40,6 @@ import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -41,7 +58,11 @@ import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -50,7 +71,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.data.local.TopicEntity
 import com.example.data.roadmap.DevRoadmapNode
 import com.example.data.roadmap.TopicStatus
+import com.example.data.auth.AdminAuthManager
 import com.example.ui.SageViewModel
+import com.example.ui.admin.AdminConsoleScreen
+import com.example.ui.admin.AdminViewModel
+import com.example.ui.components.AmbientGlowBackground
+import com.example.ui.auth.AuthViewModel
+import com.example.ui.screens.AuthScreen
+import com.example.ui.screens.AuthScreenMode
 import com.example.ui.screens.ChatRoadmapScreen
 import com.example.ui.screens.ChatScreen
 import com.example.ui.screens.ConnectionTestScreen
@@ -62,10 +90,15 @@ import com.example.ui.screens.ProgressScreen
 import com.example.ui.screens.QuizScreen
 import com.example.ui.screens.RoadmapDialog
 import com.example.ui.screens.RoadmapScreen
+import com.example.ui.screens.SettingsScreen
 import com.example.ui.screens.TopicDetailScreen
 import com.example.ui.screens.TopicDialog
 import com.example.ui.theme.SageBackground
 import com.example.ui.theme.SageCardBorder
+import com.example.ui.theme.SageGlassBorder
+import com.example.ui.theme.SageGlassL3
+import com.example.ui.theme.SageGlowEnd
+import com.example.ui.theme.SageGlowStart
 import com.example.ui.theme.SagePrimary
 import com.example.ui.theme.SagePrimaryLight
 import com.example.ui.theme.SagePrimaryStart
@@ -96,11 +129,16 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun SageApp(
-    viewModel: SageViewModel = viewModel()
+    viewModel: SageViewModel = viewModel(),
+    authViewModel: AuthViewModel = viewModel(
+        factory = AuthViewModel.Factory(
+            androidx.compose.ui.platform.LocalContext.current.applicationContext as android.app.Application
+        )
+    )
 ) {
     var currentTab by remember { mutableStateOf(NavTab.HOME) }
     var inChatScreen by remember { mutableStateOf(false) }
-    var hasEnteredApp by rememberSaveable { mutableStateOf(false) }
+    var hasEnteredApp by rememberSaveable { mutableStateOf(true) }
     var showDiagnosticsFromTest by remember { mutableStateOf(false) }
 
     // Sub-screen navigation states
@@ -109,6 +147,9 @@ fun SageApp(
     var viewingTopicNode by remember { mutableStateOf<DevRoadmapNode?>(null) }
     var takingQuizNode by remember { mutableStateOf<DevRoadmapNode?>(null) }
     var inDailyQuizScreen by remember { mutableStateOf(false) }
+    var authScreenMode by remember { mutableStateOf<AuthScreenMode?>(null) }
+    var inDiagnosticsScreen by remember { mutableStateOf(false) }
+    var inAdminConsoleScreen by remember { mutableStateOf(false) }
 
     var showRoadmapDialog by remember { mutableStateOf(false) }
     var roadmapTopic by remember { mutableStateOf<TopicEntity?>(null) }
@@ -327,6 +368,19 @@ fun SageApp(
         return
     }
 
+    // Sub-Screen 4.5: Authentication Screen (Login, Create Account, Forgot Password)
+    if (authScreenMode != null) {
+        AuthScreen(
+            authViewModel = authViewModel,
+            initialMode = authScreenMode!!,
+            onBack = { authScreenMode = null },
+            onAuthSuccess = {
+                authScreenMode = null
+            }
+        )
+        return
+    }
+
     // Sub-Screen 5: Chat Screen
     if (inChatScreen) {
         ChatScreen(
@@ -351,161 +405,21 @@ fun SageApp(
             onNavigateBack = { inChatScreen = false }
         )
     } else {
-        // Main Tab Scaffold
-        Scaffold(
-            containerColor = SageBackground,
-            contentWindowInsets = WindowInsets.navigationBars,
-            floatingActionButton = {
-                FloatingActionButton(
-                    onClick = { inChatScreen = true },
-                    containerColor = SagePrimary,
-                    contentColor = Color.White,
-                    shape = RoundedCornerShape(18.dp),
-                    modifier = Modifier.testTag("fab_open_chat")
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.AutoAwesome,
-                            contentDescription = "Ask Sage",
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Ask Sage",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
-                        )
-                    }
-                }
-            },
+        // Main Tab Scaffold with unified AmbientGlowBackground
+        AmbientGlowBackground {
+            Scaffold(
+                containerColor = Color.Transparent,
+                contentWindowInsets = WindowInsets.navigationBars,
+                floatingActionButton = {
+                    AskSageFloatingButton(
+                        onClick = { inChatScreen = true }
+                    )
+                },
             bottomBar = {
-                NavigationBar(
-                    containerColor = SageSurface,
-                    tonalElevation = 8.dp,
-                    modifier = Modifier
-                        .border(
-                            width = 1.dp,
-                            color = SageCardBorder,
-                            shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
-                        )
-                        .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                        .testTag("bottom_navigation_bar")
-                ) {
-                    // 1. Home
-                    NavigationBarItem(
-                        selected = currentTab == NavTab.HOME,
-                        onClick = { currentTab = NavTab.HOME },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.Home,
-                                contentDescription = "Home",
-                                modifier = Modifier.size(24.dp)
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = "Home",
-                                fontWeight = if (currentTab == NavTab.HOME) FontWeight.Bold else FontWeight.Medium,
-                                fontSize = 11.sp
-                            )
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Color.White,
-                            selectedTextColor = Color.White,
-                            indicatorColor = SagePrimary,
-                            unselectedIconColor = SageTextMuted,
-                            unselectedTextColor = SageTextMuted
-                        ),
-                        modifier = Modifier.testTag("nav_tab_home")
-                    )
-
-                    // 2. Explore
-                    NavigationBarItem(
-                        selected = currentTab == NavTab.EXPLORE,
-                        onClick = { currentTab = NavTab.EXPLORE },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.MenuBook,
-                                contentDescription = "Explore",
-                                modifier = Modifier.size(24.dp)
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = "Explore",
-                                fontWeight = if (currentTab == NavTab.EXPLORE) FontWeight.Bold else FontWeight.Medium,
-                                fontSize = 11.sp
-                            )
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Color.White,
-                            selectedTextColor = Color.White,
-                            indicatorColor = SagePrimary,
-                            unselectedIconColor = SageTextMuted,
-                            unselectedTextColor = SageTextMuted
-                        ),
-                        modifier = Modifier.testTag("nav_tab_explore")
-                    )
-
-                    // 3. Progress
-                    NavigationBarItem(
-                        selected = currentTab == NavTab.PROGRESS,
-                        onClick = { currentTab = NavTab.PROGRESS },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.AutoAwesome,
-                                contentDescription = "Progress",
-                                modifier = Modifier.size(24.dp)
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = "Progress",
-                                fontWeight = if (currentTab == NavTab.PROGRESS) FontWeight.Bold else FontWeight.Medium,
-                                fontSize = 11.sp
-                            )
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Color.White,
-                            selectedTextColor = Color.White,
-                            indicatorColor = SagePrimary,
-                            unselectedIconColor = SageTextMuted,
-                            unselectedTextColor = SageTextMuted
-                        ),
-                        modifier = Modifier.testTag("nav_tab_progress")
-                    )
-
-                    // 4. Settings
-                    NavigationBarItem(
-                        selected = currentTab == NavTab.SETTINGS,
-                        onClick = { currentTab = NavTab.SETTINGS },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = "Settings",
-                                modifier = Modifier.size(24.dp)
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = "Settings",
-                                fontWeight = if (currentTab == NavTab.SETTINGS) FontWeight.Bold else FontWeight.Medium,
-                                fontSize = 11.sp
-                            )
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Color.White,
-                            selectedTextColor = Color.White,
-                            indicatorColor = SagePrimary,
-                            unselectedIconColor = SageTextMuted,
-                            unselectedTextColor = SageTextMuted
-                        ),
-                        modifier = Modifier.testTag("nav_tab_settings")
-                    )
-                }
+                com.example.ui.components.GlassDock(
+                    currentTab = currentTab,
+                    onTabSelected = { currentTab = it }
+                )
             }
         ) { innerPadding ->
             Box(
@@ -513,108 +427,172 @@ fun SageApp(
                     .fillMaxSize()
                     .padding(innerPadding)
             ) {
-                when (currentTab) {
-                    NavTab.HOME -> {
-                        HomeScreen(
-                            streakDays = viewModel.streakDays,
-                            activeRoadmapDetail = activeRoadmapDetail,
-                            progressList = activeRoadmapProgress,
-                            todayDailyQuiz = todayDailyQuiz,
-                            onOpenRoadmap = { roadmapId ->
-                                viewModel.selectRoadmap(roadmapId)
-                                viewingRoadmapId = roadmapId
-                            },
-                            onContinueLearning = { node ->
-                                viewModel.startLearningRoadmapTopic(activeRoadmapId, node) {
-                                    inChatScreen = true
-                                }
-                            },
-                            onOpenDailyQuiz = {
-                                inDailyQuizScreen = true
-                            },
-                            onStartNextTopic = { node ->
-                                viewingTopicNode = node
-                            },
-                            onExploreRoadmaps = {
-                                currentTab = NavTab.EXPLORE
-                            },
-                            isAiConnected = (connectionStatus.isSuccess == true),
-                            onOpenDiagnostics = {
-                                currentTab = NavTab.SETTINGS
-                            }
-                        )
-                    }
-
-                    NavTab.EXPLORE -> {
-                        ExploreScreen(
-                            summaries = viewModel.allRoadmapSummaries,
-                            roadmapPercentages = roadmapPercentages,
-                            onOpenRoadmap = { roadmapId ->
-                                viewModel.selectRoadmap(roadmapId)
-                                viewingRoadmapId = roadmapId
-                            },
-                            onStartTrack = { trackTitle ->
-                                val roadmap = viewModel.allRoadmapSummaries.find { it.title.equals(trackTitle, ignoreCase = true) }
-                                if (roadmap != null) {
-                                    viewModel.selectRoadmap(roadmap.id)
-                                }
-                                viewModel.openTrack(
-                                    trackTitle,
-                                    "Hi Sage! I want to start learning $trackTitle. Can you assess where we should begin?"
-                                )
-                                inChatScreen = true
-                            },
-                            onCustomTrack = {
-                                showTopicDialog = true
-                            }
-                        )
-                    }
-
-                    NavTab.PROGRESS -> {
-                        ProgressScreen(
-                            activeRoadmapDetail = activeRoadmapDetail,
-                            progressList = activeRoadmapProgress,
-                            streakDays = viewModel.streakDays,
-                            longestStreak = viewModel.longestStreak,
-                            quizAverage = averageQuizScore,
-                            quizzesCompleted = totalQuizzesCount,
-                            recentlyCompleted = recentlyCompletedTopics,
-                            weakConcepts = activeWeakConcepts,
-                            onSelectTopic = { nodeId ->
-                                val node = activeRoadmapDetail?.nodes?.find { it.id == nodeId }
-                                if (node != null) {
+                AnimatedContent(
+                    targetState = currentTab,
+                    transitionSpec = {
+                        (fadeIn(animationSpec = tween(300, easing = FastOutSlowInEasing)) +
+                                scaleIn(initialScale = 0.985f, animationSpec = tween(300, easing = FastOutSlowInEasing)) +
+                                slideInVertically(initialOffsetY = { 24 }, animationSpec = tween(300, easing = FastOutSlowInEasing)))
+                            .togetherWith(fadeOut(animationSpec = tween(180, easing = FastOutSlowInEasing)))
+                    },
+                    label = "tab_crossfade"
+                ) { targetTab ->
+                    when (targetTab) {
+                        NavTab.HOME -> {
+                            HomeScreen(
+                                streakDays = viewModel.streakDays,
+                                activeRoadmapDetail = activeRoadmapDetail,
+                                progressList = activeRoadmapProgress,
+                                todayDailyQuiz = todayDailyQuiz,
+                                onOpenRoadmap = { roadmapId ->
+                                    viewModel.selectRoadmap(roadmapId)
+                                    viewingRoadmapId = roadmapId
+                                },
+                                onContinueLearning = { node ->
+                                    viewModel.startLearningRoadmapTopic(activeRoadmapId, node) {
+                                        inChatScreen = true
+                                    }
+                                },
+                                onOpenDailyQuiz = {
+                                    inDailyQuizScreen = true
+                                },
+                                onStartNextTopic = { node ->
                                     viewingTopicNode = node
+                                },
+                                onExploreRoadmaps = {
+                                    currentTab = NavTab.EXPLORE
+                                },
+                                isAiConnected = (connectionStatus.isSuccess == true),
+                                onOpenDiagnostics = {
+                                    currentTab = NavTab.SETTINGS
                                 }
-                            },
-                            onPracticeWeakConcept = { concept, topicCtx ->
-                                viewModel.practiceWeakConcept(concept, topicCtx) {
-                                    inChatScreen = true
-                                }
-                            },
-                            onOpenRoadmap = { roadmapId ->
-                                viewModel.selectRoadmap(roadmapId)
-                                viewingRoadmapId = roadmapId
-                            }
-                        )
-                    }
+                            )
+                        }
 
-                    NavTab.SETTINGS -> {
-                        DiagnosticScreen(
-                            isOnline = isOnline,
-                            isAiConnected = connectionStatus.isSuccess == true,
-                            lastRequestSuccess = viewModel.lastRequestSuccess,
-                            lastError = viewModel.lastErrorMessage,
-                            lastLatencyMs = viewModel.lastLatencyMs,
-                            isTesting = connectionStatus.isChecking,
-                            backendUrl = viewModel.backendUrl,
-                            onRunTest = { viewModel.testAiConnection() },
-                            onSaveBackendUrl = { viewModel.saveBackendUrl(it) },
-                            onBack = null,
-                            onResetDefaults = { viewModel.resetToDefaults() }
-                        )
+                        NavTab.EXPLORE -> {
+                            ExploreScreen(
+                                summaries = viewModel.allRoadmapSummaries,
+                                roadmapPercentages = roadmapPercentages,
+                                curriculumDepartments = viewModel.allCurriculumDepartments,
+                                onSearchCurriculum = { query, dept ->
+                                    viewModel.searchCurriculumCourses(query, dept)
+                                },
+                                onStartCurriculumCourse = { course ->
+                                    viewModel.selectRoadmap(course.roadmapId)
+                                    val detail = viewModel.curriculumRepository.toRoadmapDetail(course)
+                                    val firstNode = detail.nodes.firstOrNull()
+                                    if (firstNode != null) {
+                                        viewModel.startLearningRoadmapTopic(course.roadmapId, firstNode) {
+                                            inChatScreen = true
+                                        }
+                                    } else {
+                                        viewModel.openTrack(
+                                            "${course.code}: ${course.title}",
+                                            "Hi Sage! I am studying '${course.code}: ${course.title}' (${course.departmentName}, Regulation ${course.regulation}). Let's start with Module 1 of the official syllabus."
+                                        )
+                                        inChatScreen = true
+                                    }
+                                },
+                                onOpenRoadmap = { roadmapId ->
+                                    viewModel.selectRoadmap(roadmapId)
+                                    viewingRoadmapId = roadmapId
+                                },
+                                onStartTrack = { trackTitle ->
+                                    val roadmap = viewModel.allRoadmapSummaries.find { it.title.equals(trackTitle, ignoreCase = true) }
+                                    if (roadmap != null) {
+                                        viewModel.selectRoadmap(roadmap.id)
+                                    }
+                                    viewModel.openTrack(
+                                        trackTitle,
+                                        "Hi Sage! I want to start learning $trackTitle. Can you assess where we should begin?"
+                                    )
+                                    inChatScreen = true
+                                },
+                                onCustomTrack = {
+                                    showTopicDialog = true
+                                }
+                            )
+                        }
+
+                        NavTab.PROGRESS -> {
+                            ProgressScreen(
+                                activeRoadmapDetail = activeRoadmapDetail,
+                                progressList = activeRoadmapProgress,
+                                streakDays = viewModel.streakDays,
+                                longestStreak = viewModel.longestStreak,
+                                quizAverage = averageQuizScore,
+                                quizzesCompleted = totalQuizzesCount,
+                                recentlyCompleted = recentlyCompletedTopics,
+                                weakConcepts = activeWeakConcepts,
+                                onSelectTopic = { nodeId ->
+                                    val node = activeRoadmapDetail?.nodes?.find { it.id == nodeId }
+                                    if (node != null) {
+                                        viewingTopicNode = node
+                                    }
+                                },
+                                onPracticeWeakConcept = { concept, topicCtx ->
+                                    viewModel.practiceWeakConcept(concept, topicCtx) {
+                                        inChatScreen = true
+                                    }
+                                },
+                                onOpenRoadmap = { roadmapId ->
+                                    viewModel.selectRoadmap(roadmapId)
+                                    viewingRoadmapId = roadmapId
+                                }
+                            )
+                        }
+
+                        NavTab.SETTINGS -> {
+                            if (inAdminConsoleScreen && AdminAuthManager.isAdmin()) {
+                                val context = androidx.compose.ui.platform.LocalContext.current
+                                val adminViewModel: AdminViewModel = viewModel(
+                                    factory = AdminViewModel.Factory(
+                                        context.applicationContext as android.app.Application
+                                    )
+                                )
+                                AdminConsoleScreen(
+                                    adminViewModel = adminViewModel,
+                                    backendUrl = viewModel.backendUrl,
+                                    onSaveBackendUrl = { viewModel.saveBackendUrl(it) },
+                                    onResetBackendDefaults = { viewModel.resetToDefaults() },
+                                    onBack = { inAdminConsoleScreen = false }
+                                )
+                            } else if (inDiagnosticsScreen) {
+                                DiagnosticScreen(
+                                    isOnline = isOnline,
+                                    isAiConnected = connectionStatus.isSuccess == true,
+                                    lastRequestSuccess = viewModel.lastRequestSuccess,
+                                    lastError = viewModel.lastErrorMessage,
+                                    lastLatencyMs = viewModel.lastLatencyMs,
+                                    isTesting = connectionStatus.isChecking,
+                                    backendUrl = viewModel.backendUrl,
+                                    onRunTest = { viewModel.testAiConnection() },
+                                    onSaveBackendUrl = { viewModel.saveBackendUrl(it) },
+                                    onBack = { inDiagnosticsScreen = false },
+                                    onResetDefaults = { viewModel.resetToDefaults() }
+                                )
+                            } else {
+                                SettingsScreen(
+                                    authViewModel = authViewModel,
+                                    onOpenAuth = { mode ->
+                                        authScreenMode = mode
+                                    },
+                                    onOpenDiagnostics = {
+                                        inDiagnosticsScreen = true
+                                    },
+                                    onOpenDeveloperConsole = {
+                                        inAdminConsoleScreen = true
+                                    },
+                                    backendStatus = if (connectionStatus.isSuccess == true) "Online" else "Checking",
+                                    syncStatus = "Active",
+                                    lastErrorCode = viewModel.lastErrorMessage
+                                )
+                            }
+                        }
                     }
                 }
             }
+        }
         }
     }
 
@@ -642,5 +620,128 @@ fun SageApp(
             onDeleteTopic = { viewModel.deleteTopic(it) },
             onDismiss = { showTopicDialog = false }
         )
+    }
+}
+
+/**
+ * Floating glass action button for "Ask Sage" with breathing ambient glow,
+ * gentle floating animation, and responsive micro-interaction press scaling.
+ */
+@Composable
+fun AskSageFloatingButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    val infiniteTransition = rememberInfiniteTransition(label = "fab_breath")
+    val ambientGlowAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.40f,
+        targetValue = 0.55f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2600, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "fab_glow"
+    )
+
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = spring(dampingRatio = 0.72f, stiffness = 600f),
+        label = "fab_scale"
+    )
+
+    val pressGlow by animateFloatAsState(
+        targetValue = if (isPressed) 1f else 0f,
+        animationSpec = spring(dampingRatio = 0.72f, stiffness = 600f),
+        label = "fab_press_glow"
+    )
+
+    Box(
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .drawBehind {
+                val glowRadius = size.maxDimension * (0.85f + (0.15f * pressGlow))
+                val effectiveAlpha = ((ambientGlowAlpha * 0.8f) + (pressGlow * 0.45f)).coerceAtMost(0.95f)
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            SageGlowStart.copy(alpha = 0.65f * effectiveAlpha),
+                            SagePrimary.copy(alpha = 0.35f * effectiveAlpha),
+                            Color.Transparent
+                        ),
+                        center = center,
+                        radius = glowRadius
+                    ),
+                    radius = glowRadius,
+                    center = center
+                )
+            }
+            .clip(RoundedCornerShape(24.dp))
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        SagePrimaryLight.copy(alpha = 0.88f),
+                        SagePrimary.copy(alpha = 0.74f),
+                        SagePrimaryStart.copy(alpha = 0.80f)
+                    )
+                )
+            )
+            .border(
+                width = 1.3.dp,
+                brush = Brush.verticalGradient(
+                    listOf(
+                        Color.White.copy(alpha = 0.80f),
+                        SageGlowEnd.copy(alpha = 0.65f),
+                        Color.White.copy(alpha = 0.25f)
+                    )
+                ),
+                shape = RoundedCornerShape(24.dp)
+            )
+            .drawBehind {
+                drawLine(
+                    brush = Brush.horizontalGradient(
+                        listOf(
+                            Color.Transparent,
+                            Color.White.copy(alpha = 0.60f),
+                            Color.Transparent
+                        )
+                    ),
+                    start = Offset(x = size.width * 0.15f, y = 1.5f),
+                    end = Offset(x = size.width * 0.85f, y = 1.5f),
+                    strokeWidth = 2f
+                )
+            }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
+            .padding(horizontal = 20.dp, vertical = 13.dp)
+            .testTag("fab_open_chat")
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.AutoAwesome,
+                contentDescription = "Ask Sage",
+                tint = Color.White,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Ask Sage",
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp,
+                letterSpacing = 0.3.sp
+            )
+        }
     }
 }

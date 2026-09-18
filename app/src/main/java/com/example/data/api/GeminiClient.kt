@@ -32,7 +32,7 @@ sealed class GeminiResult<out T> {
  * Hardened Production Backend Client.
  *
  * Architecture:
- * Android APK -> HTTPS -> Cloud Run / Backend Proxy -> Gemini 3.5 Flash -> JSON Response -> Android APK
+ * Android APK -> HTTPS -> Render Backend Proxy -> Gemini 3.5 Flash -> JSON Response -> Android APK
  *
  * Zero Gemini credentials in Android APK.
  * Enforces HTTPS, strictly validates Content-Type JSON, and handles connection failures gracefully.

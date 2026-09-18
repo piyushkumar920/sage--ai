@@ -164,16 +164,34 @@ fun MessageBubble(
                     RoundedCornerShape(topStart = 4.dp, topEnd = 18.dp, bottomStart = 18.dp, bottomEnd = 18.dp)
                 }
 
+                val bubbleBorderBrush = if (isUser) {
+                    Brush.linearGradient(
+                        listOf(
+                            Color.White.copy(alpha = 0.25f),
+                            SagePrimaryStart.copy(alpha = 0.6f),
+                            Color.White.copy(alpha = 0.08f)
+                        )
+                    )
+                } else {
+                    Brush.linearGradient(
+                        listOf(
+                            Color.White.copy(alpha = 0.14f),
+                            SagePrimaryLight.copy(alpha = 0.25f),
+                            Color.White.copy(alpha = 0.04f)
+                        )
+                    )
+                }
+
                 Box(
                     modifier = Modifier
                         .clip(shape)
                         .background(if (isUser) SageUserBubble else SageAiBubble)
                         .border(
                             width = 1.dp,
-                            color = if (isUser) SagePrimaryStart.copy(alpha = 0.5f) else SageCardBorder,
+                            brush = bubbleBorderBrush,
                             shape = shape
                         )
-                        .padding(horizontal = 14.dp, vertical = 10.dp)
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
                     Column {
                         FormattedContent(text = message.content)
@@ -227,14 +245,24 @@ fun SageAvatar() {
             .clip(CircleShape)
             .background(
                 Brush.linearGradient(listOf(SagePrimaryStart, SagePrimary, SageAccent))
+            )
+            .border(
+                1.dp,
+                Brush.linearGradient(
+                    listOf(
+                        Color.White.copy(alpha = 0.45f),
+                        SagePrimaryLight.copy(alpha = 0.6f)
+                    )
+                ),
+                CircleShape
             ),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = Icons.Default.AutoAwesome,
             contentDescription = "Sage AI",
-            tint = SageGold,
-            modifier = Modifier.size(18.dp)
+            tint = Color.White,
+            modifier = Modifier.size(16.dp)
         )
     }
 }
@@ -245,7 +273,8 @@ fun UserAvatar() {
         modifier = Modifier
             .size(32.dp)
             .clip(CircleShape)
-            .background(SageCardBorder),
+            .background(SageCardBorder)
+            .border(1.dp, Color.White.copy(alpha = 0.15f), CircleShape),
         contentAlignment = Alignment.Center
     ) {
         Icon(

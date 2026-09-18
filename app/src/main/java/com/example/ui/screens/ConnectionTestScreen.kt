@@ -43,10 +43,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.components.AmbientGlowBackground
+import com.example.ui.components.GlassButton
+import com.example.ui.components.GlassButtonVariant
+import com.example.ui.components.GlassCard
+import com.example.ui.components.GlassLevel
 import com.example.ui.theme.SageAccent
 import com.example.ui.theme.SageBackground
 import com.example.ui.theme.SageCardBorder
 import com.example.ui.theme.SageError
+import com.example.ui.theme.SageGlassBorder
+import com.example.ui.theme.SageGlassBorderLight
 import com.example.ui.theme.SageGold
 import com.example.ui.theme.SagePrimary
 import com.example.ui.theme.SagePrimaryLight
@@ -66,270 +73,228 @@ fun ConnectionTestScreen(
     onEnterApp: () -> Unit,
     onOpenDiagnostics: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(SageBackground)
-            .padding(24.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()
+    AmbientGlowBackground {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            contentAlignment = Alignment.Center
         ) {
-            // Sage Emblem Hero
-            Box(
-                modifier = Modifier
-                    .size(88.dp)
-                    .clip(CircleShape)
-                    .background(
-                        Brush.linearGradient(listOf(SagePrimaryStart, SagePrimary, SageAccent))
-                    )
-                    .border(2.dp, SageGold.copy(alpha = 0.6f), CircleShape),
-                contentAlignment = Alignment.Center
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(
-                    imageVector = Icons.Default.AutoAwesome,
-                    contentDescription = "Sage Emblem",
-                    tint = SageGold,
-                    modifier = Modifier.size(48.dp)
+                // Sage Emblem Hero with glowing aura
+                Box(
+                    modifier = Modifier
+                        .size(96.dp)
+                        .clip(CircleShape)
+                        .background(SagePrimary.copy(alpha = 0.2f))
+                        .border(1.dp, SageGlassBorderLight, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(76.dp)
+                            .clip(CircleShape)
+                            .background(
+                                Brush.linearGradient(listOf(SagePrimaryStart, SagePrimary, SageAccent))
+                            )
+                            .border(1.5.dp, SageGold.copy(alpha = 0.7f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AutoAwesome,
+                            contentDescription = "Sage Emblem",
+                            tint = SageGold,
+                            modifier = Modifier.size(42.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Text(
+                    text = "SAGE",
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 4.sp,
+                    color = SageTextPrimary
                 )
-            }
 
-            Spacer(modifier = Modifier.height(20.dp))
+                Text(
+                    text = "AI Learning Companion",
+                    fontSize = 14.sp,
+                    color = SagePrimaryLight,
+                    letterSpacing = 1.sp,
+                    modifier = Modifier.padding(top = 4.dp, bottom = 28.dp)
+                )
 
-            Text(
-                text = "SAGE",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 4.sp,
-                color = SageTextPrimary
-            )
-
-            Text(
-                text = "AI Learning Companion",
-                fontSize = 14.sp,
-                color = SagePrimaryLight,
-                letterSpacing = 1.sp,
-                modifier = Modifier.padding(top = 4.dp, bottom = 32.dp)
-            )
-
-            // Status Container
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(SageRaisedSurface)
-                    .border(1.dp, SageCardBorder, RoundedCornerShape(16.dp))
-                    .padding(20.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                when {
-                    isChecking -> {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            CircularProgressIndicator(
-                                color = SagePrimary,
-                                strokeWidth = 3.dp,
-                                modifier = Modifier.size(36.dp)
-                            )
-                            Spacer(modifier = Modifier.height(14.dp))
-                            Text(
-                                text = "Testing Gemini AI Connection...",
-                                color = SageTextPrimary,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "Verifying live connection with Google Gemini",
-                                color = SageTextSecondary,
-                                fontSize = 12.sp,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                    }
-
-                    isSuccess == true -> {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = "Success",
-                                tint = SageSuccess,
-                                modifier = Modifier.size(36.dp)
-                            )
-                            Spacer(modifier = Modifier.height(10.dp))
-                            Text(
-                                text = "✓ AI connected",
-                                color = SageSuccess,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "Live communication with Google Gemini is verified.",
-                                color = SageTextSecondary,
-                                fontSize = 12.sp,
-                                textAlign = TextAlign.Center
-                            )
-                            Spacer(modifier = Modifier.height(18.dp))
-                            Button(
-                                onClick = onEnterApp,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = SagePrimary,
-                                    contentColor = Color.White
-                                ),
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(46.dp)
-                                    .testTag("enter_sage_button")
-                            ) {
-                                Text(
-                                    text = "Start Learning with Sage",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
+                // Status Container
+                GlassCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    level = GlassLevel.L2,
+                    shape = RoundedCornerShape(20.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        when {
+                            isChecking -> {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    CircularProgressIndicator(
+                                        color = SagePrimaryLight,
+                                        strokeWidth = 3.dp,
+                                        modifier = Modifier.size(36.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(14.dp))
+                                    Text(
+                                        text = "Testing Gemini AI Connection...",
+                                        color = SageTextPrimary,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Verifying live connection with Google Gemini",
+                                        color = SageTextSecondary,
+                                        fontSize = 12.sp,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
                             }
-                        }
-                    }
 
-                    else -> {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ErrorOutline,
-                                contentDescription = "Error",
-                                tint = SageError,
-                                modifier = Modifier.size(36.dp)
-                            )
-                            Spacer(modifier = Modifier.height(10.dp))
-                            Text(
-                                text = "AI connection failed.",
-                                color = SageError,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = errorMessage?.ifEmpty { null }
-                                    ?: "Please check your internet connection or server status.",
-                                color = SageTextSecondary,
-                                fontSize = 12.sp,
-                                textAlign = TextAlign.Center,
-                                lineHeight = 17.sp
-                            )
-                            Spacer(modifier = Modifier.height(18.dp))
-                            Button(
-                                onClick = onRetry,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = SagePrimary,
-                                    contentColor = Color.White
-                                ),
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(46.dp)
-                                    .testTag("connection_test_retry_button")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Refresh,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "Try Again",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
+                            isSuccess == true -> {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.CheckCircle,
+                                        contentDescription = "Success",
+                                        tint = SageSuccess,
+                                        modifier = Modifier.size(36.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    Text(
+                                        text = "✓ AI connected",
+                                        color = SageSuccess,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Live communication with Google Gemini is verified.",
+                                        color = SageTextSecondary,
+                                        fontSize = 12.sp,
+                                        textAlign = TextAlign.Center
+                                    )
+                                    Spacer(modifier = Modifier.height(18.dp))
+                                    GlassButton(
+                                        text = "Start Learning with Sage",
+                                        onClick = onEnterApp,
+                                        variant = GlassButtonVariant.Primary,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(46.dp)
+                                            .testTag("enter_sage_button")
+                                    )
+                                }
                             }
-                            Spacer(modifier = Modifier.height(10.dp))
-                            OutlinedButton(
-                                onClick = onOpenDiagnostics,
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = SageGold
-                                ),
-                                border = BorderStroke(1.dp, SageGold.copy(alpha = 0.5f)),
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(46.dp)
-                                    .testTag("fix_connection_button")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Build,
-                                    contentDescription = null,
-                                    tint = SageGold,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "Developer Diagnostics",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = SageGold
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(10.dp))
-                            OutlinedButton(
-                                onClick = onEnterApp,
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = SageTextPrimary
-                                ),
-                                border = BorderStroke(1.dp, SageCardBorder),
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(46.dp)
-                                    .testTag("continue_offline_button")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.MenuBook,
-                                    contentDescription = null,
-                                    tint = SageTextSecondary,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "Continue to App (Offline Mode)",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = SageTextSecondary
-                                )
+
+                            else -> {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ErrorOutline,
+                                        contentDescription = "Error",
+                                        tint = SageError,
+                                        modifier = Modifier.size(36.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    Text(
+                                        text = "AI connection failed.",
+                                        color = SageError,
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = errorMessage?.ifEmpty { null }
+                                            ?: "Please check your internet connection or server status.",
+                                        color = SageTextSecondary,
+                                        fontSize = 12.sp,
+                                        textAlign = TextAlign.Center,
+                                        lineHeight = 17.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(18.dp))
+                                    GlassButton(
+                                        text = "Try Again",
+                                        icon = Icons.Default.Refresh,
+                                        onClick = onRetry,
+                                        variant = GlassButtonVariant.Primary,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(46.dp)
+                                            .testTag("connection_test_retry_button")
+                                    )
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    GlassButton(
+                                        text = "Developer Diagnostics",
+                                        icon = Icons.Default.Build,
+                                        onClick = onOpenDiagnostics,
+                                        variant = GlassButtonVariant.Outline,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(46.dp)
+                                            .testTag("fix_connection_button")
+                                    )
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    GlassButton(
+                                        text = "Continue to App (Offline Mode)",
+                                        icon = Icons.AutoMirrored.Filled.MenuBook,
+                                        onClick = onEnterApp,
+                                        variant = GlassButtonVariant.Ghost,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(46.dp)
+                                            .testTag("continue_offline_button")
+                                    )
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            TextButton(
-                onClick = onOpenDiagnostics,
-                modifier = Modifier.testTag("open_diagnostics_button")
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Build,
-                    contentDescription = null,
-                    tint = SageGold,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "Developer Diagnostics",
-                    color = SageGold,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
+                TextButton(
+                    onClick = onOpenDiagnostics,
+                    modifier = Modifier.testTag("open_diagnostics_button")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Build,
+                        contentDescription = null,
+                        tint = SageGold,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Developer Diagnostics",
+                        color = SageGold,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         }
     }
