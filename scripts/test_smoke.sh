@@ -75,6 +75,18 @@ check_response "Unknown API Route (POST)" "404" "POST" "/api/nonexistent-endpoin
 # 5. Test root path JSON response
 check_response "Root API Info" "200" "GET" "/" ""
 
+# 6. Test Study Tools - Notes
+NOTES_PAYLOAD='{"operation":"notes","topic":"Evolution of operating systems","subject":"Operating Systems"}'
+check_response "Study Tools (Notes)" "200" "POST" "/api/study-tools" "$NOTES_PAYLOAD"
+
+# 7. Test Study Tools - Flashcards
+FLASH_PAYLOAD='{"operation":"flashcards","topic":"CPU Scheduling","subject":"Operating Systems"}'
+check_response "Study Tools (Flashcards)" "200" "POST" "/api/study-tools" "$FLASH_PAYLOAD"
+
+# 8. Test Study Tools - Invalid Operation Validation
+INVALID_OP_PAYLOAD='{"operation":"unknown_operation","topic":"Testing"}'
+check_response "Study Tools Invalid Operation (400)" "400" "POST" "/api/study-tools" "$INVALID_OP_PAYLOAD"
+
 echo "========================================================"
 if [ "$FAILED" -eq 0 ]; then
   echo "ALL SMOKE TESTS PASSED! Backend strictly adheres to JSON-only API contract."

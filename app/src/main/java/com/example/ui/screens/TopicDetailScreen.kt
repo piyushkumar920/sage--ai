@@ -89,6 +89,7 @@ fun TopicDetailScreen(
     onAskSage: () -> Unit,
     onTakeQuiz: () -> Unit,
     onToggleComplete: () -> Unit,
+    onOpenStudyTools: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -304,7 +305,21 @@ fun TopicDetailScreen(
                         )
                     }
 
-                    // Button 4: Mark Complete / Toggle Status
+                    // Button 4: Study Tools (Curriculum Context AI Tools)
+                    if (onOpenStudyTools != null) {
+                        GlassButton(
+                            text = "Study Tools (Notes, Cards, Maps & Sheets)",
+                            onClick = onOpenStudyTools,
+                            icon = Icons.Default.AutoAwesome,
+                            variant = GlassButtonVariant.Secondary,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(46.dp)
+                                .testTag("topic_study_tools_button")
+                        )
+                    }
+
+                    // Button 5: Mark Complete / Toggle Status
                     GlassCard(
                         modifier = Modifier
                             .fillMaxWidth()

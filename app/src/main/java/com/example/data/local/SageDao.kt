@@ -128,4 +128,20 @@ interface SageDao {
 
     @Query("UPDATE weak_concepts SET isResolved = 1 WHERE id = :id")
     suspend fun resolveWeakConcept(id: Long)
+
+    // --- Saved Study Tools ---
+    @Query("SELECT * FROM saved_study_tools ORDER BY updatedAt DESC")
+    fun getAllSavedStudyTools(): Flow<List<com.example.data.studytools.SavedStudyToolEntity>>
+
+    @Query("SELECT * FROM saved_study_tools WHERE type = :type ORDER BY updatedAt DESC")
+    fun getSavedStudyToolsByType(type: String): Flow<List<com.example.data.studytools.SavedStudyToolEntity>>
+
+    @Query("SELECT * FROM saved_study_tools WHERE id = :id LIMIT 1")
+    suspend fun getSavedStudyToolById(id: String): com.example.data.studytools.SavedStudyToolEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertOrUpdateSavedStudyTool(tool: com.example.data.studytools.SavedStudyToolEntity)
+
+    @Query("DELETE FROM saved_study_tools WHERE id = :id")
+    suspend fun deleteSavedStudyTool(id: String)
 }

@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server/server.js",
     "dev": "node server/server.js",
-    "test": "node scripts/test_regression.js"
+    "test": "node scripts/test_regression.js",
+    "smoke": "node scripts/test_study_tools.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

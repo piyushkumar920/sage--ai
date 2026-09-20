@@ -40,15 +40,12 @@ const PORT = Number(
 );
 
 const SERVICE_NAME = 'sage-backend-api';
-const PRIMARY_MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash';
-const CANDIDATE_MODELS = [
+const PRIMARY_MODEL = process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite';
+const CANDIDATE_MODELS = Array.from(new Set([
   PRIMARY_MODEL,
   'gemini-3.5-flash-lite',
-  'gemini-3.1-flash-lite-preview',
-  'gemini-3.1-flash-lite',
-  'gemini-2.5-flash',
-  'gemini-flash-latest'
-];
+  'gemini-3.5-flash'
+]));
 
 function logStartup() {
   console.log('========================================================');
@@ -352,6 +349,398 @@ app.post('/api/chat', async (req, res) => {
     success: false,
     error: lastError?.error || 'All candidate Gemini models failed to generate content.',
     code: lastError?.code || 'UNKNOWN_ERROR',
+    service: SERVICE_NAME,
+    requestId: req.requestId,
+    timestamp: new Date().toISOString()
+  });
+});
+
+/**
+ * Phase A — SAGE STUDY TOOLS Endpoint
+ * POST /api/study-tools
+ * Body: {
+ *   operation: 'notes' | 'flashcards' | 'mindmap' | 'revision' | 'formulas' | 'solve_image',
+ *   topic?: string,
+ *   subject?: string,
+ *   syllabusContext?: string,
+ *   imageBase64?: string,
+ *   imageMimeType?: string,
+ *   prompt?: string
+ * }
+ */
+app.post('/api/study-tools', async (req, res) => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey === 'MY_GEMINI_API_KEY' || apiKey.trim() === '') {
+    return res.status(500).json({
+      ok: false,
+      success: false,
+      error: 'GEMINI_API_KEY is not configured on the Sage backend server.',
+      code: 'AUTH_OR_API_KEY_ERROR',
+      service: SERVICE_NAME,
+      requestId: req.requestId,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  const {
+    operation,
+    topic = '',
+    subject = '',
+    syllabusContext = '',
+    imageBase64 = '',
+    imageMimeType = 'image/jpeg',
+    prompt = '',
+    academicContext = null
+  } = req.body || {};
+
+  const validOperations = ['notes', 'flashcards', 'mindmap', 'revision', 'formulas', 'solve_image'];
+  if (!operation || !validOperations.includes(operation)) {
+    return res.status(400).json({
+      ok: false,
+      success: false,
+      error: `Invalid or missing operation. Must be one of: ${validOperations.join(', ')}`,
+      code: 'INVALID_REQUEST',
+      service: SERVICE_NAME,
+      requestId: req.requestId,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  // Structured Logging for Study Tools Request as required
+  console.log(`[STUDY_TOOLS]\noperation=${operation}\nroute=/api/study-tools\nmodel=${PRIMARY_MODEL}\nrequestReceived=true`);
+
+  if (operation === 'solve_image' && !imageBase64) {
+    return res.status(400).json({
+      ok: false,
+      success: false,
+      error: 'Missing image data (imageBase64) for solve_image operation.',
+      code: 'INVALID_REQUEST',
+      service: SERVICE_NAME,
+      requestId: req.requestId,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  const effectiveTopic = (topic || (academicContext && (academicContext.topic || academicContext.courseName)) || '').trim();
+  const effectiveSubject = (subject || (academicContext && (academicContext.courseName || academicContext.courseCode)) || '').trim();
+
+  if (operation !== 'solve_image' && !effectiveTopic && !prompt.trim()) {
+    return res.status(400).json({
+      ok: false,
+      success: false,
+      error: 'Missing topic or prompt for study tool generation.',
+      code: 'INVALID_REQUEST',
+      service: SERVICE_NAME,
+      requestId: req.requestId,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  // Construct operation-specific system prompts & instructions
+  let systemInstructionText = `You are Sage Study Assistant, an expert academic tutor.
+You MUST output ONLY a valid, single JSON object without any markdown wrapping, code blocks (no \`\`\`json), or preamble.`;
+
+  let userPromptText = '';
+
+  let academicDetails = '';
+  if (academicContext && typeof academicContext === 'object') {
+    const lines = [];
+    if (academicContext.department) lines.push(`Department: ${academicContext.department}`);
+    if (academicContext.programme) lines.push(`Programme: ${academicContext.programme}`);
+    if (academicContext.regulation) lines.push(`Regulation: ${academicContext.regulation}`);
+    if (academicContext.semester) lines.push(`Semester: ${academicContext.semester}`);
+    if (academicContext.courseCode || academicContext.courseName) {
+      lines.push(`Course: ${academicContext.courseCode || ''} - ${academicContext.courseName || ''}`.trim());
+    }
+    if (academicContext.module) lines.push(`Module: ${academicContext.module}`);
+    if (academicContext.topic) lines.push(`Topic: ${academicContext.topic}`);
+    if (academicContext.officialSyllabusContent) {
+      lines.push(`Official Syllabus: ${academicContext.officialSyllabusContent}`);
+    }
+    if (lines.length > 0) {
+      academicDetails = `\nAcademic Curriculum Context:\n${lines.join('\n')}`;
+    }
+  }
+
+  const effectiveSyllabus = syllabusContext || (academicContext && academicContext.officialSyllabusContent) || '';
+  const contextBlock = `${academicDetails}${effectiveSyllabus ? `\nOfficial Syllabus Context:\n${effectiveSyllabus}\nNote: Stay strictly grounded in this official syllabus context. If any concept goes beyond this official syllabus, set "beyondSyllabus": true or clearly flag it.` : ''}`;
+
+  switch (operation) {
+    case 'notes':
+      userPromptText = `Generate comprehensive academic study notes for:
+Topic: "${topic}"
+Subject: "${subject}"
+${contextBlock}
+User Instructions: ${prompt || 'Provide well-structured, clear conceptual notes.'}
+
+Return JSON with exactly this structure:
+{
+  "type": "notes",
+  "title": "${topic || 'Study Notes'}",
+  "summary": "High level 2-3 sentence conceptual overview",
+  "sections": [
+    {
+      "heading": "Section Heading",
+      "content": "In-depth pedagogical explanation with clear formatting",
+      "keyPoints": ["Point 1", "Point 2", "Point 3"]
+    }
+  ],
+  "examples": ["Example 1 with context", "Example 2 with real world application"],
+  "importantTerms": ["Term 1: definition", "Term 2: definition"],
+  "beyondSyllabus": false
+}`;
+      break;
+
+    case 'flashcards':
+      userPromptText = `Generate a set of 5 to 10 high-yield, interactive revision flashcards for:
+Topic: "${topic}"
+Subject: "${subject}"
+${contextBlock}
+User Instructions: ${prompt || 'Focus on high-yield exam concepts and definitions.'}
+
+Return JSON with exactly this structure:
+{
+  "type": "flashcards",
+  "title": "${topic || 'Flashcard Set'}",
+  "cards": [
+    {
+      "front": "Clear question or concept prompt",
+      "back": "Concise, complete, accurate answer",
+      "hint": "Helpful cognitive nudge or mnemonic"
+    }
+  ]
+}`;
+      break;
+
+    case 'mindmap':
+      userPromptText = `Generate a hierarchical conceptual mind map for:
+Topic: "${topic}"
+Subject: "${subject}"
+${contextBlock}
+User Instructions: ${prompt || 'Break down the concept hierarchically into logical sub-branches.'}
+
+Return JSON with exactly this structure:
+{
+  "type": "mindmap",
+  "title": "${topic || 'Concept Mind Map'}",
+  "root": {
+    "id": "root",
+    "label": "${topic || 'Core Concept'}",
+    "description": "Short explanation of the central concept",
+    "children": [
+      {
+        "id": "node_1",
+        "label": "Subtopic Branch",
+        "description": "Clear explanation of this branch",
+        "children": [
+          {
+            "id": "node_1_1",
+            "label": "Detail Concept",
+            "description": "Explanation of detail",
+            "children": []
+          }
+        ]
+      }
+    ]
+  }
+}`;
+      break;
+
+    case 'revision':
+      userPromptText = `Generate an intense, high-impact Last-Minute Revision Sheet for:
+Topic: "${topic}"
+Subject: "${subject}"
+${contextBlock}
+User Instructions: ${prompt || 'High-yield revision points, traps, definitions, and cheat notes.'}
+
+Return JSON with exactly this structure:
+{
+  "type": "revision",
+  "title": "${topic || 'Revision Sheet'}",
+  "coreConcepts": ["Core concept 1", "Core concept 2"],
+  "definitions": ["Definition 1", "Definition 2"],
+  "keyFacts": ["Key fact 1", "Key fact 2"],
+  "importantFormulas": ["Formula or relationship if applicable"],
+  "commonMistakes": ["Common misconception 1 and how to avoid it", "Exam trap 2"],
+  "quickExamples": ["Quick practical example with concise solution"],
+  "lastMinuteRevisionPoints": ["Point to remember 5 minutes before exam 1", "Point 2"],
+  "beyondSyllabus": false
+}`;
+      break;
+
+    case 'formulas':
+      userPromptText = `Generate an authoritative Formula & Key Equations Sheet for:
+Topic: "${topic}"
+Subject: "${subject}"
+${contextBlock}
+User Instructions: ${prompt || 'Key equations, variable definitions, SI units, and applications. If the topic has no mathematical/physical formulas, state key analytical rules or properties without making up fake math.'}
+
+Return JSON with exactly this structure:
+{
+  "type": "formulas",
+  "title": "${topic || 'Formula Sheet'}",
+  "hasFormulas": true,
+  "formulas": [
+    {
+      "name": "Equation / Rule Name",
+      "formula": "e.g. F = m * a or E = mc^2 or Time Complexity T(n)",
+      "variables": ["F: Force (Newtons, N)", "m: Mass (kg)", "a: Acceleration (m/s^2)"],
+      "units": "SI units description",
+      "usageExplanation": "When and how to apply this equation",
+      "example": "Worked mini-example calculation"
+    }
+  ],
+  "notes": "General guidance on applying these equations"
+}`;
+      break;
+
+    case 'solve_image':
+      userPromptText = `Analyze the provided educational image carefully.
+${prompt ? `User question/notes: ${prompt}\n` : ''}
+Determine if the image contains a clear educational question (printed, handwritten, mathematics, physics, chemistry, programming code, MCQ, engineering problem, or diagram).
+If the image is blurry, unreadable, cut off, or not an educational problem:
+Set "isClear": false, "problem": "Image is unclear or unreadable.", "answer": "Please upload a clearer image of the question.", "steps": [], "finalAnswer": ""
+
+If it IS clear:
+Set "isClear": true, detect the full question verbatim into "problem", break down the pedagogical solution into numbered logical "steps" with clear explanations, provide the exact "finalAnswer", and set "needsVerification": false (or true if ambiguous).
+
+Return JSON with exactly this structure:
+{
+  "type": "solution",
+  "isClear": true,
+  "problem": "Exact detected question text from image",
+  "subject": "Detected academic subject (e.g., Mathematics, Physics, Data Structures)",
+  "answer": "Direct summary answer",
+  "steps": [
+    {
+      "step": 1,
+      "title": "Step Title (e.g., Identify Given Variables)",
+      "explanation": "Clear, step-by-step mathematical or logical derivation"
+    }
+  ],
+  "finalAnswer": "Definitive final answer or result",
+  "needsVerification": false
+}`;
+      break;
+  }
+
+  // Construct Gemini request parts
+  const userParts = [];
+  if (operation === 'solve_image' && imageBase64) {
+    // Clean base64 header if present (e.g. data:image/jpeg;base64,...)
+    const cleanBase64 = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
+    userParts.push({
+      inlineData: {
+        mimeType: imageMimeType || 'image/jpeg',
+        data: cleanBase64
+      }
+    });
+  }
+  userParts.push({ text: userPromptText });
+
+  const payload = {
+    contents: [
+      {
+        role: 'user',
+        parts: userParts
+      }
+    ],
+    systemInstruction: {
+      parts: [{ text: systemInstructionText }]
+    },
+    generationConfig: {
+      temperature: 0.2, // Low temperature for deterministic structured JSON
+      topP: 0.95,
+      maxOutputTokens: 4096,
+      responseMimeType: 'application/json'
+    }
+  };
+
+  let lastError = null;
+  for (const modelName of CANDIDATE_MODELS) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+      const upstreamRes = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(60000)
+      });
+
+      if (!upstreamRes.ok) {
+        console.error(`[STUDY_TOOLS_GEMINI_ERROR]\nstatus=${upstreamRes.status}\noperation=${operation}\nmodel=${modelName}`);
+        if (upstreamRes.status === 429) {
+          console.warn(`[${req.requestId}] StudyTools model ${modelName} returned 429, trying next candidate model...`);
+          lastError = { status: 429, error: `Sage has reached its temporary AI request limit on ${modelName}.`, code: 'RATE_LIMITED' };
+          continue;
+        }
+        if (upstreamRes.status === 401 || upstreamRes.status === 403) {
+          lastError = { status: 500, error: 'AI credentials authorization error.', code: 'AUTH_OR_API_KEY_ERROR' };
+          break;
+        }
+        if (upstreamRes.status === 404) {
+          // Upstream Gemini model not found - map to 503 so client NEVER confuses with route 404
+          lastError = { status: 503, error: `Upstream model ${modelName} is unavailable.`, code: 'GEMINI_SERVICE_UNAVAILABLE' };
+          continue;
+        }
+        const errJson = await upstreamRes.json().catch(() => ({}));
+        const msg = errJson?.error?.message || `Gemini upstream service error (${upstreamRes.status})`;
+        lastError = { status: 503, error: msg, code: 'GEMINI_SERVICE_UNAVAILABLE' };
+        continue;
+      }
+
+      const data = await upstreamRes.json();
+      const rawText = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
+
+      if (!rawText.trim()) {
+        console.error(`[STUDY_TOOLS_GEMINI_ERROR]\nstatus=500\noperation=${operation}\nmodel=${modelName}`);
+        lastError = { status: 500, error: 'Empty generation received from Gemini.', code: 'BACKEND_ERROR' };
+        continue;
+      }
+
+      // Clean response (strip any accidental markdown block)
+      let cleanJsonStr = rawText.trim();
+      if (cleanJsonStr.startsWith('```json')) {
+        cleanJsonStr = cleanJsonStr.replace(/^```json\s*/i, '').replace(/\s*```$/, '');
+      } else if (cleanJsonStr.startsWith('```')) {
+        cleanJsonStr = cleanJsonStr.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+
+      let parsedData;
+      try {
+        parsedData = JSON.parse(cleanJsonStr);
+      } catch (parseErr) {
+        console.error(`[STUDY_TOOLS_GEMINI_ERROR]\nstatus=502\noperation=${operation}\nmodel=${modelName}`);
+        console.error(`[${req.requestId}] Failed to parse Gemini JSON:`, cleanJsonStr.slice(0, 200));
+        lastError = { status: 502, error: 'Malformed JSON returned by AI model.', code: 'BACKEND_ERROR' };
+        continue;
+      }
+
+      return res.json({
+        ok: true,
+        success: true,
+        operation,
+        data: parsedData,
+        model: modelName,
+        service: SERVICE_NAME,
+        requestId: req.requestId,
+        timestamp: new Date().toISOString()
+      });
+    } catch (err) {
+      console.error(`[STUDY_TOOLS_GEMINI_ERROR]\nstatus=504\noperation=${operation}\nmodel=${modelName}`);
+      if (err.name === 'TimeoutError' || err.message.includes('timeout')) {
+        lastError = { status: 504, error: 'Connection to AI model timed out.', code: 'NETWORK_ERROR' };
+      } else {
+        lastError = { status: 502, error: `Error during study tool generation: ${err.message}`, code: 'NETWORK_ERROR' };
+      }
+    }
+  }
+
+  return res.status(lastError?.status || 500).json({
+    ok: false,
+    success: false,
+    error: lastError?.error || "Sage couldn't generate this material right now. Please try again.",
+    code: lastError?.code || 'BACKEND_ERROR',
     service: SERVICE_NAME,
     requestId: req.requestId,
     timestamp: new Date().toISOString()

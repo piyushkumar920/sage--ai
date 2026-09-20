@@ -114,6 +114,55 @@ class GeminiClient(
         return chatViaBackend(history, systemPrompt, mode)
     }
 
+    /**
+     * Calls the dedicated /api/study-tools endpoint on the secure Render backend.
+     * Returns raw JSON string of the structured data payload or an error.
+     */
+    suspend fun generateStudyTool(
+        operation: String,
+        topic: String = "",
+        subject: String = "",
+        syllabusContext: String = "",
+        imageBase64: String = "",
+        imageMimeType: String = "image/jpeg",
+        prompt: String = "",
+        academicContext: com.example.data.studytools.AcademicContext? = null
+    ): GeminiResult<String> {
+        return try {
+            val api = createApiService()
+            val request = com.example.data.studytools.SageStudyToolsRequest(
+                operation = operation,
+                topic = topic,
+                subject = subject,
+                syllabusContext = syllabusContext,
+                imageBase64 = imageBase64,
+                imageMimeType = imageMimeType,
+                prompt = prompt,
+                academicContext = academicContext
+            )
+            val response = api.generateStudyTool(request)
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && (body.success || body.ok == true) && body.data != null) {
+                    val jsonAdapter = moshi.adapter(Any::class.java)
+                    val dataJson = jsonAdapter.toJson(body.data)
+                    GeminiResult.Success(dataJson)
+                } else {
+                    val errMsg = body?.error ?: "Study tool generation returned empty data."
+                    GeminiResult.Error(
+                        message = errMsg,
+                        diagnosticMessage = errMsg,
+                        requestId = body?.requestId
+                    )
+                }
+            } else {
+                parseHttpError(response.code(), response.errorBody()?.string())
+            }
+        } catch (e: Exception) {
+            handleException(e)
+        }
+    }
+
     private suspend fun testBackendProxy(): GeminiResult<Boolean> {
         return try {
             val api = createApiService()
@@ -212,42 +261,42 @@ class GeminiClient(
     private fun parseHttpError(code: Int, errorBody: String?): GeminiResult.Error {
         return when (code) {
             400 -> GeminiResult.Error(
-                message = "Invalid request sent to AI server.",
+                message = "Invalid study tool request. Please check inputs and try again.",
                 diagnosticMessage = "Bad request to backend (HTTP 400): ${errorBody ?: "Invalid parameters"}",
                 isBackendError = true
             )
             401, 403 -> GeminiResult.Error(
-                message = "AI service access denied.",
+                message = "Service access error. Please try again later.",
                 diagnosticMessage = "Backend authentication or authorization error (HTTP $code).",
                 isAuthError = true
             )
             404 -> GeminiResult.Error(
-                message = "AI service route not found.",
-                diagnosticMessage = "Backend endpoint not found (HTTP 404). Please verify production backend deployment.",
+                message = "Study service is temporarily unavailable. Please try again.",
+                diagnosticMessage = "Backend endpoint not found (HTTP 404). Route /api/study-tools was not found on backend.",
                 isBackendError = true
             )
             429 -> GeminiResult.Error(
-                message = "AI service is currently busy. Please wait a moment and try again.",
+                message = "Sage has reached its temporary AI request limit. Please try again shortly.",
                 diagnosticMessage = "Gemini rate limit exceeded on server (HTTP 429).",
                 isRateLimit = true
             )
             500 -> GeminiResult.Error(
-                message = "AI service encountered an internal error. Please retry shortly.",
+                message = "Sage couldn't generate this material right now. Please try again.",
                 diagnosticMessage = "Backend server error (HTTP 500): ${errorBody ?: "Internal error"}",
                 isBackendError = true
             )
             502, 503 -> GeminiResult.Error(
-                message = "Couldn't reach Sage. Please check your internet connection.",
+                message = "Sage couldn't generate this material right now. Please try again.",
                 diagnosticMessage = "Backend or Gemini AI service unavailable (HTTP $code).",
                 isBackendError = true
             )
             504 -> GeminiResult.Error(
-                message = "Couldn't reach Sage. Please check your internet connection.",
+                message = "You're offline. Connect to the internet to generate new study material.",
                 diagnosticMessage = "Backend gateway timeout (HTTP 504).",
                 isTimeout = true
             )
             else -> GeminiResult.Error(
-                message = "AI service request failed (HTTP $code).",
+                message = "Sage couldn't generate this material right now. Please try again.",
                 diagnosticMessage = "HTTP error $code: ${errorBody ?: "Unknown"}",
                 isBackendError = true
             )
@@ -257,23 +306,24 @@ class GeminiClient(
     private fun handleException(e: Exception): GeminiResult.Error {
         return when (e) {
             is UnknownHostException -> GeminiResult.Error(
-                message = "Couldn't reach Sage. Please check your internet connection.",
+                message = "You're offline. Connect to the internet to generate new study material.",
                 diagnosticMessage = "Domain resolution failed: ${e.message}",
                 isNetworkError = true
             )
             is ConnectException -> GeminiResult.Error(
-                message = "Couldn't reach Sage. Please check your internet connection.",
+                message = "You're offline. Connect to the internet to generate new study material.",
                 diagnosticMessage = "Connection failed to backend: ${e.message}",
-                isBackendError = true
+                isBackendError = true,
+                isNetworkError = true
             )
             is SocketTimeoutException -> GeminiResult.Error(
-                message = "Couldn't reach Sage. Please check your internet connection.",
+                message = "You're offline. Connect to the internet to generate new study material.",
                 diagnosticMessage = "Socket timeout: ${e.message}",
                 isTimeout = true,
                 isNetworkError = true
             )
             is JsonDataException, is JsonEncodingException -> GeminiResult.Error(
-                message = "Received invalid response from server.",
+                message = "Sage couldn't parse the generated study material. Please retry.",
                 diagnosticMessage = "Malformed JSON returned by backend: ${e.message}",
                 isBackendError = true
             )
@@ -281,19 +331,19 @@ class GeminiClient(
                 val msg = e.localizedMessage ?: e.message ?: "Connection error"
                 if (msg.startsWith("HTML_RESPONSE:")) {
                     GeminiResult.Error(
-                        message = "Couldn't reach Sage. Please check your internet connection.",
+                        message = "Study service is temporarily unavailable. Please try again.",
                         diagnosticMessage = "API returned HTML instead of JSON — production routing/deployment problem.",
                         isBackendError = true
                     )
                 } else if (msg.startsWith("REDIRECT_")) {
                     GeminiResult.Error(
-                        message = "Couldn't reach Sage. Please check your internet connection.",
+                        message = "Study service is temporarily unavailable. Please try again.",
                         diagnosticMessage = msg,
                         isBackendError = true
                     )
                 } else {
                     GeminiResult.Error(
-                        message = "Couldn't reach Sage. Please check your internet connection.",
+                        message = "You're offline. Connect to the internet to generate new study material.",
                         diagnosticMessage = "Network error: $msg",
                         isNetworkError = true
                     )

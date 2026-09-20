@@ -103,3 +103,15 @@ data class FirestoreSupportTicketPlaceholder(
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )
+
+data class FirestoreStudyToolItem(
+    val id: String = "",
+    val type: String = "",
+    val title: String = "",
+    val subject: String = "",
+    val topic: String = "",
+    val syllabusContext: String = "",
+    val contentJson: String = "",
+    val createdAt: Long = System.currentTimeMillis(),
+    val updatedAt: Long = System.currentTimeMillis()
+)

@@ -42,6 +42,9 @@ class RoadmapLoader(private val context: Context) {
     }
 
     fun getRoadmapDetail(roadmapId: String): DevRoadmapDetail? {
+        if (roadmapId.startsWith("curriculum_")) {
+            return null
+        }
         cachedDetails[roadmapId]?.let { return it }
 
         try {
@@ -116,6 +119,9 @@ class RoadmapLoader(private val context: Context) {
             )
             cachedDetails[roadmapId] = detail
             return detail
+        } catch (e: java.io.FileNotFoundException) {
+            Log.w("RoadmapLoader", "Roadmap asset not found: roadmaps/$roadmapId.json")
+            return null
         } catch (e: Exception) {
             Log.e("RoadmapLoader", "Error loading roadmap $roadmapId", e)
             return null

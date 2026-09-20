@@ -27,6 +27,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.School
@@ -101,6 +103,7 @@ fun ExploreScreen(
     curriculumDepartments: List<CurriculumDepartment> = emptyList(),
     onSearchCurriculum: ((String, String?) -> List<CurriculumCourse>)? = null,
     onStartCurriculumCourse: ((CurriculumCourse) -> Unit)? = null,
+    onOpenStudyTools: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -265,6 +268,54 @@ fun ExploreScreen(
                             .height(38.dp)
                             .testTag("custom_track_button")
                     )
+                }
+            }
+
+            if (onOpenStudyTools != null) {
+                item {
+                    GlassCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("explore_study_tools_card"),
+                        level = GlassLevel.L2,
+                        glowColor = SagePrimary.copy(alpha = 0.3f),
+                        borderColor = SagePrimaryStart.copy(alpha = 0.5f),
+                        onClick = onOpenStudyTools
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(text = "⚡", fontSize = 22.sp)
+                                Column {
+                                    Text(
+                                        text = "Sage Study Tools",
+                                        color = SageTextPrimary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 15.sp
+                                    )
+                                    Text(
+                                        text = "Notes, Flashcards, Mind Maps, Formula Sheets & Scan & Solve",
+                                        color = SageTextSecondary,
+                                        fontSize = 11.sp
+                                    )
+                                }
+                            }
+                            Icon(
+                                imageVector = Icons.Default.ChevronRight,
+                                contentDescription = null,
+                                tint = SagePrimaryLight,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
                 }
             }
 

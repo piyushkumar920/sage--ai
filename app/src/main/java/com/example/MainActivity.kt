@@ -93,6 +93,8 @@ import com.example.ui.screens.RoadmapScreen
 import com.example.ui.screens.SettingsScreen
 import com.example.ui.screens.TopicDetailScreen
 import com.example.ui.screens.TopicDialog
+import com.example.ui.studytools.StudyToolsScreen
+import com.example.ui.studytools.StudyToolsViewModel
 import com.example.ui.theme.SageBackground
 import com.example.ui.theme.SageCardBorder
 import com.example.ui.theme.SageGlassBorder
@@ -143,6 +145,7 @@ fun SageApp(
 
     // Sub-screen navigation states
     var inChatRoadmapScreen by remember { mutableStateOf(false) }
+    var inStudyToolsScreen by remember { mutableStateOf(false) }
     var viewingRoadmapId by remember { mutableStateOf<String?>(null) }
     var viewingTopicNode by remember { mutableStateOf<DevRoadmapNode?>(null) }
     var takingQuizNode by remember { mutableStateOf<DevRoadmapNode?>(null) }
@@ -150,6 +153,8 @@ fun SageApp(
     var authScreenMode by remember { mutableStateOf<AuthScreenMode?>(null) }
     var inDiagnosticsScreen by remember { mutableStateOf(false) }
     var inAdminConsoleScreen by remember { mutableStateOf(false) }
+
+    val studyToolsViewModel: StudyToolsViewModel = viewModel()
 
     var showRoadmapDialog by remember { mutableStateOf(false) }
     var roadmapTopic by remember { mutableStateOf<TopicEntity?>(null) }
@@ -326,6 +331,40 @@ fun SageApp(
                     nodeTitle = topicNode.title,
                     category = topicNode.category
                 )
+            },
+            onOpenStudyTools = {
+                val roadmapDetail = viewModel.getRoadmapDetail(activeRoadmapId) ?: activeRoadmapDetail
+                val curriculumCourse = if (activeRoadmapId.startsWith("curriculum_")) {
+                    viewModel.curriculumRepository.getCourseByRoadmapId(activeRoadmapId)
+                } else null
+
+                val academicContext = if (curriculumCourse != null) {
+                    com.example.data.studytools.AcademicContext(
+                        department = curriculumCourse.departmentName,
+                        programme = curriculumCourse.programme,
+                        regulation = curriculumCourse.regulation,
+                        semester = curriculumCourse.semester,
+                        courseCode = curriculumCourse.code,
+                        courseName = curriculumCourse.title,
+                        module = topicNode.title,
+                        topic = topicNode.title,
+                        officialSyllabusContent = topicNode.description
+                    )
+                } else {
+                    com.example.data.studytools.AcademicContext(
+                        module = topicNode.title,
+                        topic = topicNode.title,
+                        officialSyllabusContent = topicNode.description
+                    )
+                }
+
+                studyToolsViewModel.setCurriculumContext(
+                    topic = topicNode.title,
+                    subject = curriculumCourse?.title ?: roadmapDetail?.title ?: "Curriculum Subject",
+                    syllabus = topicNode.description,
+                    academicContext = academicContext
+                )
+                inStudyToolsScreen = true
             }
         )
         return
@@ -377,6 +416,15 @@ fun SageApp(
             onAuthSuccess = {
                 authScreenMode = null
             }
+        )
+        return
+    }
+
+    // Sub-Screen 4.8: Sage Study Tools Screen
+    if (inStudyToolsScreen) {
+        StudyToolsScreen(
+            viewModel = studyToolsViewModel,
+            onBack = { inStudyToolsScreen = false }
         )
         return
     }
@@ -465,6 +513,9 @@ fun SageApp(
                                 isAiConnected = (connectionStatus.isSuccess == true),
                                 onOpenDiagnostics = {
                                     currentTab = NavTab.SETTINGS
+                                },
+                                onOpenStudyTools = {
+                                    inStudyToolsScreen = true
                                 }
                             )
                         }
@@ -510,6 +561,9 @@ fun SageApp(
                                 },
                                 onCustomTrack = {
                                     showTopicDialog = true
+                                },
+                                onOpenStudyTools = {
+                                    inStudyToolsScreen = true
                                 }
                             )
                         }

@@ -13,9 +13,10 @@ import androidx.room.RoomDatabase
         TopicProgressEntity::class,
         QuizResultEntity::class,
         DailyQuizRecordEntity::class,
-        WeakConceptEntity::class
+        WeakConceptEntity::class,
+        com.example.data.studytools.SavedStudyToolEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class SageDatabase : RoomDatabase() {

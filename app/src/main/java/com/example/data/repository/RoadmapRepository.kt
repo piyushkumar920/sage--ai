@@ -232,7 +232,7 @@ class RoadmapRepository(
                 val completed = progress.count { it.status == "COMPLETED" }
                 result[summary.id] = (completed * 100) / summary.nodes
             } else if (summary.id == "fullstack" || summary.id == preferencesManager.activeRoadmapId) {
-                val detail = loader.getRoadmapDetail(summary.id)
+                val detail = getRoadmapDetail(summary.id)
                 if (detail != null) {
                     ensureInitializedProgress(summary.id, detail)
                     val p = dao.getTopicProgressForRoadmapOnce(summary.id)
@@ -344,20 +344,30 @@ class RoadmapRepository(
 
         // Personalization: Find a topic from weak concepts, recently learned, or current roadmap
         val activeRoadmapId = preferencesManager.activeRoadmapId
-        val detail = loader.getRoadmapDetail(activeRoadmapId) ?: loader.getRoadmapDetail("fullstack")!!
+        val detail = getRoadmapDetail(activeRoadmapId)
+            ?: getRoadmapDetail("fullstack")
+            ?: loader.getRoadmapDetail("fullstack")!!
         val weakConcepts = dao.getTopicProgressForRoadmapOnce(activeRoadmapId)
             .filter { it.status == "NEEDS_REVIEW" }
 
+        val fallbackNode = detail.nodes.firstOrNull() ?: DevRoadmapNode(
+            id = "${activeRoadmapId}_core",
+            title = detail.title,
+            icon = detail.icon,
+            category = "Core",
+            description = detail.description
+        )
+
         val targetTopicNode = if (weakConcepts.isNotEmpty()) {
             val weakNodeId = weakConcepts.first().nodeId
-            detail.nodes.find { it.id == weakNodeId } ?: detail.nodes.first()
+            detail.nodes.find { it.id == weakNodeId } ?: fallbackNode
         } else {
             val inProgress = dao.getTopicProgressForRoadmapOnce(activeRoadmapId)
                 .find { it.status == "IN_PROGRESS" }
             if (inProgress != null) {
-                detail.nodes.find { it.id == inProgress.nodeId } ?: detail.nodes.first()
+                detail.nodes.find { it.id == inProgress.nodeId } ?: fallbackNode
             } else {
-                detail.nodes.first()
+                fallbackNode
             }
         }
 

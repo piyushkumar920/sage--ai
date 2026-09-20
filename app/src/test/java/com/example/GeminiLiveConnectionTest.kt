@@ -32,7 +32,7 @@ class GeminiLiveConnectionTest {
         println("Effective Backend Proxy URL: $effectiveUrl")
         assertTrue("Backend URL must start with https://", effectiveUrl.startsWith("https://"))
         assertTrue("Backend URL must target Render production backend", effectiveUrl.contains("onrender.com"))
-        assertEquals("Configured model must be gemini-3.5-flash", "gemini-3.5-flash", GeminiConfig.GEMINI_MODEL)
+        assertEquals("Configured model must be gemini-3.5-flash-lite", "gemini-3.5-flash-lite", GeminiConfig.GEMINI_MODEL)
 
         // 2. Verify custom backend URL override works
         val customClient = GeminiClient(backendUrlProvider = { "https://custom-proxy.example.com" })

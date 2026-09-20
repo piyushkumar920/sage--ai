@@ -92,6 +92,7 @@ fun HomeScreen(
     onExploreRoadmaps: () -> Unit,
     isAiConnected: Boolean = true,
     onOpenDiagnostics: () -> Unit = {},
+    onOpenStudyTools: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val roadmapDetail = activeRoadmapDetail
@@ -233,6 +234,69 @@ fun HomeScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                         }
+                    }
+                }
+            }
+
+            // Sage Study Tools Feature Card
+            item {
+                GlassCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("home_study_tools_banner_card"),
+                    level = GlassLevel.L2,
+                    shape = RoundedCornerShape(18.dp),
+                    glowColor = SagePrimaryLight.copy(alpha = 0.25f),
+                    borderColor = SagePrimaryStart.copy(alpha = 0.4f),
+                    onClick = onOpenStudyTools
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        Brush.linearGradient(
+                                            listOf(SagePrimaryStart, SagePrimary)
+                                        )
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = "⚡", fontSize = 22.sp)
+                            }
+                            Column {
+                                Text(
+                                    text = "Sage Study Tools",
+                                    color = SageTextPrimary,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 16.sp
+                                )
+                                Text(
+                                    text = "Scan & Solve • Notes • Flashcards • Mind Maps • Formula Sheets",
+                                    color = SageTextSecondary,
+                                    fontSize = 11.sp,
+                                    lineHeight = 15.sp,
+                                    maxLines = 2
+                                )
+                            }
+                        }
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = "Open Study Tools",
+                            tint = SagePrimaryLight,
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
                 }
             }
