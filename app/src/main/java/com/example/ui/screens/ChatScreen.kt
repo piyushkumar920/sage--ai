@@ -131,6 +131,8 @@ fun ChatScreen(
     studyToolsViewModel: StudyToolsViewModel? = null,
     onSendMessage: (String) -> Unit,
     onRetryMessage: (Long) -> Unit,
+    onEditMessage: ((Long, String) -> Unit)? = null,
+    onRetryAi: ((Long) -> Unit)? = null,
     onModeChanged: (String) -> Unit,
     onOpenTopics: () -> Unit,
     onOpenRoadmap: () -> Unit,
@@ -141,6 +143,9 @@ fun ChatScreen(
 ) {
     var inputText by remember { mutableStateOf("") }
     var attachedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var editingMessageId by remember { mutableStateOf<Long?>(null) }
+    var editingText by remember { mutableStateOf("") }
+    var editErrorMessage by remember { mutableStateOf<String?>(null) }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
@@ -434,9 +439,49 @@ fun ChatScreen(
                             verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             items(messages, key = { it.id }) { msg ->
+                                val isEditingThisMessage = (editingMessageId == msg.id)
                                 MessageBubble(
                                     message = msg,
-                                    onRetry = onRetryMessage
+                                    onRetry = onRetryMessage,
+                                    isEditing = isEditingThisMessage,
+                                    editingText = if (isEditingThisMessage) editingText else "",
+                                    onEditingTextChange = { newText ->
+                                        if (isEditingThisMessage) {
+                                            editingText = newText
+                                            if (newText.isNotBlank()) {
+                                                editErrorMessage = null
+                                            }
+                                        }
+                                    },
+                                    editErrorMessage = if (isEditingThisMessage) editErrorMessage else null,
+                                    onStartEdit = { msgId, currentContent ->
+                                        if (!isGenerating) {
+                                            editingMessageId = msgId
+                                            editingText = currentContent
+                                            editErrorMessage = null
+                                        }
+                                    },
+                                    onCancelEdit = {
+                                        editingMessageId = null
+                                        editingText = ""
+                                        editErrorMessage = null
+                                    },
+                                    onSaveEdit = { msgId, editedTextContent ->
+                                        val clean = editedTextContent.trim()
+                                        if (clean.isEmpty()) {
+                                            editErrorMessage = "Message cannot be empty."
+                                        } else if (!isGenerating) {
+                                            editingMessageId = null
+                                            editErrorMessage = null
+                                            onEditMessage?.invoke(msgId, clean)
+                                        }
+                                    },
+                                    onRetryAi = { msgId ->
+                                        if (!isGenerating) {
+                                            onRetryAi?.invoke(msgId)
+                                        }
+                                    },
+                                    isGenerating = isGenerating
                                 )
                             }
 

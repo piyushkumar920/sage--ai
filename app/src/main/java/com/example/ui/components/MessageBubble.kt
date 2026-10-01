@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Refresh
@@ -31,20 +33,24 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.local.MessageEntity
@@ -52,6 +58,9 @@ import com.example.ui.theme.SageAccent
 import com.example.ui.theme.SageAiBubble
 import com.example.ui.theme.SageCardBorder
 import com.example.ui.theme.SageError
+import com.example.ui.theme.SageGlassBorder
+import com.example.ui.theme.SageGlassL2
+import com.example.ui.theme.SageGlassL3
 import com.example.ui.theme.SageGold
 import com.example.ui.theme.SagePrimary
 import com.example.ui.theme.SagePrimaryLight
@@ -68,6 +77,15 @@ import java.util.Locale
 fun MessageBubble(
     message: MessageEntity,
     onRetry: (Long) -> Unit,
+    isEditing: Boolean = false,
+    editingText: String = "",
+    onEditingTextChange: (String) -> Unit = {},
+    editErrorMessage: String? = null,
+    onStartEdit: ((Long, String) -> Unit)? = null,
+    onCancelEdit: (() -> Unit)? = null,
+    onSaveEdit: ((Long, String) -> Unit)? = null,
+    onRetryAi: ((Long) -> Unit)? = null,
+    isGenerating: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val isUser = message.role == "user"
@@ -101,7 +119,7 @@ fun MessageBubble(
         }
 
         Column(
-            modifier = Modifier.widthIn(max = 300.dp),
+            modifier = Modifier.widthIn(max = if (isEditing) 340.dp else 300.dp),
             horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
         ) {
             if (message.status == "FAILED") {
@@ -153,6 +171,116 @@ fun MessageBubble(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(text = "Try Again", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                }
+            } else if (isUser && isEditing) {
+                // In-place User Message Editing Card
+                val shape = RoundedCornerShape(16.dp)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(shape)
+                        .background(SageGlassL2)
+                        .border(1.2.dp, SagePrimaryLight.copy(alpha = 0.6f), shape)
+                        .padding(12.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val focusRequester = remember { FocusRequester() }
+                        LaunchedEffect(Unit) {
+                            focusRequester.requestFocus()
+                        }
+
+                        OutlinedTextField(
+                            value = editingText,
+                            onValueChange = onEditingTextChange,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .focusRequester(focusRequester)
+                                .testTag("edit_message_input"),
+                            placeholder = {
+                                Text(
+                                    text = "Edit your message...",
+                                    color = SageTextMuted,
+                                    fontSize = 13.sp
+                                )
+                            },
+                            textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                color = SageTextPrimary,
+                                fontSize = 14.sp,
+                                lineHeight = 20.sp
+                            ),
+                            minLines = 2,
+                            maxLines = 8,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = SageTextPrimary,
+                                unfocusedTextColor = SageTextPrimary,
+                                focusedBorderColor = SagePrimaryLight,
+                                unfocusedBorderColor = SageGlassBorder,
+                                focusedContainerColor = SageGlassL3,
+                                unfocusedContainerColor = SageGlassL3
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+
+                        if (!editErrorMessage.isNullOrBlank()) {
+                            Text(
+                                text = editErrorMessage,
+                                color = SageError,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier
+                                    .padding(horizontal = 4.dp)
+                                    .testTag("edit_error_text")
+                            )
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            TextButton(
+                                onClick = { onCancelEdit?.invoke() },
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                modifier = Modifier.testTag("cancel_edit_button")
+                            ) {
+                                Text(
+                                    text = "Cancel",
+                                    color = SageTextSecondary,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(6.dp))
+
+                            Button(
+                                onClick = {
+                                    if (!isGenerating) {
+                                        onSaveEdit?.invoke(message.id, editingText)
+                                    }
+                                },
+                                enabled = !isGenerating,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = SagePrimary,
+                                    contentColor = Color.White,
+                                    disabledContainerColor = SagePrimary.copy(alpha = 0.4f)
+                                ),
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                                modifier = Modifier.testTag("update_message_button")
+                            ) {
+                                Text(
+                                    text = "Update",
+                                    color = Color.White,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }
@@ -209,20 +337,96 @@ fun MessageBubble(
                                 fontSize = 11.sp
                             )
 
-                            if (!isUser) {
-                                Icon(
-                                    imageVector = Icons.Default.ContentCopy,
-                                    contentDescription = "Copy message",
-                                    tint = SageTextMuted,
-                                    modifier = Modifier
-                                        .size(14.dp)
-                                        .clickable {
-                                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                            val clip = ClipData.newPlainText("Sage Response", message.content)
-                                            clipboard.setPrimaryClip(clip)
-                                            Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
+                            if (isUser) {
+                                // User edit button
+                                if (onStartEdit != null) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .clickable(enabled = !isGenerating) {
+                                                onStartEdit(message.id, message.content)
+                                            }
+                                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                                            .testTag("user_edit_button_${message.id}")
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Edit,
+                                            contentDescription = "Edit message",
+                                            tint = if (!isGenerating) SagePrimaryLight.copy(alpha = 0.85f) else SageTextMuted.copy(alpha = 0.4f),
+                                            modifier = Modifier.size(12.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(3.dp))
+                                        Text(
+                                            text = "Edit",
+                                            color = if (!isGenerating) SagePrimaryLight.copy(alpha = 0.85f) else SageTextMuted.copy(alpha = 0.4f),
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                }
+                            } else {
+                                // AI Actions (Copy + Retry)
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    // Copy action
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .clickable {
+                                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                                val clip = ClipData.newPlainText("Sage Response", message.content)
+                                                clipboard.setPrimaryClip(clip)
+                                                Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
+                                            }
+                                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                                            .testTag("ai_copy_button_${message.id}")
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.ContentCopy,
+                                            contentDescription = "Copy response",
+                                            tint = SageTextMuted,
+                                            modifier = Modifier.size(12.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(3.dp))
+                                        Text(
+                                            text = "Copy",
+                                            color = SageTextMuted,
+                                            fontSize = 11.sp
+                                        )
+                                    }
+
+                                    // Retry action
+                                    if (onRetryAi != null) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .clickable(enabled = !isGenerating) {
+                                                    onRetryAi(message.id)
+                                                }
+                                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                                                .testTag("ai_retry_button_${message.id}")
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Refresh,
+                                                contentDescription = "Retry AI response",
+                                                tint = if (!isGenerating) SagePrimaryLight else SageTextMuted.copy(alpha = 0.4f),
+                                                modifier = Modifier.size(12.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(3.dp))
+                                            Text(
+                                                text = "Retry",
+                                                color = if (!isGenerating) SagePrimaryLight else SageTextMuted.copy(alpha = 0.4f),
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Medium
+                                            )
                                         }
-                                )
+                                    }
+                                }
                             }
                         }
                     }
@@ -288,32 +492,12 @@ fun UserAvatar() {
 
 @Composable
 fun FormattedContent(text: String) {
-    val blocks = parseContentBlocks(text)
-
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        blocks.forEach { block ->
-            when (block) {
-                is ContentBlock.Code -> {
-                    if (block.language.lowercase() in listOf("latex", "math", "tex")) {
-                        MathFormulaCard(formula = block.code)
-                    } else {
-                        CodeBlockView(code = block.code, language = block.language)
-                    }
-                }
-                is ContentBlock.Math -> {
-                    MathFormulaCard(formula = block.latex)
-                }
-                is ContentBlock.Text -> {
-                    MathText(
-                        text = block.content,
-                        color = SageTextPrimary,
-                        fontSize = 15.sp,
-                        lineHeight = 22.sp
-                    )
-                }
-            }
-        }
-    }
+    SageRichText(
+        text = text,
+        color = SageTextPrimary,
+        fontSize = 15.sp,
+        lineHeight = 22.sp
+    )
 }
 
 @Composable
@@ -369,55 +553,4 @@ fun CodeBlockView(code: String, language: String) {
             )
         }
     }
-}
-
-sealed class ContentBlock {
-    data class Text(val content: String) : ContentBlock()
-    data class Code(val code: String, val language: String) : ContentBlock()
-    data class Math(val latex: String) : ContentBlock()
-}
-
-fun parseContentBlocks(content: String): List<ContentBlock> {
-    val list = mutableListOf<ContentBlock>()
-    // Regex matches either code fences ```...``` or block math $$...$$ or \[...\]
-    val blockRegex = Regex("(```([a-zA-Z0-9_-]*)\\n?([\\s\\S]*?)```|\\$\\$([\\s\\S]*?)\\$\\$|\\\\\\[([\\s\\S]*?)\\\\\\])")
-    var lastIndex = 0
-
-    blockRegex.findAll(content).forEach { match ->
-        val textBefore = content.substring(lastIndex, match.range.first)
-        if (textBefore.trim().isNotEmpty()) {
-            list.add(ContentBlock.Text(textBefore.trim()))
-        }
-
-        val fullMatch = match.value
-        when {
-            fullMatch.startsWith("```") -> {
-                val lang = match.groupValues[2]
-                val code = match.groupValues[3].trimEnd()
-                list.add(ContentBlock.Code(code = code, language = lang))
-            }
-            fullMatch.startsWith("$$") -> {
-                val math = match.groupValues[4].trim()
-                list.add(ContentBlock.Math(latex = math))
-            }
-            fullMatch.startsWith("\\[") -> {
-                val math = match.groupValues[5].trim()
-                list.add(ContentBlock.Math(latex = math))
-            }
-        }
-        lastIndex = match.range.last + 1
-    }
-
-    if (lastIndex < content.length) {
-        val remaining = content.substring(lastIndex)
-        if (remaining.trim().isNotEmpty()) {
-            list.add(ContentBlock.Text(remaining.trim()))
-        }
-    }
-
-    if (list.isEmpty() && content.isNotEmpty()) {
-        list.add(ContentBlock.Text(content))
-    }
-
-    return list
 }

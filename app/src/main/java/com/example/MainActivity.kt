@@ -519,6 +519,8 @@ fun SageApp(
             studyToolsViewModel = studyToolsViewModel,
             onSendMessage = { viewModel.sendMessage(it) },
             onRetryMessage = { viewModel.retryMessage(it) },
+            onEditMessage = { msgId, newText -> viewModel.editAndResendMessage(msgId, newText) },
+            onRetryAi = { msgId -> viewModel.retryAiResponse(msgId) },
             onModeChanged = { viewModel.setMode(it) },
             onOpenTopics = { showTopicDialog = true },
             onOpenRoadmap = {

@@ -195,6 +195,207 @@ class SageRepository(
         }
     }
 
+    suspend fun editAndResendMessage(
+        topicId: Long,
+        userMessageId: Long,
+        newText: String,
+        currentMode: String,
+        curriculumContext: String? = null
+    ): Result<String> = withContext(Dispatchers.IO) {
+        val cleanText = newText.trim()
+        if (cleanText.isEmpty()) {
+            return@withContext Result.failure(IllegalArgumentException("Message cannot be empty"))
+        }
+
+        val topic = dao.getTopicById(topicId) ?: return@withContext Result.failure(
+            IllegalStateException("Topic not found")
+        )
+
+        val targetMessage = dao.getMessageById(userMessageId) ?: return@withContext Result.failure(
+            IllegalStateException("Target message not found")
+        )
+
+        // 1. Update the user message content and timestamp
+        dao.updateMessage(
+            targetMessage.copy(
+                content = cleanText,
+                timestamp = System.currentTimeMillis(),
+                status = "SENT"
+            )
+        )
+
+        // 2. Delete all subsequent messages in this topic (branch from this point forward)
+        dao.deleteMessagesAfterId(topicId, userMessageId)
+
+        // 3. Insert placeholder model message
+        val modelMsgId = dao.insertMessage(
+            MessageEntity(
+                topicId = topicId,
+                role = "model",
+                content = "",
+                status = "SENDING"
+            )
+        )
+
+        // 4. Build history up to and including the updated user message
+        val allMessages = dao.getMessagesForTopicOnce(topicId)
+        val conversationHistory = mutableListOf<GeminiContent>()
+
+        for (msg in allMessages) {
+            if (msg.id == modelMsgId) continue // Skip placeholder
+            if (msg.content.isBlank() && msg.role == "model") continue
+            if (msg.status == "FAILED") continue
+
+            val geminiRole = if (msg.role == "user") "user" else "model"
+            conversationHistory.add(
+                GeminiContent(
+                    role = geminiRole,
+                    parts = listOf(GeminiPart(text = msg.content))
+                )
+            )
+        }
+
+        // 5. Determine system prompt according to mode and curriculum state
+        val systemPrompt = buildSystemPromptForMode(currentMode, topic, curriculumContext)
+
+        // 6. Call Gemini API via Backend Proxy
+        val startTime = System.currentTimeMillis()
+        val result = geminiClient.generateContent(conversationHistory, systemPrompt, mode = currentMode)
+        val latency = System.currentTimeMillis() - startTime
+        preferencesManager.lastLatencyMs = latency
+
+        when (result) {
+            is GeminiResult.Success -> {
+                val aiResponse = result.data
+                dao.updateMessage(
+                    MessageEntity(
+                        id = modelMsgId,
+                        topicId = topicId,
+                        role = "model",
+                        content = aiResponse,
+                        timestamp = System.currentTimeMillis(),
+                        status = "SENT"
+                    )
+                )
+                dao.updateTopic(topic.copy(updatedAt = System.currentTimeMillis()))
+                preferencesManager.updateStreak()
+                preferencesManager.lastRequestSuccess = true
+                preferencesManager.lastErrorMessage = "None"
+                Result.success(aiResponse)
+            }
+            is GeminiResult.Error -> {
+                dao.updateMessage(
+                    MessageEntity(
+                        id = modelMsgId,
+                        topicId = topicId,
+                        role = "model",
+                        content = result.message,
+                        timestamp = System.currentTimeMillis(),
+                        status = "FAILED"
+                    )
+                )
+                preferencesManager.lastRequestSuccess = false
+                preferencesManager.lastErrorMessage = result.diagnosticMessage
+                Result.failure(Exception(result.message))
+            }
+        }
+    }
+
+    suspend fun retryAiResponse(
+        topicId: Long,
+        assistantMessageId: Long,
+        currentMode: String,
+        curriculumContext: String? = null
+    ): Result<String> = withContext(Dispatchers.IO) {
+        val topic = dao.getTopicById(topicId) ?: return@withContext Result.failure(
+            IllegalStateException("Topic not found")
+        )
+
+        val targetMessage = dao.getMessageById(assistantMessageId) ?: return@withContext Result.failure(
+            IllegalStateException("Assistant message not found")
+        )
+
+        val previousSuccessfulContent = targetMessage.content
+        val previousStatus = targetMessage.status
+
+        // 1. Delete messages that came after this assistant message (if any)
+        dao.deleteMessagesAfterId(topicId, assistantMessageId)
+
+        // 2. Set this message to SENDING state (with empty content so UI shows typing indicator)
+        dao.updateMessage(
+            targetMessage.copy(
+                content = "",
+                status = "SENDING",
+                timestamp = System.currentTimeMillis()
+            )
+        )
+
+        // 3. Build history from messages strictly BEFORE this assistant message
+        val allMessages = dao.getMessagesForTopicOnce(topicId)
+        val conversationHistory = mutableListOf<GeminiContent>()
+
+        for (msg in allMessages) {
+            if (msg.id >= assistantMessageId) continue // skip this message and any later ones
+            if (msg.content.isBlank() && msg.role == "model") continue
+            if (msg.status == "FAILED") continue
+
+            val geminiRole = if (msg.role == "user") "user" else "model"
+            conversationHistory.add(
+                GeminiContent(
+                    role = geminiRole,
+                    parts = listOf(GeminiPart(text = msg.content))
+                )
+            )
+        }
+
+        // 4. Determine system prompt
+        val systemPrompt = buildSystemPromptForMode(currentMode, topic, curriculumContext)
+
+        // 5. Call Gemini API
+        val startTime = System.currentTimeMillis()
+        val result = geminiClient.generateContent(conversationHistory, systemPrompt, mode = currentMode)
+        val latency = System.currentTimeMillis() - startTime
+        preferencesManager.lastLatencyMs = latency
+
+        when (result) {
+            is GeminiResult.Success -> {
+                val aiResponse = result.data
+                dao.updateMessage(
+                    targetMessage.copy(
+                        content = aiResponse,
+                        timestamp = System.currentTimeMillis(),
+                        status = "SENT"
+                    )
+                )
+                dao.updateTopic(topic.copy(updatedAt = System.currentTimeMillis()))
+                preferencesManager.lastRequestSuccess = true
+                preferencesManager.lastErrorMessage = "None"
+                Result.success(aiResponse)
+            }
+            is GeminiResult.Error -> {
+                // Restore previous successful response if one existed, or mark as FAILED
+                if (previousSuccessfulContent.isNotBlank() && previousStatus == "SENT") {
+                    dao.updateMessage(
+                        targetMessage.copy(
+                            content = previousSuccessfulContent,
+                            status = "SENT"
+                        )
+                    )
+                } else {
+                    dao.updateMessage(
+                        targetMessage.copy(
+                            content = result.message,
+                            status = "FAILED"
+                        )
+                    )
+                }
+                preferencesManager.lastRequestSuccess = false
+                preferencesManager.lastErrorMessage = result.diagnosticMessage
+                Result.failure(Exception(result.message))
+            }
+        }
+    }
+
     suspend fun retryMessage(topicId: Long, failedMessageId: Long, currentMode: String): Result<String> =
         withContext(Dispatchers.IO) {
             val topic = dao.getTopicById(topicId) ?: return@withContext Result.failure(

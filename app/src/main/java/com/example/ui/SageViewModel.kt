@@ -724,6 +724,54 @@ Known Weak Topics: ${if (weakConcepts.isEmpty()) "None" else weakConcepts.take(3
         }
     }
 
+    private fun buildCurriculumContextOverview(topic: TopicEntity): String {
+        val roadmap = _activeRoadmapDetail.value
+        val progressList = activeRoadmapProgress.value
+        val completed = progressList.filter { it.status == "COMPLETED" }.map { it.nodeTitle }
+        val studied = progressList.filter { it.studiedInChat }.map { it.nodeTitle }
+        val needsReview = progressList.filter { it.status == "NEEDS_REVIEW" }.map { it.nodeTitle }
+        val nextNode = roadmap?.nodes?.find { node ->
+            progressList.find { it.nodeId == node.id }?.status.let { it == null || it == "NOT_STARTED" }
+        }
+
+        val curriculumCourse = if (_activeRoadmapId.value.startsWith("curriculum_")) {
+            roadmapRepository.curriculumRepository.getCourseByRoadmapId(_activeRoadmapId.value)
+        } else null
+
+        val academicCtx = _activeAcademicContext.value
+
+        return buildString {
+            if (curriculumCourse != null) {
+                appendLine("OFFICIAL ACADEMIC CURRICULUM CONTEXT:")
+                appendLine("Institution: JIS College of Engineering")
+                appendLine("Department: ${curriculumCourse.departmentName}")
+                appendLine("Programme: ${curriculumCourse.programme} (${curriculumCourse.regulation})")
+                appendLine("Course: ${curriculumCourse.code} - ${curriculumCourse.title}")
+                appendLine("Semester: Semester ${curriculumCourse.semester} (Year ${curriculumCourse.year}) | Credits: ${curriculumCourse.credits}")
+                if (academicCtx?.module != null) appendLine("Active Module: ${academicCtx.module}")
+                if (academicCtx?.topic != null) appendLine("Active Syllabus Topic: ${academicCtx.topic}")
+                if (curriculumCourse.prerequisites.isNotBlank()) appendLine("Prerequisites: ${curriculumCourse.prerequisites}")
+                if (curriculumCourse.objectives.isNotBlank()) appendLine("Course Objectives: ${curriculumCourse.objectives}")
+                if (curriculumCourse.outcomes.isNotBlank()) appendLine("Course Outcomes: ${curriculumCourse.outcomes}")
+                if (curriculumCourse.textbooks.isNotBlank()) appendLine("Prescribed Textbooks: ${curriculumCourse.textbooks}")
+                appendLine("ACADEMIC DIRECTIVE: THE SYLLABUS IS THE ROADMAP. Ground all explanations and quiz questions strictly in the official curriculum.")
+            } else {
+                appendLine("Active Roadmap: ${roadmap?.title ?: "Full Stack Web Development"}")
+                if (academicCtx?.topic != null) appendLine("Active Topic: ${academicCtx.topic}")
+            }
+            appendLine("Current Topic / Focus: ${topic.title}")
+            appendLine("Completed Topics (${completed.size}): ${if (completed.isEmpty()) "None yet" else completed.joinToString(", ")}")
+            appendLine("Topics Studied in Chat (${studied.size}): ${if (studied.isEmpty()) "None yet" else studied.joinToString(", ")}")
+            if (needsReview.isNotEmpty()) {
+                appendLine("Topics Needing Review: ${needsReview.joinToString(", ")}")
+            }
+            if (nextNode != null) {
+                appendLine("Next Recommended Roadmap Topic: ${nextNode.title}")
+            }
+            appendLine("Pedagogical Directive: Use the user's roadmap progress to deliver tailored, context-aware teaching.")
+        }
+    }
+
     fun sendMessage(text: String) {
         val topic = _activeTopic.value ?: return
         if (text.isBlank() || _isGenerating.value) return
@@ -731,49 +779,10 @@ Known Weak Topics: ${if (weakConcepts.isEmpty()) "None" else weakConcepts.take(3
         viewModelScope.launch {
             _isGenerating.value = true
             try {
-                // 1. Build comprehensive roadmap & curriculum overview for Sage context
+                val roadmapOverview = buildCurriculumContextOverview(topic)
+
+                // Track chat study interaction if current topic corresponds to roadmap node
                 val roadmap = _activeRoadmapDetail.value
-                val progressList = activeRoadmapProgress.value
-                val completed = progressList.filter { it.status == "COMPLETED" }.map { it.nodeTitle }
-                val studied = progressList.filter { it.studiedInChat }.map { it.nodeTitle }
-                val needsReview = progressList.filter { it.status == "NEEDS_REVIEW" }.map { it.nodeTitle }
-                val nextNode = roadmap?.nodes?.find { node ->
-                    progressList.find { it.nodeId == node.id }?.status.let { it == null || it == "NOT_STARTED" }
-                }
-
-                val curriculumCourse = if (_activeRoadmapId.value.startsWith("curriculum_")) {
-                    roadmapRepository.curriculumRepository.getCourseByRoadmapId(_activeRoadmapId.value)
-                } else null
-
-                val roadmapOverview = buildString {
-                    if (curriculumCourse != null) {
-                        appendLine("OFFICIAL ACADEMIC CURRICULUM CONTEXT:")
-                        appendLine("Institution: JIS College of Engineering")
-                        appendLine("Department: ${curriculumCourse.departmentName}")
-                        appendLine("Programme: ${curriculumCourse.programme} (${curriculumCourse.regulation})")
-                        appendLine("Course: ${curriculumCourse.code} - ${curriculumCourse.title}")
-                        appendLine("Semester: Semester ${curriculumCourse.semester} (Year ${curriculumCourse.year}) | Credits: ${curriculumCourse.credits}")
-                        if (curriculumCourse.prerequisites.isNotBlank()) appendLine("Prerequisites: ${curriculumCourse.prerequisites}")
-                        if (curriculumCourse.objectives.isNotBlank()) appendLine("Course Objectives: ${curriculumCourse.objectives}")
-                        if (curriculumCourse.outcomes.isNotBlank()) appendLine("Course Outcomes: ${curriculumCourse.outcomes}")
-                        if (curriculumCourse.textbooks.isNotBlank()) appendLine("Prescribed Textbooks: ${curriculumCourse.textbooks}")
-                        appendLine("ACADEMIC DIRECTIVE: THE SYLLABUS IS THE ROADMAP. Ground all explanations and quiz questions strictly in the official curriculum.")
-                    } else {
-                        appendLine("Active Roadmap: ${roadmap?.title ?: "Full Stack Web Development"}")
-                    }
-                    appendLine("Current Topic / Focus: ${topic.title}")
-                    appendLine("Completed Topics (${completed.size}): ${if (completed.isEmpty()) "None yet" else completed.joinToString(", ")}")
-                    appendLine("Topics Studied in Chat (${studied.size}): ${if (studied.isEmpty()) "None yet" else studied.joinToString(", ")}")
-                    if (needsReview.isNotEmpty()) {
-                        appendLine("Topics Needing Review: ${needsReview.joinToString(", ")}")
-                    }
-                    if (nextNode != null) {
-                        appendLine("Next Recommended Roadmap Topic: ${nextNode.title}")
-                    }
-                    appendLine("Pedagogical Directive: Use the user's roadmap progress to deliver tailored, context-aware teaching.")
-                }
-
-                // 2. Track chat study interaction if current topic corresponds to roadmap node
                 val activeNode = roadmap?.nodes?.find { node ->
                     topic.title.contains(node.title, ignoreCase = true) ||
                     topic.roadmapJson.contains(node.id, ignoreCase = true)
@@ -791,6 +800,51 @@ Known Weak Topics: ${if (weakConcepts.isEmpty()) "None" else weakConcepts.take(3
                 repository.sendMessage(
                     topicId = topic.id,
                     userText = text,
+                    currentMode = _currentMode.value,
+                    curriculumContext = roadmapOverview
+                )
+                refreshRoadmapPercentages()
+            } finally {
+                _isGenerating.value = false
+            }
+        }
+    }
+
+    fun editAndResendMessage(messageId: Long, newText: String) {
+        val topic = _activeTopic.value ?: return
+        if (newText.isBlank() || _isGenerating.value) return
+
+        viewModelScope.launch {
+            _isGenerating.value = true
+            try {
+                val roadmapOverview = buildCurriculumContextOverview(topic)
+
+                repository.editAndResendMessage(
+                    topicId = topic.id,
+                    userMessageId = messageId,
+                    newText = newText,
+                    currentMode = _currentMode.value,
+                    curriculumContext = roadmapOverview
+                )
+                refreshRoadmapPercentages()
+            } finally {
+                _isGenerating.value = false
+            }
+        }
+    }
+
+    fun retryAiResponse(messageId: Long) {
+        val topic = _activeTopic.value ?: return
+        if (_isGenerating.value) return
+
+        viewModelScope.launch {
+            _isGenerating.value = true
+            try {
+                val roadmapOverview = buildCurriculumContextOverview(topic)
+
+                repository.retryAiResponse(
+                    topicId = topic.id,
+                    assistantMessageId = messageId,
                     currentMode = _currentMode.value,
                     curriculumContext = roadmapOverview
                 )

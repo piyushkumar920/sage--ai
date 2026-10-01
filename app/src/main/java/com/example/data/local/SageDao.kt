@@ -43,6 +43,12 @@ interface SageDao {
     @Query("DELETE FROM messages WHERE id = :messageId")
     suspend fun deleteMessageById(messageId: Long)
 
+    @Query("SELECT * FROM messages WHERE id = :messageId LIMIT 1")
+    suspend fun getMessageById(messageId: Long): MessageEntity?
+
+    @Query("DELETE FROM messages WHERE topicId = :topicId AND id > :messageId")
+    suspend fun deleteMessagesAfterId(topicId: Long, messageId: Long)
+
     @Query("DELETE FROM messages WHERE topicId = :topicId")
     suspend fun deleteMessagesForTopic(topicId: Long)
 

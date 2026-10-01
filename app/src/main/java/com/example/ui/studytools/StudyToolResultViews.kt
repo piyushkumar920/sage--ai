@@ -75,6 +75,8 @@ import com.example.ui.components.GlassCard
 import com.example.ui.components.GlassLevel
 import com.example.ui.components.MathFormulaCard
 import com.example.ui.components.MathText
+import com.example.ui.components.SageInlineRichText
+import com.example.ui.components.SageRichText
 import com.example.ui.theme.SageGlassBorder
 import com.example.ui.theme.SageGlassL2
 import com.example.ui.theme.SageGlassL3
@@ -156,13 +158,13 @@ fun NotesResultView(
                 glowColor = SagePrimary.copy(alpha = 0.2f)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
+                    SageInlineRichText(
                         text = notes.title,
                         color = SageTextPrimary,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.ExtraBold
                     )
-                    Text(
+                    SageRichText(
                         text = notes.summary,
                         color = SageTextSecondary,
                         fontSize = 14.sp,
@@ -175,13 +177,13 @@ fun NotesResultView(
         items(notes.sections) { section ->
             GlassCard(modifier = Modifier.fillMaxWidth(), level = GlassLevel.L1) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(
+                    SageInlineRichText(
                         text = section.heading,
                         color = SagePrimaryLight,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
-                    Text(
+                    SageRichText(
                         text = section.content,
                         color = SageTextPrimary,
                         fontSize = 14.sp,
@@ -195,7 +197,7 @@ fun NotesResultView(
                                     verticalAlignment = Alignment.Top
                                 ) {
                                     Text(text = "•", color = SageGold, fontWeight = FontWeight.Bold)
-                                    Text(text = pt, color = SageTextSecondary, fontSize = 13.sp)
+                                    SageRichText(text = pt, color = SageTextSecondary, fontSize = 13.sp)
                                 }
                             }
                         }
@@ -215,7 +217,10 @@ fun NotesResultView(
                             fontWeight = FontWeight.Bold
                         )
                         notes.importantTerms.forEach { term ->
-                            Text(text = "📖 $term", color = SageTextSecondary, fontSize = 13.sp)
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(text = "📖", fontSize = 13.sp)
+                                SageInlineRichText(text = term, color = SageTextSecondary, fontSize = 13.sp)
+                            }
                         }
                     }
                 }
@@ -233,7 +238,10 @@ fun NotesResultView(
                             fontWeight = FontWeight.Bold
                         )
                         notes.examples.forEach { ex ->
-                            Text(text = "💡 $ex", color = SageTextSecondary, fontSize = 13.sp)
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(text = "💡", fontSize = 13.sp)
+                                SageRichText(text = ex, color = SageTextSecondary, fontSize = 13.sp)
+                            }
                         }
                     }
                 }
@@ -284,7 +292,7 @@ fun FlashcardsResultView(
             IconButton(onClick = onClose) {
                 Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = SageTextSecondary)
             }
-            Text(
+            SageInlineRichText(
                 text = "${flashcardsData.title} (${currentIndex + 1}/$total)",
                 color = SageTextPrimary,
                 fontWeight = FontWeight.Bold,
@@ -330,11 +338,10 @@ fun FlashcardsResultView(
                             letterSpacing = 1.5.sp
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text(
+                        SageRichText(
                             text = currentCard.front,
                             color = SageTextPrimary,
                             fontSize = 18.sp,
-                            fontWeight = FontWeight.SemiBold,
                             textAlign = TextAlign.Center,
                             lineHeight = 26.sp
                         )
@@ -362,17 +369,16 @@ fun FlashcardsResultView(
                             letterSpacing = 1.5.sp
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text(
+                        SageRichText(
                             text = currentCard.back,
                             color = SageTextPrimary,
                             fontSize = 17.sp,
-                            fontWeight = FontWeight.Normal,
                             textAlign = TextAlign.Center,
                             lineHeight = 24.sp
                         )
                         if (currentCard.hint.isNotBlank()) {
                             Spacer(modifier = Modifier.height(16.dp))
-                            Text(
+                            SageInlineRichText(
                                 text = "💡 Hint: ${currentCard.hint}",
                                 color = SageGold,
                                 fontSize = 12.sp,
@@ -441,12 +447,15 @@ fun MindMapResultView(
             IconButton(onClick = onClose) {
                 Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = SageTextSecondary)
             }
-            Text(
-                text = "🧠 ${mindMapData.title}",
-                color = SageTextPrimary,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = "🧠 ", fontSize = 16.sp)
+                SageInlineRichText(
+                    text = mindMapData.title,
+                    color = SageTextPrimary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+            }
             IconButton(onClick = { scale = if (scale == 1f) 1.25f else 1f }) {
                 Icon(
                     imageVector = Icons.Default.Lightbulb,
@@ -531,14 +540,14 @@ fun MindMapNodeComposable(
                             .background(nodeColor)
                     )
                     Column {
-                        Text(
+                        SageInlineRichText(
                             text = node.label,
                             color = SageTextPrimary,
                             fontWeight = if (depth == 0) FontWeight.ExtraBold else FontWeight.Bold,
                             fontSize = if (depth == 0) 16.sp else 14.sp
                         )
                         if (node.description.isNotBlank()) {
-                            Text(
+                            SageInlineRichText(
                                 text = node.description,
                                 color = SageTextSecondary,
                                 fontSize = 12.sp,
@@ -605,7 +614,7 @@ fun RevisionSheetResultView(
         item {
             GlassCard(modifier = Modifier.fillMaxWidth(), level = GlassLevel.L2) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
+                    SageInlineRichText(
                         text = sheet.title,
                         color = SageTextPrimary,
                         fontSize = 18.sp,
@@ -636,7 +645,10 @@ fun RevisionSheetResultView(
                             fontWeight = FontWeight.Bold
                         )
                         sheet.lastMinuteRevisionPoints.forEach { pt ->
-                            Text(text = "⚡ $pt", color = SageTextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(text = "⚡", fontSize = 13.sp)
+                                SageRichText(text = pt, color = SageTextPrimary, fontSize = 13.sp)
+                            }
                         }
                     }
                 }
@@ -649,7 +661,10 @@ fun RevisionSheetResultView(
                     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(text = "Core Concepts", color = SagePrimaryLight, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                         sheet.coreConcepts.forEach { c ->
-                            Text(text = "• $c", color = SageTextSecondary, fontSize = 13.sp)
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(text = "•", color = SagePrimaryLight, fontWeight = FontWeight.Bold)
+                                SageRichText(text = c, color = SageTextSecondary, fontSize = 13.sp)
+                            }
                         }
                     }
                 }
@@ -666,7 +681,10 @@ fun RevisionSheetResultView(
                     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(text = "⚠️ Common Traps & Exam Mistakes", color = SageWarning, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                         sheet.commonMistakes.forEach { m ->
-                            Text(text = "❌ $m", color = SageTextSecondary, fontSize = 13.sp)
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(text = "❌", fontSize = 13.sp)
+                                SageRichText(text = m, color = SageTextSecondary, fontSize = 13.sp)
+                            }
                         }
                     }
                 }
@@ -679,7 +697,10 @@ fun RevisionSheetResultView(
                     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(text = "Key Definitions", color = SageSuccess, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                         sheet.definitions.forEach { d ->
-                            Text(text = "📌 $d", color = SageTextSecondary, fontSize = 13.sp)
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(text = "📌", fontSize = 13.sp)
+                                SageRichText(text = d, color = SageTextSecondary, fontSize = 13.sp)
+                            }
                         }
                     }
                 }

@@ -78,6 +78,8 @@ import com.example.ui.components.GlassCard
 import com.example.ui.components.GlassLevel
 import com.example.ui.components.MathFormulaCard
 import com.example.ui.components.MathText
+import com.example.ui.components.SageInlineRichText
+import com.example.ui.components.SageRichText
 import com.example.ui.theme.SageAccent
 import com.example.ui.theme.SageBackground
 import com.example.ui.theme.SageCardBorder
@@ -588,7 +590,7 @@ private fun InChatNotesContent(
                     Column {
                         Text(text = "EXECUTIVE SUMMARY", color = SageGold, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = notes.summary, color = SageTextPrimary, fontSize = 11.sp, lineHeight = 16.sp)
+                        SageRichText(text = notes.summary, color = SageTextPrimary, fontSize = 11.sp, lineHeight = 16.sp)
                     }
                 }
             }
@@ -604,11 +606,14 @@ private fun InChatNotesContent(
                     .padding(10.dp)
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(text = section.heading, color = SagePrimaryLight, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    Text(text = section.content, color = SageTextSecondary, fontSize = 11.sp, lineHeight = 16.sp)
+                    SageInlineRichText(text = section.heading, color = SagePrimaryLight, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    SageRichText(text = section.content, color = SageTextSecondary, fontSize = 11.sp, lineHeight = 16.sp)
                     if (section.keyPoints.isNotEmpty()) {
                         section.keyPoints.forEach { kp ->
-                            Text(text = "• $kp", color = SageGold, fontSize = 10.sp, fontWeight = FontWeight.Medium)
+                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(text = "•", color = SageGold, fontSize = 10.sp, fontWeight = FontWeight.Medium)
+                                SageRichText(text = kp, color = SageGold, fontSize = 10.sp)
+                            }
                         }
                     }
                 }
@@ -620,7 +625,10 @@ private fun InChatNotesContent(
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(text = "IMPORTANT TERMS", color = SageGold, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                     notes.importantTerms.forEach { term ->
-                        Text(text = "• $term", color = SageTextPrimary, fontSize = 11.sp)
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(text = "•", color = SageTextPrimary, fontSize = 11.sp)
+                            SageInlineRichText(text = term, color = SageTextPrimary, fontSize = 11.sp)
+                        }
                     }
                 }
             }
@@ -706,18 +714,17 @@ private fun InChatFlashcardsContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                Text(
+                SageRichText(
                     text = if (isFlipped) currentCard.back else currentCard.front,
                     color = SageTextPrimary,
                     fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center,
                     lineHeight = 18.sp
                 )
 
                 if (!isFlipped && currentCard.hint.isNotBlank()) {
                     Spacer(modifier = Modifier.height(6.dp))
-                    Text(
+                    SageInlineRichText(
                         text = "💡 Hint: ${currentCard.hint}",
                         color = SageTextMuted,
                         fontSize = 10.sp,
@@ -809,9 +816,9 @@ private fun InChatMindMapContent(
             ) {
                 Column {
                     Text(text = "ROOT CONCEPT", color = SageGold, fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                    Text(text = mindMap.root.label.ifBlank { mindMap.title }, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    SageInlineRichText(text = mindMap.root.label.ifBlank { mindMap.title }, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     if (mindMap.root.description.isNotBlank()) {
-                        Text(text = mindMap.root.description, color = SageTextSecondary, fontSize = 11.sp)
+                        SageInlineRichText(text = mindMap.root.description, color = SageTextSecondary, fontSize = 11.sp)
                     }
                 }
             }
@@ -834,13 +841,19 @@ private fun MindMapNodeCard(node: MindMapNode) {
             .padding(10.dp)
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(text = "🌿 ${node.label}", color = SagePrimaryLight, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = "🌿 ", fontSize = 12.sp)
+                SageInlineRichText(text = node.label, color = SagePrimaryLight, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            }
             if (node.description.isNotBlank()) {
-                Text(text = node.description, color = SageTextSecondary, fontSize = 11.sp)
+                SageInlineRichText(text = node.description, color = SageTextSecondary, fontSize = 11.sp)
             }
             if (node.children.isNotEmpty()) {
                 node.children.forEach { child ->
-                    Text(text = "   └ ${child.label}: ${child.description}", color = SageTextMuted, fontSize = 10.sp)
+                    Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(text = "   └ ", color = SageTextMuted, fontSize = 10.sp)
+                        SageInlineRichText(text = "${child.label}: ${child.description}", color = SageTextMuted, fontSize = 10.sp)
+                    }
                 }
             }
         }
@@ -863,7 +876,10 @@ private fun InChatRevisionContent(
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(text = "HIGH-YIELD EXAM FACTS", color = SageGold, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                     revision.keyFacts.forEach { fact ->
-                        Text(text = "⭐ $fact", color = SageTextPrimary, fontSize = 11.sp)
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(text = "⭐", fontSize = 11.sp)
+                            SageRichText(text = fact, color = SageTextPrimary, fontSize = 11.sp)
+                        }
                     }
                 }
             }
@@ -874,7 +890,10 @@ private fun InChatRevisionContent(
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(text = "KEY DEFINITIONS", color = SagePrimaryLight, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                     revision.definitions.forEach { def ->
-                        Text(text = "• $def", color = SageTextSecondary, fontSize = 11.sp)
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(text = "•", color = SagePrimaryLight, fontSize = 11.sp)
+                            SageRichText(text = def, color = SageTextSecondary, fontSize = 11.sp)
+                        }
                     }
                 }
             }
@@ -885,7 +904,10 @@ private fun InChatRevisionContent(
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(text = "COMMON PITFALLS & MISCONCEPTIONS", color = SageWarning, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                     revision.commonMistakes.forEach { mis ->
-                        Text(text = "⚠️ $mis", color = SageTextSecondary, fontSize = 11.sp)
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(text = "⚠️", fontSize = 11.sp)
+                            SageRichText(text = mis, color = SageTextSecondary, fontSize = 11.sp)
+                        }
                     }
                 }
             }
@@ -896,7 +918,10 @@ private fun InChatRevisionContent(
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(text = "LAST-MINUTE REVISION POINTS", color = SageGold, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                     revision.lastMinuteRevisionPoints.forEach { pt ->
-                        Text(text = "⚡ $pt", color = SageTextPrimary, fontSize = 11.sp)
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(text = "⚡", fontSize = 11.sp)
+                            SageRichText(text = pt, color = SageTextPrimary, fontSize = 11.sp)
+                        }
                     }
                 }
             }
