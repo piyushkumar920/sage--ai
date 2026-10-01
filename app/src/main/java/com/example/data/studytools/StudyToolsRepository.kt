@@ -243,7 +243,8 @@ class StudyToolsRepository(
 
     suspend fun solveImage(
         imageUri: Uri,
-        prompt: String = ""
+        prompt: String = "",
+        academicContext: AcademicContext? = null
     ): GeminiResult<StudySolutionData> = withContext(Dispatchers.IO) {
         try {
             val (base64String, mimeType) = processAndCompressImage(imageUri)
@@ -253,7 +254,8 @@ class StudyToolsRepository(
                 operation = "solve_image",
                 imageBase64 = base64String,
                 imageMimeType = mimeType,
-                prompt = prompt
+                prompt = prompt,
+                academicContext = academicContext
             )
 
             when (res) {

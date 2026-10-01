@@ -25,6 +25,15 @@ class PreferencesManager(context: Context) {
         private const val KEY_CURRENT_TOPIC_ID = "current_topic_id"
         private const val KEY_CURRENT_TOPIC_TITLE = "current_topic_title"
         private const val KEY_STUDY_MINUTES = "study_minutes"
+        private const val KEY_HAS_ACADEMIC_PROFILE = "has_academic_profile"
+        private const val KEY_ACADEMIC_DEPT_ID = "academic_dept_id"
+        private const val KEY_ACADEMIC_DEPT_NAME = "academic_dept_name"
+        private const val KEY_ACADEMIC_PROGRAMME_ID = "academic_programme_id"
+        private const val KEY_ACADEMIC_PROGRAMME_NAME = "academic_programme_name"
+        private const val KEY_ACADEMIC_REGULATION = "academic_regulation"
+        private const val KEY_ACADEMIC_SEMESTER = "academic_semester"
+        private const val KEY_ACADEMIC_UPDATED_AT = "academic_updated_at"
+        private const val KEY_PYQS_ATTEMPTED = "pyqs_attempted_count"
     }
 
     init {
@@ -33,6 +42,81 @@ class PreferencesManager(context: Context) {
         if (saved.isNotEmpty() && !saved.contains("sage-backend-ai.onrender.com", ignoreCase = true)) {
             prefs.edit().remove(KEY_CUSTOM_BACKEND_URL).apply()
         }
+    }
+
+    // --- ACADEMIC PROFILE (Phase C2.5) ---
+    var hasAcademicProfile: Boolean
+        get() = prefs.getBoolean(KEY_HAS_ACADEMIC_PROFILE, false)
+        set(value) = prefs.edit().putBoolean(KEY_HAS_ACADEMIC_PROFILE, value).apply()
+
+    var academicDepartmentId: String
+        get() = prefs.getString(KEY_ACADEMIC_DEPT_ID, "") ?: ""
+        set(value) = prefs.edit().putString(KEY_ACADEMIC_DEPT_ID, value).apply()
+
+    var academicDepartmentName: String
+        get() = prefs.getString(KEY_ACADEMIC_DEPT_NAME, "") ?: ""
+        set(value) = prefs.edit().putString(KEY_ACADEMIC_DEPT_NAME, value).apply()
+
+    var academicProgrammeId: String
+        get() = prefs.getString(KEY_ACADEMIC_PROGRAMME_ID, "") ?: ""
+        set(value) = prefs.edit().putString(KEY_ACADEMIC_PROGRAMME_ID, value).apply()
+
+    var academicProgrammeName: String
+        get() = prefs.getString(KEY_ACADEMIC_PROGRAMME_NAME, "") ?: ""
+        set(value) = prefs.edit().putString(KEY_ACADEMIC_PROGRAMME_NAME, value).apply()
+
+    var academicRegulation: String
+        get() = prefs.getString(KEY_ACADEMIC_REGULATION, "R25") ?: "R25"
+        set(value) = prefs.edit().putString(KEY_ACADEMIC_REGULATION, value).apply()
+
+    var academicSemester: Int
+        get() = prefs.getInt(KEY_ACADEMIC_SEMESTER, 1)
+        set(value) = prefs.edit().putInt(KEY_ACADEMIC_SEMESTER, value).apply()
+
+    var academicProfileUpdatedAt: Long
+        get() = prefs.getLong(KEY_ACADEMIC_UPDATED_AT, 0L)
+        set(value) = prefs.edit().putLong(KEY_ACADEMIC_UPDATED_AT, value).apply()
+
+    fun saveAcademicProfile(profile: com.example.data.profile.AcademicProfile) {
+        prefs.edit()
+            .putBoolean(KEY_HAS_ACADEMIC_PROFILE, true)
+            .putString(KEY_ACADEMIC_DEPT_ID, profile.departmentId)
+            .putString(KEY_ACADEMIC_DEPT_NAME, profile.departmentName)
+            .putString(KEY_ACADEMIC_PROGRAMME_ID, profile.programmeId)
+            .putString(KEY_ACADEMIC_PROGRAMME_NAME, profile.programmeName)
+            .putString(KEY_ACADEMIC_REGULATION, profile.regulation)
+            .putInt(KEY_ACADEMIC_SEMESTER, profile.semester)
+            .putLong(KEY_ACADEMIC_UPDATED_AT, profile.updatedAt)
+            .apply()
+    }
+
+    fun getAcademicProfile(): com.example.data.profile.AcademicProfile? {
+        if (!hasAcademicProfile) return null
+        val deptId = academicDepartmentId
+        if (deptId.isBlank()) return null
+        return com.example.data.profile.AcademicProfile(
+            departmentId = deptId,
+            departmentName = academicDepartmentName.ifBlank { deptId },
+            programmeId = academicProgrammeId.ifBlank { deptId },
+            programmeName = academicProgrammeName.ifBlank { academicDepartmentName },
+            regulationId = academicRegulation.lowercase(),
+            regulation = academicRegulation,
+            semester = academicSemester,
+            updatedAt = academicProfileUpdatedAt
+        )
+    }
+
+    fun clearAcademicProfile() {
+        prefs.edit()
+            .putBoolean(KEY_HAS_ACADEMIC_PROFILE, false)
+            .remove(KEY_ACADEMIC_DEPT_ID)
+            .remove(KEY_ACADEMIC_DEPT_NAME)
+            .remove(KEY_ACADEMIC_PROGRAMME_ID)
+            .remove(KEY_ACADEMIC_PROGRAMME_NAME)
+            .remove(KEY_ACADEMIC_REGULATION)
+            .remove(KEY_ACADEMIC_SEMESTER)
+            .remove(KEY_ACADEMIC_UPDATED_AT)
+            .apply()
     }
 
     var customBackendUrl: String
@@ -98,6 +182,14 @@ class PreferencesManager(context: Context) {
     var studyMinutes: Int
         get() = prefs.getInt(KEY_STUDY_MINUTES, 45)
         set(value) = prefs.edit().putInt(KEY_STUDY_MINUTES, value).apply()
+
+    var pyqsAttemptedCount: Int
+        get() = prefs.getInt(KEY_PYQS_ATTEMPTED, 12)
+        set(value) = prefs.edit().putInt(KEY_PYQS_ATTEMPTED, value).apply()
+
+    fun incrementPyqsAttempted(count: Int = 1) {
+        pyqsAttemptedCount = pyqsAttemptedCount + count
+    }
 
     fun addStudyMinutes(minutes: Int) {
         val current = studyMinutes

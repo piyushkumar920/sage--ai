@@ -82,6 +82,7 @@ import com.example.ui.screens.AuthScreenMode
 import com.example.ui.screens.ChatRoadmapScreen
 import com.example.ui.screens.ChatScreen
 import com.example.ui.screens.ConnectionTestScreen
+import com.example.ui.screens.CurriculumTopicSelectorDialog
 import com.example.ui.screens.DailyQuizScreen
 import com.example.ui.screens.DiagnosticScreen
 import com.example.ui.screens.ExploreScreen
@@ -93,6 +94,8 @@ import com.example.ui.screens.RoadmapScreen
 import com.example.ui.screens.SettingsScreen
 import com.example.ui.screens.TopicDetailScreen
 import com.example.ui.screens.TopicDialog
+import com.example.ui.screens.focus.FocusScreen
+import com.example.ui.screens.focus.FocusViewModel
 import com.example.ui.studytools.StudyToolsScreen
 import com.example.ui.studytools.StudyToolsViewModel
 import com.example.ui.theme.SageBackground
@@ -153,8 +156,15 @@ fun SageApp(
     var authScreenMode by remember { mutableStateOf<AuthScreenMode?>(null) }
     var inDiagnosticsScreen by remember { mutableStateOf(false) }
     var inAdminConsoleScreen by remember { mutableStateOf(false) }
+    var inFocusScreen by rememberSaveable { mutableStateOf(false) }
 
     val studyToolsViewModel: StudyToolsViewModel = viewModel()
+    val focusViewModel: FocusViewModel = viewModel(
+        factory = FocusViewModel.Factory(
+            androidx.compose.ui.platform.LocalContext.current.applicationContext as android.app.Application
+        )
+    )
+    val focusStats by focusViewModel.focusStats.collectAsState()
 
     var showRoadmapDialog by remember { mutableStateOf(false) }
     var roadmapTopic by remember { mutableStateOf<TopicEntity?>(null) }
@@ -198,6 +208,17 @@ fun SageApp(
     val todayDailyQuiz by viewModel.todayDailyQuiz.collectAsState()
     val dailyQuizHistory by viewModel.dailyQuizHistory.collectAsState()
     val dailyQuizStats by viewModel.dailyQuizStats.collectAsState()
+
+    // Daily mission state (Phase C2)
+    val todayDailyMission by viewModel.todayMission.collectAsState()
+    val recentDailyMissions by viewModel.recentDailyMissions.collectAsState()
+
+    // Academic Profile state (Phase C2.5)
+    val academicProfile by viewModel.academicProfile.collectAsState()
+    var showAcademicProfileDialog by remember { mutableStateOf(false) }
+
+    // Adaptive Learning & Weekly Review state (Phase C3)
+    val weeklyReviewData by viewModel.weeklyReviewData.collectAsState()
 
     // First gate: Connection Test Screen
     if (!hasEnteredApp) {
@@ -365,6 +386,34 @@ fun SageApp(
                     academicContext = academicContext
                 )
                 inStudyToolsScreen = true
+            },
+            onOpenFocusMode = {
+                val curriculumCourse = if (activeRoadmapId.startsWith("curriculum_")) {
+                    viewModel.curriculumRepository.getCourseByRoadmapId(activeRoadmapId)
+                } else null
+
+                val academicCtx = if (curriculumCourse != null) {
+                    com.example.data.studytools.AcademicContext(
+                        department = curriculumCourse.departmentName,
+                        programme = curriculumCourse.programme,
+                        regulation = curriculumCourse.regulation,
+                        semester = curriculumCourse.semester,
+                        courseCode = curriculumCourse.code,
+                        courseName = curriculumCourse.title,
+                        module = topicNode.title,
+                        topic = topicNode.title,
+                        officialSyllabusContent = topicNode.description
+                    )
+                } else {
+                    com.example.data.studytools.AcademicContext(
+                        module = topicNode.title,
+                        topic = topicNode.title,
+                        officialSyllabusContent = topicNode.description
+                    )
+                }
+                focusViewModel.initializeWithContext(academicCtx)
+                viewingTopicNode = null
+                inFocusScreen = true
             }
         )
         return
@@ -429,6 +478,34 @@ fun SageApp(
         return
     }
 
+    val activeAcademicContext by viewModel.activeAcademicContext.collectAsState()
+
+    // Sub-Screen 4.9: Focus Mode Screen (Distraction-Free Learning Session)
+    if (inFocusScreen && !inChatScreen) {
+        val activeTopicId = activeTopic?.id
+        FocusScreen(
+            focusViewModel = focusViewModel,
+            curriculumRepository = viewModel.curriculumRepository,
+            allTopics = allTopics,
+            activeTopicId = activeTopicId,
+            currentAcademicProfile = academicProfile,
+            onOpenChatWithPrompt = { prompt, context ->
+                context?.let { viewModel.setAcademicContext(it) }
+                viewModel.sendMessage(prompt)
+                inChatScreen = true
+            },
+            onOpenStudyChat = { context ->
+                context?.let { viewModel.setAcademicContext(it) }
+                inChatScreen = true
+            },
+            onOpenScanAndSolve = {
+                inStudyToolsScreen = true
+            },
+            onBack = { inFocusScreen = false }
+        )
+        return
+    }
+
     // Sub-Screen 5: Chat Screen
     if (inChatScreen) {
         ChatScreen(
@@ -438,6 +515,8 @@ fun SageApp(
             isOnline = isOnline,
             currentMode = currentMode,
             streakDays = viewModel.streakDays,
+            academicContext = activeAcademicContext,
+            studyToolsViewModel = studyToolsViewModel,
             onSendMessage = { viewModel.sendMessage(it) },
             onRetryMessage = { viewModel.retryMessage(it) },
             onModeChanged = { viewModel.setMode(it) },
@@ -492,6 +571,9 @@ fun SageApp(
                                 activeRoadmapDetail = activeRoadmapDetail,
                                 progressList = activeRoadmapProgress,
                                 todayDailyQuiz = todayDailyQuiz,
+                                todayDailyMission = todayDailyMission,
+                                academicProfile = academicProfile,
+                                onOpenAcademicProfileDialog = { showAcademicProfileDialog = true },
                                 onOpenRoadmap = { roadmapId ->
                                     viewModel.selectRoadmap(roadmapId)
                                     viewingRoadmapId = roadmapId
@@ -510,12 +592,72 @@ fun SageApp(
                                 onExploreRoadmaps = {
                                     currentTab = NavTab.EXPLORE
                                 },
+                                onStartDailyMission = { mission ->
+                                    focusViewModel.initializeWithMission(mission)
+                                    inFocusScreen = true
+                                },
+                                onStartFiveMinuteFocus = { mission ->
+                                    focusViewModel.startFiveMinuteMissionFocus(mission)
+                                    inFocusScreen = true
+                                },
+                                onToggleDailyMissionTask = { taskId ->
+                                    viewModel.toggleMissionTask(taskId)
+                                },
+                                onDailyMissionTaskAction = { task, context ->
+                                    when (task.taskType) {
+                                        com.example.data.mission.MissionTaskType.LEARN -> {
+                                            viewModel.setAcademicContext(context)
+                                            viewModel.sendMessage(
+                                                "Hi Sage! I am ready to learn '${task.title}' for ${context.courseCode}: ${context.courseName}. Please break it down clearly."
+                                            )
+                                            inChatScreen = true
+                                        }
+                                        com.example.data.mission.MissionTaskType.PRACTICE -> {
+                                            studyToolsViewModel.setCurriculumContext(
+                                                topic = context.topic,
+                                                subject = context.courseName,
+                                                syllabus = context.officialSyllabusContent,
+                                                academicContext = context
+                                            )
+                                            studyToolsViewModel.selectTool(com.example.data.studytools.StudyToolType.FLASHCARDS)
+                                            inStudyToolsScreen = true
+                                        }
+                                        com.example.data.mission.MissionTaskType.PYQ -> {
+                                            currentTab = NavTab.PROGRESS
+                                        }
+                                        com.example.data.mission.MissionTaskType.REVIEW -> {
+                                            studyToolsViewModel.setCurriculumContext(
+                                                topic = context.topic,
+                                                subject = context.courseName,
+                                                syllabus = context.officialSyllabusContent,
+                                                academicContext = context
+                                            )
+                                            studyToolsViewModel.selectTool(com.example.data.studytools.StudyToolType.REVISION_SHEET)
+                                            inStudyToolsScreen = true
+                                        }
+                                    }
+                                },
+                                onReviewDailyMission = { mission ->
+                                    val ctx = mission.toAcademicContext()
+                                    studyToolsViewModel.setCurriculumContext(
+                                        topic = ctx.topic,
+                                        subject = ctx.courseName,
+                                        syllabus = ctx.officialSyllabusContent,
+                                        academicContext = ctx
+                                    )
+                                    studyToolsViewModel.selectTool(com.example.data.studytools.StudyToolType.REVISION_SHEET)
+                                    inStudyToolsScreen = true
+                                },
                                 isAiConnected = (connectionStatus.isSuccess == true),
                                 onOpenDiagnostics = {
                                     currentTab = NavTab.SETTINGS
                                 },
                                 onOpenStudyTools = {
                                     inStudyToolsScreen = true
+                                },
+                                onOpenFocusMode = {
+                                    focusViewModel.initializeWithContext(activeAcademicContext)
+                                    inFocusScreen = true
                                 }
                             )
                         }
@@ -589,10 +731,27 @@ fun SageApp(
                                         inChatScreen = true
                                     }
                                 },
+                                onReviewWeakConcept = { concept, context ->
+                                    context?.let { viewModel.setAcademicContext(it) }
+                                    viewModel.sendMessage(
+                                        "Hi Sage! I need to review and master '$concept'. Could you give a concise explanation, break down the core intuition, and give me one targeted question to test my understanding?"
+                                    )
+                                    inChatScreen = true
+                                },
+                                onStartReviewSession = { concept, context ->
+                                    focusViewModel.initializeForReviewSession(concept, context)
+                                    inFocusScreen = true
+                                },
                                 onOpenRoadmap = { roadmapId ->
                                     viewModel.selectRoadmap(roadmapId)
                                     viewingRoadmapId = roadmapId
-                                }
+                                },
+                                academicContext = activeAcademicContext,
+                                careerSummaries = viewModel.allRoadmapSummaries,
+                                roadmapPercentages = roadmapPercentages,
+                                focusStats = focusStats,
+                                dailyMissions = recentDailyMissions,
+                                weeklyReviewData = weeklyReviewData
                             )
                         }
 
@@ -628,6 +787,8 @@ fun SageApp(
                             } else {
                                 SettingsScreen(
                                     authViewModel = authViewModel,
+                                    academicProfile = academicProfile,
+                                    onOpenAcademicProfileDialog = { showAcademicProfileDialog = true },
                                     onOpenAuth = { mode ->
                                         authScreenMode = mode
                                     },
@@ -650,6 +811,18 @@ fun SageApp(
         }
     }
 
+    if (showAcademicProfileDialog) {
+        com.example.ui.components.AcademicProfileDialog(
+            currentProfile = academicProfile,
+            departments = viewModel.allCurriculumDepartments,
+            onSaveProfile = { dept, sem ->
+                viewModel.saveAcademicProfile(dept, sem)
+                showAcademicProfileDialog = false
+            },
+            onDismiss = { showAcademicProfileDialog = false }
+        )
+    }
+
     if (showRoadmapDialog) {
         RoadmapDialog(
             topic = roadmapTopic ?: activeTopic,
@@ -658,15 +831,23 @@ fun SageApp(
     }
 
     if (showTopicDialog) {
-        TopicDialog(
-            topics = allTopics,
+        CurriculumTopicSelectorDialog(
+            curriculumRepository = viewModel.curriculumRepository,
+            allTopics = allTopics,
             activeTopicId = activeTopic?.id ?: -1L,
-            onSelectTopic = {
+            activeAcademicContext = activeAcademicContext,
+            onSelectCurriculumTopic = { course, module, specificTopic ->
+                viewModel.selectCurriculumTopic(course, module, specificTopic) {
+                    showTopicDialog = false
+                    inChatScreen = true
+                }
+            },
+            onSelectExistingTopic = {
                 viewModel.selectTopic(it)
                 showTopicDialog = false
                 inChatScreen = true
             },
-            onCreateTopic = { title, mode ->
+            onCreateCustomTopic = { title, mode ->
                 viewModel.createTopic(title, mode)
                 showTopicDialog = false
                 inChatScreen = true

@@ -10,13 +10,15 @@ data class FirestoreUserProfile(
 )
 
 data class FirestoreAcademicProfile(
-    val departmentId: String = "cse_aiml",
-    val departmentName: String = "CSE (AI & ML)",
-    val programme: String = "B. Tech CSE (AI & ML)",
+    val hasProfile: Boolean = false,
+    val departmentId: String = "",
+    val departmentName: String = "",
+    val programme: String = "",
+    val programmeId: String = "",
     val regulation: String = "R25",
     val currentSemester: Int = 1,
-    val activeRoadmapId: String = "curriculum_cse_aiml_CS101",
-    val activeRoadmapTitle: String = "CS101: Introduction to Programming and Problem Solving",
+    val activeRoadmapId: String = "",
+    val activeRoadmapTitle: String = "",
     val currentTopicId: String = "",
     val currentTopicTitle: String = "",
     val selectedSubjects: List<String> = emptyList(),

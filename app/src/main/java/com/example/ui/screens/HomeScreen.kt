@@ -53,9 +53,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.local.DailyQuizRecordEntity
 import com.example.data.local.TopicProgressEntity
+import com.example.data.mission.DailyMissionEntity
+import com.example.data.mission.MissionTask
 import com.example.data.roadmap.DevRoadmapDetail
 import com.example.data.roadmap.DevRoadmapNode
+import com.example.data.studytools.AcademicContext
 import com.example.ui.components.AmbientGlowBackground
+import com.example.ui.components.DailyMissionCard
 import com.example.ui.components.GlassButton
 import com.example.ui.components.GlassButtonVariant
 import com.example.ui.components.GlassCard
@@ -85,20 +89,29 @@ fun HomeScreen(
     activeRoadmapDetail: DevRoadmapDetail?,
     progressList: List<TopicProgressEntity>,
     todayDailyQuiz: DailyQuizRecordEntity?,
+    todayDailyMission: DailyMissionEntity? = null,
+    academicProfile: com.example.data.profile.AcademicProfile? = null,
+    onOpenAcademicProfileDialog: () -> Unit = {},
     onOpenRoadmap: (String) -> Unit,
     onContinueLearning: (DevRoadmapNode) -> Unit,
     onOpenDailyQuiz: () -> Unit,
     onStartNextTopic: (DevRoadmapNode) -> Unit,
     onExploreRoadmaps: () -> Unit,
+    onStartDailyMission: (DailyMissionEntity) -> Unit = {},
+    onStartFiveMinuteFocus: (DailyMissionEntity) -> Unit = {},
+    onToggleDailyMissionTask: (taskId: String) -> Unit = {},
+    onDailyMissionTaskAction: (task: MissionTask, context: AcademicContext) -> Unit = { _, _ -> },
+    onReviewDailyMission: (DailyMissionEntity) -> Unit = {},
     isAiConnected: Boolean = true,
     onOpenDiagnostics: () -> Unit = {},
     onOpenStudyTools: () -> Unit = {},
+    onOpenFocusMode: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val roadmapDetail = activeRoadmapDetail
-    val roadmapTitle = roadmapDetail?.title ?: "CS101: Introduction to Programming and Problem Solving"
-    val roadmapIcon = roadmapDetail?.icon ?: "🤖"
-    val roadmapId = roadmapDetail?.id ?: "curriculum_cse_aiml_CS101"
+    val roadmapTitle = roadmapDetail?.title ?: (academicProfile?.let { "${it.departmentName} - Semester ${it.semester}" } ?: "Official Academic Curriculum")
+    val roadmapIcon = roadmapDetail?.icon ?: "🎓"
+    val roadmapId = roadmapDetail?.id ?: ""
 
     val statusMap = remember(progressList) {
         progressList.associate { it.nodeId to it.status }
@@ -192,6 +205,126 @@ fun HomeScreen(
                 }
             }
 
+            // Academic Profile Setup Banner (First-time users) or Academic Context Badge
+            if (academicProfile == null) {
+                item {
+                    GlassCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("academic_profile_setup_prompt_card"),
+                        level = GlassLevel.L2,
+                        shape = RoundedCornerShape(18.dp),
+                        glowColor = SagePrimaryLight.copy(alpha = 0.35f),
+                        borderColor = SagePrimaryLight.copy(alpha = 0.5f),
+                        onClick = onOpenAcademicProfileDialog
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(44.dp)
+                                        .clip(CircleShape)
+                                        .background(
+                                            Brush.linearGradient(
+                                                listOf(SagePrimaryStart, SagePrimary)
+                                            )
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(text = "🎓", fontSize = 22.sp)
+                                }
+                                Column {
+                                    Text(
+                                        text = "Set Up Academic Profile",
+                                        color = SageTextPrimary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 15.sp
+                                    )
+                                    Text(
+                                        text = "Choose Department & Semester to personalize syllabus & missions",
+                                        color = SageTextSecondary,
+                                        fontSize = 12.sp,
+                                        lineHeight = 16.sp
+                                    )
+                                }
+                            }
+                            Button(
+                                onClick = onOpenAcademicProfileDialog,
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = SagePrimary),
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                modifier = Modifier.testTag("setup_profile_button")
+                            ) {
+                                Text("Set Up", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+            } else {
+                item {
+                    // Active Academic Profile Badge with Change Action
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(SageGlassL1)
+                            .border(1.dp, SageGlassBorder, RoundedCornerShape(14.dp))
+                            .clickable { onOpenAcademicProfileDialog() }
+                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                            .testTag("home_active_academic_profile_chip")
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(text = "🎓", fontSize = 16.sp)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text(
+                                        text = "${academicProfile.departmentName} • Sem ${academicProfile.semester}",
+                                        color = SageTextPrimary,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Text(
+                                        text = "${academicProfile.programmeName} (${academicProfile.regulation})",
+                                        color = SageTextMuted,
+                                        fontSize = 11.sp
+                                    )
+                                }
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "Change",
+                                    color = SagePrimaryLight,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Icon(
+                                    imageVector = Icons.Default.ChevronRight,
+                                    contentDescription = "Change Academic Profile",
+                                    tint = SagePrimaryLight,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             if (!isAiConnected) {
                 item {
                     GlassCard(
@@ -234,6 +367,106 @@ fun HomeScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                         }
+                    }
+                }
+            }
+
+            // Phase C2: Daily Mission Card
+            if (todayDailyMission != null) {
+                item {
+                    DailyMissionCard(
+                        mission = todayDailyMission,
+                        onStartMission = onStartDailyMission,
+                        onStartFiveMinuteFocus = onStartFiveMinuteFocus,
+                        onToggleTask = onToggleDailyMissionTask,
+                        onTaskAction = onDailyMissionTaskAction,
+                        onReviewMission = onReviewDailyMission,
+                        onContinueLearning = {
+                            if (currentTopicNode != null) {
+                                onContinueLearning(currentTopicNode)
+                            } else {
+                                onOpenFocusMode()
+                            }
+                        }
+                    )
+                }
+            }
+
+            // Focus Mode Feature Card
+            item {
+                GlassCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("home_focus_mode_banner_card"),
+                    level = GlassLevel.L2,
+                    shape = RoundedCornerShape(18.dp),
+                    glowColor = SageGold.copy(alpha = 0.2f),
+                    borderColor = SageGold.copy(alpha = 0.35f),
+                    onClick = onOpenFocusMode
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        Brush.linearGradient(
+                                            listOf(SageGold.copy(alpha = 0.85f), SagePrimaryStart)
+                                        )
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = "🎯", fontSize = 22.sp)
+                            }
+                            Column {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "Focus Mode",
+                                        color = SageTextPrimary,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        fontSize = 16.sp
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(SageGold.copy(alpha = 0.2f))
+                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                    ) {
+                                        Text(
+                                            text = "DISTRACTION-FREE",
+                                            color = SageGold,
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = "Curriculum-grounded learning sessions with timer & checkpoints",
+                                    color = SageTextSecondary,
+                                    fontSize = 11.sp,
+                                    lineHeight = 15.sp,
+                                    maxLines = 2
+                                )
+                            }
+                        }
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = "Open Focus Mode",
+                            tint = SageGold,
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
                 }
             }

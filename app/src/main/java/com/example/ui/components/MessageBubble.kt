@@ -290,30 +290,22 @@ fun UserAvatar() {
 fun FormattedContent(text: String) {
     val blocks = parseContentBlocks(text)
 
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         blocks.forEach { block ->
             when (block) {
                 is ContentBlock.Code -> {
-                    CodeBlockView(code = block.code, language = block.language)
+                    if (block.language.lowercase() in listOf("latex", "math", "tex")) {
+                        MathFormulaCard(formula = block.code)
+                    } else {
+                        CodeBlockView(code = block.code, language = block.language)
+                    }
+                }
+                is ContentBlock.Math -> {
+                    MathFormulaCard(formula = block.latex)
                 }
                 is ContentBlock.Text -> {
-                    val annotatedString = buildAnnotatedString {
-                        val raw = block.content
-                        var lastIndex = 0
-                        val boldPattern = Regex("\\*\\*(.*?)\\*\\*")
-                        boldPattern.findAll(raw).forEach { match ->
-                            append(raw.substring(lastIndex, match.range.first))
-                            withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = SageTextPrimary)) {
-                                append(match.groupValues[1])
-                            }
-                            lastIndex = match.range.last + 1
-                        }
-                        if (lastIndex < raw.length) {
-                            append(raw.substring(lastIndex))
-                        }
-                    }
-                    Text(
-                        text = annotatedString,
+                    MathText(
+                        text = block.content,
                         color = SageTextPrimary,
                         fontSize = 15.sp,
                         lineHeight = 22.sp
@@ -382,21 +374,37 @@ fun CodeBlockView(code: String, language: String) {
 sealed class ContentBlock {
     data class Text(val content: String) : ContentBlock()
     data class Code(val code: String, val language: String) : ContentBlock()
+    data class Math(val latex: String) : ContentBlock()
 }
 
 fun parseContentBlocks(content: String): List<ContentBlock> {
     val list = mutableListOf<ContentBlock>()
-    val codeFenceRegex = Regex("```([a-zA-Z0-9_-]*)\\n?([\\s\\S]*?)```")
+    // Regex matches either code fences ```...``` or block math $$...$$ or \[...\]
+    val blockRegex = Regex("(```([a-zA-Z0-9_-]*)\\n?([\\s\\S]*?)```|\\$\\$([\\s\\S]*?)\\$\\$|\\\\\\[([\\s\\S]*?)\\\\\\])")
     var lastIndex = 0
 
-    codeFenceRegex.findAll(content).forEach { match ->
+    blockRegex.findAll(content).forEach { match ->
         val textBefore = content.substring(lastIndex, match.range.first)
         if (textBefore.trim().isNotEmpty()) {
             list.add(ContentBlock.Text(textBefore.trim()))
         }
-        val lang = match.groupValues[1]
-        val code = match.groupValues[2].trimEnd()
-        list.add(ContentBlock.Code(code = code, language = lang))
+
+        val fullMatch = match.value
+        when {
+            fullMatch.startsWith("```") -> {
+                val lang = match.groupValues[2]
+                val code = match.groupValues[3].trimEnd()
+                list.add(ContentBlock.Code(code = code, language = lang))
+            }
+            fullMatch.startsWith("$$") -> {
+                val math = match.groupValues[4].trim()
+                list.add(ContentBlock.Math(latex = math))
+            }
+            fullMatch.startsWith("\\[") -> {
+                val math = match.groupValues[5].trim()
+                list.add(ContentBlock.Math(latex = math))
+            }
+        }
         lastIndex = match.range.last + 1
     }
 

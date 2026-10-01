@@ -85,6 +85,8 @@ import com.google.firebase.auth.FirebaseUser
 @Composable
 fun SettingsScreen(
     authViewModel: AuthViewModel,
+    academicProfile: com.example.data.profile.AcademicProfile? = null,
+    onOpenAcademicProfileDialog: () -> Unit = {},
     onOpenAuth: (AuthScreenMode) -> Unit,
     onOpenDiagnostics: () -> Unit,
     onOpenDeveloperConsole: () -> Unit = onOpenDiagnostics,
@@ -439,7 +441,85 @@ fun SettingsScreen(
                     }
                 }
 
-                // SECTION 2: LEARNING PREFERENCES
+                // SECTION 2: ACADEMIC PROFILE (Phase C2.5)
+                Text(
+                    text = "ACADEMIC PROFILE",
+                    color = SagePrimaryLight,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp,
+                    modifier = Modifier.padding(start = 4.dp, top = 8.dp)
+                )
+
+                GlassCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("settings_academic_profile_card"),
+                    level = GlassLevel.L2,
+                    shape = RoundedCornerShape(18.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(SagePrimary.copy(alpha = 0.2f))
+                                        .border(1.dp, SagePrimaryLight.copy(alpha = 0.4f), RoundedCornerShape(10.dp)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(text = "🎓", fontSize = 20.sp)
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = academicProfile?.departmentName ?: "No Profile Selected",
+                                        color = SageTextPrimary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp
+                                    )
+                                    Text(
+                                        text = if (academicProfile != null) "Semester ${academicProfile.semester} • ${academicProfile.regulation}" else "Set up to personalize your curriculum",
+                                        color = SageTextSecondary,
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            }
+                        }
+
+                        if (academicProfile != null) {
+                            HorizontalDivider(color = SageGlassBorder, thickness = 1.dp)
+
+                            AccountDetailRow(label = "Programme", value = academicProfile.programmeName)
+                            AccountDetailRow(label = "Department ID", value = academicProfile.departmentId.uppercase())
+                            AccountDetailRow(label = "Regulation", value = academicProfile.regulation)
+                            AccountDetailRow(label = "Current Semester", value = "Semester ${academicProfile.semester}")
+                        }
+
+                        Spacer(modifier = Modifier.height(2.dp))
+
+                        GlassButton(
+                            text = if (academicProfile == null) "Set Up Academic Profile" else "Change Academic Profile",
+                            onClick = onOpenAcademicProfileDialog,
+                            icon = Icons.Default.Build,
+                            variant = GlassButtonVariant.Primary,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(44.dp)
+                                .testTag("change_academic_profile_button")
+                        )
+                    }
+                }
+
+                // SECTION 3: LEARNING PREFERENCES
                 Text(
                     text = "PREFERENCES",
                     color = SagePrimaryLight,

@@ -89,32 +89,50 @@ class FirestoreSyncService(
             val remoteAcademicSnap = academicDocRef.get().await()
             val remoteAcademic = remoteAcademicSnap.toObject(FirestoreAcademicProfile::class.java)
 
-            val localActiveRoadmapId = preferencesManager.activeRoadmapId
-            val localActiveRoadmapTitle = preferencesManager.activeRoadmapTitle
-            val localCurrentTopicId = preferencesManager.currentTopicId
-            val localCurrentTopicTitle = preferencesManager.currentTopicTitle
+            val localProfile = preferencesManager.getAcademicProfile()
+            val localHasProfile = preferencesManager.hasAcademicProfile
+            val localUpdatedAt = preferencesManager.academicProfileUpdatedAt
 
-            if (remoteAcademic != null && remoteAcademic.updatedAt > preferencesManager.lastLatencyMs && remoteAcademic.activeRoadmapId.isNotBlank()) {
-                // Remote has valid academic profile; update local preferences if local is default or older
-                if (localActiveRoadmapId == "curriculum_cse_aiml_CS101" && remoteAcademic.activeRoadmapId != localActiveRoadmapId) {
+            if (remoteAcademic != null && remoteAcademic.hasProfile && remoteAcademic.departmentId.isNotBlank() &&
+                (!localHasProfile || remoteAcademic.updatedAt > localUpdatedAt)
+            ) {
+                // Remote profile takes precedence (newer or local empty)
+                val newLocalProfile = com.example.data.profile.AcademicProfile(
+                    departmentId = remoteAcademic.departmentId,
+                    departmentName = remoteAcademic.departmentName,
+                    programmeId = remoteAcademic.programmeId.ifBlank { remoteAcademic.departmentId },
+                    programmeName = remoteAcademic.programme,
+                    regulationId = remoteAcademic.regulation.lowercase(),
+                    regulation = remoteAcademic.regulation,
+                    semester = remoteAcademic.currentSemester,
+                    updatedAt = remoteAcademic.updatedAt
+                )
+                preferencesManager.saveAcademicProfile(newLocalProfile)
+                dao.saveAcademicProfile(newLocalProfile.toEntity())
+
+                if (remoteAcademic.activeRoadmapId.isNotBlank()) {
                     preferencesManager.activeRoadmapId = remoteAcademic.activeRoadmapId
                     preferencesManager.activeRoadmapTitle = remoteAcademic.activeRoadmapTitle
+                }
+                if (remoteAcademic.currentTopicId.isNotBlank()) {
                     preferencesManager.currentTopicId = remoteAcademic.currentTopicId
                     preferencesManager.currentTopicTitle = remoteAcademic.currentTopicTitle
                 }
-            } else {
+            } else if (localProfile != null && localHasProfile) {
                 // Push local academic profile to Firestore
                 val localAcademic = FirestoreAcademicProfile(
-                    departmentId = "cse_aiml",
-                    departmentName = "CSE (AI & ML)",
-                    programme = "B. Tech CSE (AI & ML)",
-                    regulation = "R25",
-                    currentSemester = 1,
-                    activeRoadmapId = localActiveRoadmapId,
-                    activeRoadmapTitle = localActiveRoadmapTitle,
-                    currentTopicId = localCurrentTopicId,
-                    currentTopicTitle = localCurrentTopicTitle,
-                    updatedAt = System.currentTimeMillis()
+                    hasProfile = true,
+                    departmentId = localProfile.departmentId,
+                    departmentName = localProfile.departmentName,
+                    programme = localProfile.programmeName,
+                    programmeId = localProfile.programmeId,
+                    regulation = localProfile.regulation,
+                    currentSemester = localProfile.semester,
+                    activeRoadmapId = preferencesManager.activeRoadmapId,
+                    activeRoadmapTitle = preferencesManager.activeRoadmapTitle,
+                    currentTopicId = preferencesManager.currentTopicId,
+                    currentTopicTitle = preferencesManager.currentTopicTitle,
+                    updatedAt = localProfile.updatedAt
                 )
                 academicDocRef.set(localAcademic, SetOptions.merge()).await()
             }

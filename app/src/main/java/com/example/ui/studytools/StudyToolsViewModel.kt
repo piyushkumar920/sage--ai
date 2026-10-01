@@ -132,18 +132,24 @@ class StudyToolsViewModel(application: Application) : AndroidViewModel(applicati
     // GENERATION HANDLERS
     // ==========================================
 
-    fun generateNotes(topic: String, subject: String, prompt: String = "") {
+    fun generateNotes(
+        topic: String,
+        subject: String,
+        prompt: String = "",
+        academicContext: com.example.data.studytools.AcademicContext? = null
+    ) {
         viewModelScope.launch {
             _uiState.value = StudyToolUiState.Loading
             val effectiveTopic = topic.ifBlank { contextTopic }
             val effectiveSubject = subject.ifBlank { contextSubject }
+            val effectiveAcademic = academicContext ?: contextAcademic
 
             when (val res = repository.generateNotes(
                 topic = effectiveTopic,
                 subject = effectiveSubject,
                 syllabusContext = contextSyllabus,
                 prompt = prompt,
-                academicContext = contextAcademic
+                academicContext = effectiveAcademic
             )) {
                 is GeminiResult.Success -> {
                     val entity = SavedStudyToolEntity(
@@ -166,18 +172,24 @@ class StudyToolsViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-    fun generateFlashcards(topic: String, subject: String, prompt: String = "") {
+    fun generateFlashcards(
+        topic: String,
+        subject: String,
+        prompt: String = "",
+        academicContext: com.example.data.studytools.AcademicContext? = null
+    ) {
         viewModelScope.launch {
             _uiState.value = StudyToolUiState.Loading
             val effectiveTopic = topic.ifBlank { contextTopic }
             val effectiveSubject = subject.ifBlank { contextSubject }
+            val effectiveAcademic = academicContext ?: contextAcademic
 
             when (val res = repository.generateFlashcards(
                 topic = effectiveTopic,
                 subject = effectiveSubject,
                 syllabusContext = contextSyllabus,
                 prompt = prompt,
-                academicContext = contextAcademic
+                academicContext = effectiveAcademic
             )) {
                 is GeminiResult.Success -> {
                     val entity = SavedStudyToolEntity(
@@ -202,18 +214,24 @@ class StudyToolsViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-    fun generateMindMap(topic: String, subject: String, prompt: String = "") {
+    fun generateMindMap(
+        topic: String,
+        subject: String,
+        prompt: String = "",
+        academicContext: com.example.data.studytools.AcademicContext? = null
+    ) {
         viewModelScope.launch {
             _uiState.value = StudyToolUiState.Loading
             val effectiveTopic = topic.ifBlank { contextTopic }
             val effectiveSubject = subject.ifBlank { contextSubject }
+            val effectiveAcademic = academicContext ?: contextAcademic
 
             when (val res = repository.generateMindMap(
                 topic = effectiveTopic,
                 subject = effectiveSubject,
                 syllabusContext = contextSyllabus,
                 prompt = prompt,
-                academicContext = contextAcademic
+                academicContext = effectiveAcademic
             )) {
                 is GeminiResult.Success -> {
                     val entity = SavedStudyToolEntity(
@@ -236,18 +254,24 @@ class StudyToolsViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-    fun generateRevisionSheet(topic: String, subject: String, prompt: String = "") {
+    fun generateRevisionSheet(
+        topic: String,
+        subject: String,
+        prompt: String = "",
+        academicContext: com.example.data.studytools.AcademicContext? = null
+    ) {
         viewModelScope.launch {
             _uiState.value = StudyToolUiState.Loading
             val effectiveTopic = topic.ifBlank { contextTopic }
             val effectiveSubject = subject.ifBlank { contextSubject }
+            val effectiveAcademic = academicContext ?: contextAcademic
 
             when (val res = repository.generateRevisionSheet(
                 topic = effectiveTopic,
                 subject = effectiveSubject,
                 syllabusContext = contextSyllabus,
                 prompt = prompt,
-                academicContext = contextAcademic
+                academicContext = effectiveAcademic
             )) {
                 is GeminiResult.Success -> {
                     val entity = SavedStudyToolEntity(
@@ -270,18 +294,24 @@ class StudyToolsViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-    fun generateFormulaSheet(topic: String, subject: String, prompt: String = "") {
+    fun generateFormulaSheet(
+        topic: String,
+        subject: String,
+        prompt: String = "",
+        academicContext: com.example.data.studytools.AcademicContext? = null
+    ) {
         viewModelScope.launch {
             _uiState.value = StudyToolUiState.Loading
             val effectiveTopic = topic.ifBlank { contextTopic }
             val effectiveSubject = subject.ifBlank { contextSubject }
+            val effectiveAcademic = academicContext ?: contextAcademic
 
             when (val res = repository.generateFormulaSheet(
                 topic = effectiveTopic,
                 subject = effectiveSubject,
                 syllabusContext = contextSyllabus,
                 prompt = prompt,
-                academicContext = contextAcademic
+                academicContext = effectiveAcademic
             )) {
                 is GeminiResult.Success -> {
                     val entity = SavedStudyToolEntity(
@@ -304,10 +334,11 @@ class StudyToolsViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
-    fun solveImage(uri: Uri, prompt: String = "") {
+    fun solveImage(uri: Uri, prompt: String = "", academicContext: com.example.data.studytools.AcademicContext? = null) {
         viewModelScope.launch {
             _uiState.value = StudyToolUiState.Loading
-            when (val res = repository.solveImage(uri, prompt)) {
+            val effectiveAcademic = academicContext ?: contextAcademic
+            when (val res = repository.solveImage(uri, prompt, effectiveAcademic)) {
                 is GeminiResult.Success -> {
                     val entity = SavedStudyToolEntity(
                         id = "solve_${UUID.randomUUID()}",

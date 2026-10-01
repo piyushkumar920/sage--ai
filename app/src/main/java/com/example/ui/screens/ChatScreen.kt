@@ -1,5 +1,9 @@
 package com.example.ui.screens
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -37,8 +41,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material3.Button
@@ -56,6 +62,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -75,6 +82,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.local.MessageEntity
 import com.example.data.local.TopicEntity
+import com.example.data.studytools.AcademicContext
+import com.example.data.studytools.StudyToolType
 import com.example.ui.components.AmbientGlowBackground
 import com.example.ui.components.GlassCard
 import com.example.ui.components.GlassLevel
@@ -82,6 +91,12 @@ import com.example.ui.components.MessageBubble
 import com.example.ui.components.ModeSelector
 import com.example.ui.components.OfflineBanner
 import com.example.ui.components.QuickActionChips
+import com.example.ui.studytools.ChatAcademicContextHeader
+import com.example.ui.studytools.ChatAttachedImagePreview
+import com.example.ui.studytools.ChatStudyActionsToolbar
+import com.example.ui.studytools.ChatStudyResultContainer
+import com.example.ui.studytools.StudyToolUiState
+import com.example.ui.studytools.StudyToolsViewModel
 import com.example.ui.theme.SageAccent
 import com.example.ui.theme.SageBackground
 import com.example.ui.theme.SageCardBorder
@@ -112,6 +127,8 @@ fun ChatScreen(
     isOnline: Boolean,
     currentMode: String,
     streakDays: Int,
+    academicContext: AcademicContext? = null,
+    studyToolsViewModel: StudyToolsViewModel? = null,
     onSendMessage: (String) -> Unit,
     onRetryMessage: (Long) -> Unit,
     onModeChanged: (String) -> Unit,
@@ -123,11 +140,24 @@ fun ChatScreen(
     modifier: Modifier = Modifier
 ) {
     var inputText by remember { mutableStateOf("") }
+    var attachedImageUri by remember { mutableStateOf<Uri?>(null) }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
+    val studyToolState by studyToolsViewModel?.uiState?.collectAsState()
+        ?: remember { mutableStateOf(StudyToolUiState.Idle) }
+
+    // Image Picker for Scan & Solve
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            attachedImageUri = uri
+        }
+    }
+
     // Auto-scroll on new messages or generation change
-    LaunchedEffect(messages.size, isGenerating) {
+    LaunchedEffect(messages.size, isGenerating, studyToolState) {
         if (messages.isNotEmpty()) {
             listState.animateScrollToItem(messages.size - 1)
         }
@@ -155,10 +185,12 @@ fun ChatScreen(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = activeTopic?.title ?: "Sage Learning",
+                                text = academicContext?.courseName?.ifBlank { null }
+                                    ?: activeTopic?.title
+                                    ?: "Sage Learning",
                                 color = SageTextPrimary,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 17.sp,
+                                fontSize = 16.sp,
                                 maxLines = 1
                             )
                             Spacer(modifier = Modifier.width(5.dp))
@@ -170,7 +202,7 @@ fun ChatScreen(
                             )
                         }
                         Text(
-                            text = "Mode: $currentMode",
+                            text = if (academicContext != null) "Syllabus Track • $currentMode" else "Mode: $currentMode",
                             color = if (currentMode == "SOCRATIC") SageGold else SagePrimaryLight,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Medium
@@ -239,7 +271,9 @@ fun ChatScreen(
                     // Diagnostics button
                     IconButton(
                         onClick = onOpenDiagnostics,
-                        modifier = Modifier.testTag("open_diagnostic_button")
+                        modifier = Modifier
+                            .size(36.dp)
+                            .testTag("chat_diagnostics_button")
                     ) {
                         Icon(
                             imageVector = Icons.Default.Build,
@@ -250,7 +284,7 @@ fun ChatScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = SageGlassL2
+                    containerColor = SageSurface.copy(alpha = 0.88f)
                 )
             )
         }
@@ -264,56 +298,44 @@ fun ChatScreen(
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
-                // Mode Selector bar
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(SageGlassL1)
-                        .border(
-                            1.dp,
-                            SageGlassBorder,
-                            RoundedCornerShape(0.dp)
-                        )
-                        .padding(horizontal = 14.dp, vertical = 6.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "AI Tutoring Mode:",
-                        color = SageTextMuted,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                    ModeSelector(
-                        currentMode = currentMode,
-                        onModeChanged = onModeChanged
-                    )
-                }
-
                 // Offline banner
                 OfflineBanner(
                     isOffline = !isOnline,
                     onRetry = onTestConnection
                 )
 
-                // Chat content area
+                // 1. Active Academic Context Header
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    ChatAcademicContextHeader(
+                        academicContext = academicContext,
+                        fallbackTitle = activeTopic?.title ?: "General Study",
+                        currentMode = currentMode,
+                        onChangeTopicClick = onOpenTopics
+                    )
+                }
+
+                // 2. Chat Message List & In-Chat Study Tool Content
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
                 ) {
-                    if (messages.isEmpty()) {
+                    if (messages.isEmpty() && (studyToolState is StudyToolUiState.Idle)) {
                         // Empty State Welcome Card
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(24.dp),
+                                .padding(20.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(68.dp)
+                                    .size(64.dp)
                                     .clip(CircleShape)
                                     .background(
                                         Brush.linearGradient(
@@ -340,15 +362,15 @@ fun ChatScreen(
                                     imageVector = Icons.Default.AutoAwesome,
                                     contentDescription = null,
                                     tint = Color.White,
-                                    modifier = Modifier.size(34.dp)
+                                    modifier = Modifier.size(32.dp)
                                 )
                             }
 
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(14.dp))
 
                             Text(
-                                text = "Meet Sage",
-                                fontSize = 24.sp,
+                                text = "Sage AI Study Workspace",
+                                fontSize = 22.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = SageTextPrimary
                             )
@@ -356,41 +378,41 @@ fun ChatScreen(
                             Spacer(modifier = Modifier.height(6.dp))
 
                             Text(
-                                text = "Your personal Gemini AI tutor. Ask any question, explore complex ideas, or switch to Learning Mode for structured mastery.",
+                                text = "Ask questions, generate curriculum notes, solve textbook problems with your camera, or review interactive flashcards.",
                                 color = SageTextSecondary,
-                                fontSize = 13.sp,
-                                lineHeight = 19.sp,
-                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                fontSize = 12.sp,
+                                lineHeight = 18.sp,
+                                textAlign = TextAlign.Center
                             )
 
-                            Spacer(modifier = Modifier.height(20.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
 
                             GlassCard(
                                 modifier = Modifier.fillMaxWidth(),
                                 level = GlassLevel.L2,
-                                shape = RoundedCornerShape(18.dp)
+                                shape = RoundedCornerShape(16.dp)
                             ) {
                                 Column(
-                                    modifier = Modifier.padding(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                                    modifier = Modifier.padding(14.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     Text(
-                                        text = "PROMPTS TO GET STARTED",
+                                        text = "QUICK STUDY PROMPTS",
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = SageGold,
                                         letterSpacing = 0.6.sp
                                     )
                                     listOf(
-                                        "Explain quantum entanglement with a simple analogy",
-                                        "Teach me dynamic programming step by step",
-                                        "What is the difference between TCP and UDP?"
+                                        "Explain this module step-by-step with real-world examples",
+                                        "Give me 5 key exam questions from this syllabus",
+                                        "Compare the core algorithms and their time complexities"
                                     ).forEach { samplePrompt ->
                                         Text(
                                             text = "• \"$samplePrompt\"",
                                             color = SageTextPrimary,
-                                            fontSize = 13.sp,
-                                            lineHeight = 18.sp,
+                                            fontSize = 12.sp,
+                                            lineHeight = 17.sp,
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .clip(RoundedCornerShape(8.dp))
@@ -408,7 +430,8 @@ fun ChatScreen(
                             state = listState,
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(vertical = 8.dp)
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             items(messages, key = { it.id }) { msg ->
                                 MessageBubble(
@@ -416,18 +439,105 @@ fun ChatScreen(
                                     onRetry = onRetryMessage
                                 )
                             }
+
+                            // Active Study Tool Generation Result
+                            if (studyToolsViewModel != null && studyToolState !is StudyToolUiState.Idle) {
+                                item {
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    ChatStudyResultContainer(
+                                        viewModel = studyToolsViewModel,
+                                        activeAcademicContext = academicContext,
+                                        activeTopicTitle = activeTopic?.title ?: "Study Topic",
+                                        onClose = { studyToolsViewModel.resetState() },
+                                        onAskFollowUp = { prompt ->
+                                            onSendMessage(prompt)
+                                        }
+                                    )
+                                }
+                            }
                         }
                     }
                 }
 
-                // Quick action chips
+                // 3. Attached Image Preview (For Scan & Solve)
+                if (attachedImageUri != null) {
+                    Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
+                        ChatAttachedImagePreview(
+                            imageUri = attachedImageUri!!,
+                            onRemove = { attachedImageUri = null }
+                        )
+                    }
+                }
+
+                // 4. Compact Study Actions Toolbar
+                ChatStudyActionsToolbar(
+                    onSelectTool = { toolType ->
+                        val effectiveTopic = academicContext?.topic?.ifBlank { null }
+                            ?: academicContext?.module?.ifBlank { null }
+                            ?: activeTopic?.title?.ifBlank { null }
+                            ?: "Core Syllabus"
+                        val effectiveSubject = academicContext?.courseName?.ifBlank { null }
+                            ?: academicContext?.courseCode?.ifBlank { null }
+                            ?: "Academic Subject"
+
+                        when (toolType) {
+                            StudyToolType.SCAN_AND_SOLVE -> {
+                                photoPickerLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            }
+                            StudyToolType.GENERATE_NOTES -> {
+                                studyToolsViewModel?.generateNotes(
+                                    topic = effectiveTopic,
+                                    subject = effectiveSubject,
+                                    prompt = "Generate comprehensive academic notes aligned with the official curriculum syllabus.",
+                                    academicContext = academicContext
+                                )
+                            }
+                            StudyToolType.FLASHCARDS -> {
+                                studyToolsViewModel?.generateFlashcards(
+                                    topic = effectiveTopic,
+                                    subject = effectiveSubject,
+                                    prompt = "Generate high-yield interactive flashcards covering key definitions, formulas, and concepts.",
+                                    academicContext = academicContext
+                                )
+                            }
+                            StudyToolType.MIND_MAP -> {
+                                studyToolsViewModel?.generateMindMap(
+                                    topic = effectiveTopic,
+                                    subject = effectiveSubject,
+                                    prompt = "Generate a hierarchical concept mind map tree.",
+                                    academicContext = academicContext
+                                )
+                            }
+                            StudyToolType.REVISION_SHEET -> {
+                                studyToolsViewModel?.generateRevisionSheet(
+                                    topic = effectiveTopic,
+                                    subject = effectiveSubject,
+                                    prompt = "Generate a rapid exam revision sheet with high-yield facts and misconceptions.",
+                                    academicContext = academicContext
+                                )
+                            }
+                            StudyToolType.FORMULA_SHEET -> {
+                                studyToolsViewModel?.generateFormulaSheet(
+                                    topic = effectiveTopic,
+                                    subject = effectiveSubject,
+                                    prompt = "Generate a formula sheet with variables, SI units, and application contexts.",
+                                    academicContext = academicContext
+                                )
+                            }
+                        }
+                    }
+                )
+
+                // 5. Quick action chips
                 QuickActionChips(
                     onActionSelected = { prompt ->
                         onSendMessage(prompt)
                     }
                 )
 
-                // Input bar dock
+                // 6. Input bar dock
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -443,16 +553,16 @@ fun ChatScreen(
                             ),
                             RoundedCornerShape(0.dp)
                         )
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
                     Text(
-                        text = "AI can make mistakes. Please cross-check important information.",
+                        text = "AI tutor responses are grounded in JIS College curriculum syllabus.",
                         color = SageTextMuted,
-                        fontSize = 11.sp,
+                        fontSize = 10.sp,
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(bottom = 6.dp)
+                            .padding(bottom = 4.dp)
                             .testTag("chat_ai_disclaimer")
                     )
 
@@ -460,14 +570,38 @@ fun ChatScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // Scan & Solve camera button next to text input
+                        IconButton(
+                            onClick = {
+                                photoPickerLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                )
+                            },
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(SageGlassL3)
+                                .border(1.dp, SageGlassBorder, CircleShape)
+                                .testTag("chat_camera_picker_button")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CameraAlt,
+                                contentDescription = "Scan Problem",
+                                tint = SagePrimaryLight,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(6.dp))
+
                         OutlinedTextField(
                             value = inputText,
                             onValueChange = { inputText = it },
                             placeholder = {
                                 Text(
-                                    text = if (currentMode == "SOCRATIC") "Reflect or answer here..." else "Ask Sage anything...",
+                                    text = if (attachedImageUri != null) "Ask question about image or tap send..." else if (currentMode == "SOCRATIC") "Reflect or answer here..." else "Ask Sage anything...",
                                     color = SageTextMuted,
-                                    fontSize = 14.sp
+                                    fontSize = 13.sp
                                 )
                             },
                             modifier = Modifier
@@ -476,7 +610,12 @@ fun ChatScreen(
                             maxLines = 4,
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                             keyboardActions = KeyboardActions(onSend = {
-                                if (inputText.isNotBlank() && !isGenerating) {
+                                if (attachedImageUri != null) {
+                                    val prompt = inputText.ifBlank { "Solve this academic problem step-by-step with explanation." }
+                                    studyToolsViewModel?.solveImage(attachedImageUri!!, prompt, academicContext)
+                                    attachedImageUri = null
+                                    inputText = ""
+                                } else if (inputText.isNotBlank() && !isGenerating) {
                                     onSendMessage(inputText)
                                     inputText = ""
                                 }
@@ -492,70 +631,76 @@ fun ChatScreen(
                             shape = RoundedCornerShape(22.dp)
                         )
 
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
 
-                        val canSend = inputText.isNotBlank() && !isGenerating
+                        val canSend = (inputText.isNotBlank() || attachedImageUri != null) && !isGenerating
                         val sendInteractionSource = remember { MutableInteractionSource() }
                         val isSendPressed by sendInteractionSource.collectIsPressedAsState()
 
                         val sendScale by animateFloatAsState(
-                            targetValue = if (isSendPressed) 0.88f else 1f,
-                            animationSpec = spring(dampingRatio = 0.7f, stiffness = 600f),
-                            label = "send_press"
+                            targetValue = if (isSendPressed) 0.92f else 1f,
+                            animationSpec = spring(dampingRatio = 0.72f, stiffness = 600f),
+                            label = "send_scale"
                         )
 
                         Box(
                             modifier = Modifier
+                                .size(44.dp)
                                 .graphicsLayer {
                                     scaleX = sendScale
                                     scaleY = sendScale
                                 }
-                                .size(46.dp)
                                 .clip(CircleShape)
                                 .background(
                                     if (canSend) {
-                                        Brush.linearGradient(listOf(SagePrimaryStart, SagePrimary))
+                                        Brush.linearGradient(
+                                            listOf(
+                                                SagePrimaryStart,
+                                                SagePrimary
+                                            )
+                                        )
                                     } else {
-                                        Brush.linearGradient(listOf(SageGlassL1, SageGlassL2))
+                                        Brush.linearGradient(
+                                            listOf(
+                                                SageGlassL2,
+                                                SageGlassL1
+                                            )
+                                        )
                                     }
                                 )
                                 .border(
                                     1.dp,
-                                    if (canSend) {
-                                        Brush.linearGradient(
-                                            listOf(
-                                                Color.White.copy(alpha = 0.4f),
-                                                SageGlowEnd.copy(alpha = 0.6f)
-                                            )
-                                        )
-                                    } else {
-                                        Brush.linearGradient(listOf(SageGlassBorder, SageGlassBorder))
-                                    },
+                                    if (canSend) SagePrimaryLight.copy(alpha = 0.6f) else SageGlassBorder,
                                     CircleShape
                                 )
                                 .clickable(
+                                    enabled = canSend,
                                     interactionSource = sendInteractionSource,
-                                    indication = null,
-                                    enabled = canSend
+                                    indication = null
                                 ) {
-                                    if (canSend) {
+                                    if (attachedImageUri != null) {
+                                        val prompt = inputText.ifBlank { "Solve this academic problem step-by-step with explanation." }
+                                        studyToolsViewModel?.solveImage(attachedImageUri!!, prompt, academicContext)
+                                        attachedImageUri = null
+                                        inputText = ""
+                                    } else if (inputText.isNotBlank()) {
                                         onSendMessage(inputText)
                                         inputText = ""
                                     }
                                 }
-                                .testTag("send_button"),
+                                .testTag("chat_send_button"),
                             contentAlignment = Alignment.Center
                         ) {
                             if (isGenerating) {
                                 CircularProgressIndicator(
-                                    color = SageGold,
                                     modifier = Modifier.size(20.dp),
+                                    color = SagePrimaryLight,
                                     strokeWidth = 2.dp
                                 )
                             } else {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.Send,
-                                    contentDescription = "Send",
+                                    contentDescription = "Send Message",
                                     tint = if (canSend) Color.White else SageTextMuted,
                                     modifier = Modifier.size(18.dp)
                                 )

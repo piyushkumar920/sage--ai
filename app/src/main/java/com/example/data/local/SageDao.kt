@@ -120,6 +120,9 @@ interface SageDao {
     @Query("SELECT * FROM weak_concepts WHERE isResolved = 0 ORDER BY mistakeCount DESC, lastTestedAt DESC")
     fun getActiveWeakConcepts(): Flow<List<WeakConceptEntity>>
 
+    @Query("SELECT * FROM weak_concepts WHERE isResolved = 0 ORDER BY mistakeCount DESC, lastTestedAt DESC")
+    suspend fun getActiveWeakConceptsOnce(): List<WeakConceptEntity>
+
     @Query("SELECT * FROM weak_concepts WHERE concept = :concept LIMIT 1")
     suspend fun getWeakConceptByName(concept: String): WeakConceptEntity?
 
@@ -144,4 +147,52 @@ interface SageDao {
 
     @Query("DELETE FROM saved_study_tools WHERE id = :id")
     suspend fun deleteSavedStudyTool(id: String)
+
+    // --- Focus Sessions ---
+    @Query("SELECT * FROM focus_sessions ORDER BY endedAt DESC")
+    fun getAllFocusSessions(): Flow<List<FocusSessionEntity>>
+
+    @Query("SELECT * FROM focus_sessions WHERE endedAt >= :sinceTimestamp ORDER BY endedAt DESC")
+    fun getFocusSessionsSince(sinceTimestamp: Long): Flow<List<FocusSessionEntity>>
+
+    @Query("SELECT SUM(actualFocusedSeconds) FROM focus_sessions")
+    fun getTotalFocusSeconds(): Flow<Long?>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertFocusSession(session: FocusSessionEntity): Long
+
+    // --- Daily Missions ---
+    @Query("SELECT * FROM daily_missions WHERE dateKey = :dateKey LIMIT 1")
+    fun getDailyMissionByDate(dateKey: String): Flow<com.example.data.mission.DailyMissionEntity?>
+
+    @Query("SELECT * FROM daily_missions WHERE dateKey = :dateKey LIMIT 1")
+    suspend fun getDailyMissionByDateOnce(dateKey: String): com.example.data.mission.DailyMissionEntity?
+
+    @Query("SELECT * FROM daily_missions WHERE id = :id LIMIT 1")
+    suspend fun getDailyMissionById(id: String): com.example.data.mission.DailyMissionEntity?
+
+    @Query("SELECT * FROM daily_missions ORDER BY dateKey DESC")
+    fun getAllDailyMissions(): Flow<List<com.example.data.mission.DailyMissionEntity>>
+
+    @Query("SELECT * FROM daily_missions ORDER BY dateKey DESC LIMIT :limit")
+    fun getRecentDailyMissions(limit: Int): Flow<List<com.example.data.mission.DailyMissionEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertOrUpdateDailyMission(mission: com.example.data.mission.DailyMissionEntity)
+
+    @Query("DELETE FROM daily_missions WHERE dateKey = :dateKey AND completed = 0")
+    suspend fun deleteIncompleteDailyMissionByDate(dateKey: String)
+
+    // --- Academic Profile (Phase C2.5) ---
+    @Query("SELECT * FROM academic_profile WHERE id = 'primary' LIMIT 1")
+    fun getAcademicProfileFlow(): Flow<com.example.data.profile.AcademicProfileEntity?>
+
+    @Query("SELECT * FROM academic_profile WHERE id = 'primary' LIMIT 1")
+    suspend fun getAcademicProfileOnce(): com.example.data.profile.AcademicProfileEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveAcademicProfile(profile: com.example.data.profile.AcademicProfileEntity)
+
+    @Query("DELETE FROM academic_profile WHERE id = 'primary'")
+    suspend fun clearAcademicProfile()
 }

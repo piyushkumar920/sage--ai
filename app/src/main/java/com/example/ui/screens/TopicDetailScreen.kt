@@ -90,6 +90,7 @@ fun TopicDetailScreen(
     onTakeQuiz: () -> Unit,
     onToggleComplete: () -> Unit,
     onOpenStudyTools: (() -> Unit)? = null,
+    onOpenFocusMode: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -316,6 +317,19 @@ fun TopicDetailScreen(
                                 .fillMaxWidth()
                                 .height(46.dp)
                                 .testTag("topic_study_tools_button")
+                        )
+                    }
+
+                    // Button 4.5: Focus Mode (Curriculum Session)
+                    if (onOpenFocusMode != null) {
+                        GlassButton(
+                            text = "🎯 Start Focus Session on This Topic",
+                            onClick = onOpenFocusMode,
+                            variant = GlassButtonVariant.Secondary,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(46.dp)
+                                .testTag("topic_focus_mode_button")
                         )
                     }
 

@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -63,6 +64,8 @@ class SageViewModel(application: Application) : AndroidViewModel(application) {
         dao = dao,
         preferencesManager = preferencesManager
     )
+    val curriculumRepository: com.example.data.curriculum.CurriculumRepository
+        get() = roadmapRepository.curriculumRepository
     val quizService = QuizService(geminiClient)
     private val networkMonitor = NetworkMonitor(application)
 
@@ -74,6 +77,13 @@ class SageViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _activeTopic = MutableStateFlow<TopicEntity?>(null)
     val activeTopic: StateFlow<TopicEntity?> = _activeTopic.asStateFlow()
+
+    private val _activeAcademicContext = MutableStateFlow<com.example.data.studytools.AcademicContext?>(null)
+    val activeAcademicContext: StateFlow<com.example.data.studytools.AcademicContext?> = _activeAcademicContext.asStateFlow()
+
+    fun setAcademicContext(context: com.example.data.studytools.AcademicContext?) {
+        _activeAcademicContext.value = context
+    }
 
     val messages: StateFlow<List<MessageEntity>> = _activeTopic.flatMapLatest { topic ->
         if (topic != null) repository.getMessagesForTopic(topic.id) else flowOf(emptyList())
@@ -130,6 +140,76 @@ class SageViewModel(application: Application) : AndroidViewModel(application) {
     private val _dailyQuizStats = MutableStateFlow<DailyQuizDashboardStats?>(null)
     val dailyQuizStats: StateFlow<DailyQuizDashboardStats?> = _dailyQuizStats.asStateFlow()
 
+    // --- ADAPTIVE LEARNING & WEEKLY REVIEW (PHASE C3) ---
+    val adaptiveLearningRepository = com.example.data.adaptive.AdaptiveLearningRepository(
+        context = application,
+        dao = dao,
+        preferencesManager = preferencesManager,
+        curriculumRepository = curriculumRepository
+    )
+
+    val weeklyReviewData: StateFlow<com.example.data.adaptive.WeeklyReviewData> = adaptiveLearningRepository
+        .getWeeklyReviewFlow()
+        .stateIn(viewModelScope, SharingStarted.Lazily, com.example.data.adaptive.WeeklyReviewData())
+
+    // --- ACADEMIC PROFILE STATE (PHASE C2.5) ---
+    val academicProfileRepository = com.example.data.profile.AcademicProfileRepository(
+        context = application,
+        dao = dao,
+        preferencesManager = preferencesManager,
+        curriculumRepository = curriculumRepository
+    )
+
+    val academicProfile: StateFlow<com.example.data.profile.AcademicProfile?> = academicProfileRepository
+        .academicProfileFlow
+        .stateIn(viewModelScope, SharingStarted.Lazily, academicProfileRepository.getProfileSync())
+
+    val hasAcademicProfile: StateFlow<Boolean> = academicProfileRepository.academicProfileFlow
+        .map { it != null }
+        .stateIn(viewModelScope, SharingStarted.Lazily, academicProfileRepository.hasProfile())
+
+    fun saveAcademicProfile(department: CurriculumDepartment, semester: Int) {
+        viewModelScope.launch {
+            val profile = academicProfileRepository.saveProfile(department, semester)
+            val initialCourse = academicProfileRepository.getInitialCourseForProfile(profile)
+            if (initialCourse != null) {
+                selectRoadmap(initialCourse.roadmapId)
+            }
+            _activeAcademicContext.value = academicProfileRepository.buildDefaultAcademicContext(profile)
+            val mission = dailyMissionRepository.handleAcademicProfileChange(profile)
+            _todayMission.value = mission
+            refreshRoadmapPercentages()
+        }
+    }
+
+    fun saveAcademicProfileDirect(profile: com.example.data.profile.AcademicProfile) {
+        viewModelScope.launch {
+            val saved = academicProfileRepository.saveProfile(profile)
+            val initialCourse = academicProfileRepository.getInitialCourseForProfile(saved)
+            if (initialCourse != null) {
+                selectRoadmap(initialCourse.roadmapId)
+            }
+            _activeAcademicContext.value = academicProfileRepository.buildDefaultAcademicContext(saved)
+            val mission = dailyMissionRepository.handleAcademicProfileChange(saved)
+            _todayMission.value = mission
+            refreshRoadmapPercentages()
+        }
+    }
+
+    // --- DAILY MISSION STATE (PHASE C2) ---
+    val dailyMissionRepository = com.example.data.mission.DailyMissionRepository(
+        context = application,
+        dao = dao,
+        curriculumRepository = curriculumRepository
+    )
+
+    private val _todayMission = MutableStateFlow<com.example.data.mission.DailyMissionEntity?>(null)
+    val todayMission: StateFlow<com.example.data.mission.DailyMissionEntity?> = _todayMission.asStateFlow()
+
+    val recentDailyMissions: StateFlow<List<com.example.data.mission.DailyMissionEntity>> = dailyMissionRepository
+        .getRecentMissions(14)
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
     val streakDays: Int
         get() = preferencesManager.streakDays
 
@@ -154,21 +234,65 @@ class SageViewModel(application: Application) : AndroidViewModel(application) {
             _activeTopic.value = topic
             _currentMode.value = topic.mode
 
-            // Initialize active roadmap: Force official curriculum roadmap CS101 if unset or old dev roadmap
-            val currentRoadmapId = preferencesManager.activeRoadmapId
-            val effectiveRoadmapId = if (currentRoadmapId.isBlank() || currentRoadmapId == "fullstack" || !currentRoadmapId.startsWith("curriculum_")) {
-                "curriculum_cse_aiml_CS101"
+            // Initialize from persistent Academic Profile if available
+            val profile = academicProfileRepository.getProfile()
+            if (profile != null) {
+                val initialCourse = academicProfileRepository.getInitialCourseForProfile(profile)
+                val roadmapId = initialCourse?.roadmapId ?: preferencesManager.activeRoadmapId.ifBlank { "curriculum_cse_aiml_CS101" }
+                preferencesManager.activeRoadmapId = roadmapId
+                selectRoadmap(roadmapId)
+                _activeAcademicContext.value = academicProfileRepository.buildDefaultAcademicContext(profile)
             } else {
-                currentRoadmapId
+                // If no profile established yet, check if there's a valid saved roadmap
+                val currentRoadmapId = preferencesManager.activeRoadmapId
+                if (currentRoadmapId.isNotBlank() && currentRoadmapId.startsWith("curriculum_")) {
+                    selectRoadmap(currentRoadmapId)
+                }
             }
-            preferencesManager.activeRoadmapId = effectiveRoadmapId
-            selectRoadmap(effectiveRoadmapId)
             refreshRoadmapPercentages()
 
             // Initialize daily quiz
             loadDailyQuiz()
+
+            // Initialize daily mission (Phase C2 & C2.5)
+            loadTodayMission()
         }
         testAiConnection()
+    }
+
+    fun loadTodayMission() {
+        viewModelScope.launch {
+            val profile = academicProfileRepository.getProfile()
+            // First ensure today's mission is created if absent
+            val todayMission = dailyMissionRepository.getOrCreateTodayMission(
+                academicProfile = profile,
+                activeAcademicContext = _activeAcademicContext.value,
+                activeRoadmapId = _activeRoadmapId.value,
+                activeTopicTitle = _activeTopic.value?.title
+            )
+            _todayMission.value = todayMission
+
+            // Then observe any updates (e.g. task completion, focus timer updates)
+            dailyMissionRepository.getTodayMissionFlow().collect { mission ->
+                if (mission != null) {
+                    _todayMission.value = mission
+                }
+            }
+        }
+    }
+
+    fun toggleMissionTask(taskId: String) {
+        val mission = _todayMission.value ?: return
+        viewModelScope.launch {
+            dailyMissionRepository.toggleTaskCompletion(mission.id, taskId)
+        }
+    }
+
+    fun completeTodayMission() {
+        val mission = _todayMission.value ?: return
+        viewModelScope.launch {
+            dailyMissionRepository.completeMission(mission.id)
+        }
     }
 
     fun getRoadmapDetail(roadmapId: String): DevRoadmapDetail? {
@@ -292,6 +416,28 @@ Known Weak Topics: ${if (weakConcepts.isEmpty()) "None" else weakConcepts.take(3
                 newTopic.copy(id = id)
             }
 
+            val academic = if (curriculumCourse != null) {
+                com.example.data.studytools.AcademicContext(
+                    department = curriculumCourse.departmentName,
+                    programme = curriculumCourse.programme,
+                    regulation = curriculumCourse.regulation,
+                    semester = curriculumCourse.semester,
+                    courseCode = curriculumCourse.code,
+                    courseName = curriculumCourse.title,
+                    module = node.title,
+                    topic = node.title,
+                    officialSyllabusContent = node.description
+                )
+            } else {
+                com.example.data.studytools.AcademicContext(
+                    courseName = roadmapTitle,
+                    module = node.category,
+                    topic = node.title,
+                    officialSyllabusContent = node.description
+                )
+            }
+            _activeAcademicContext.value = academic
+
             selectTopic(targetTopic)
             setMode("LEARNING")
 
@@ -345,6 +491,28 @@ Known Weak Topics: ${if (weakConcepts.isEmpty()) "None" else weakConcepts.take(3
                 val id = dao.insertTopic(newTopic)
                 newTopic.copy(id = id)
             }
+
+            val academic = if (curriculumCourse != null) {
+                com.example.data.studytools.AcademicContext(
+                    department = curriculumCourse.departmentName,
+                    programme = curriculumCourse.programme,
+                    regulation = curriculumCourse.regulation,
+                    semester = curriculumCourse.semester,
+                    courseCode = curriculumCourse.code,
+                    courseName = curriculumCourse.title,
+                    module = node.title,
+                    topic = node.title,
+                    officialSyllabusContent = node.description
+                )
+            } else {
+                com.example.data.studytools.AcademicContext(
+                    courseName = roadmapTitle,
+                    module = node.category,
+                    topic = node.title,
+                    officialSyllabusContent = node.description
+                )
+            }
+            _activeAcademicContext.value = academic
 
             selectTopic(targetTopic)
             setMode("NORMAL")
@@ -483,6 +651,47 @@ Known Weak Topics: ${if (weakConcepts.isEmpty()) "None" else weakConcepts.take(3
         _activeTopic.value = topic
         _currentMode.value = topic.mode
         preferencesManager.activeTopicId = topic.id
+    }
+
+    fun selectCurriculumTopic(
+        course: com.example.data.curriculum.CurriculumCourse,
+        module: com.example.data.curriculum.CurriculumModule,
+        specificTopic: String? = null,
+        onNavigateToChat: () -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            val topicName = specificTopic?.ifBlank { null } ?: module.title.ifBlank { "${module.moduleNumber}: Core Syllabus" }
+            val academicContext = com.example.data.studytools.AcademicContext(
+                department = course.departmentName,
+                programme = course.programme,
+                regulation = course.regulation,
+                semester = course.semester,
+                courseCode = course.code,
+                courseName = course.title,
+                module = module.title,
+                topic = topicName,
+                officialSyllabusContent = module.content
+            )
+            _activeAcademicContext.value = academicContext
+            selectRoadmap(course.roadmapId)
+
+            val sessionTitle = "${course.code}: $topicName"
+            val existingTopic = allTopics.value.find { it.title.equals(sessionTitle, ignoreCase = true) }
+            val targetTopic = if (existingTopic != null) {
+                existingTopic
+            } else {
+                val newTopic = TopicEntity(
+                    title = sessionTitle,
+                    mode = "NORMAL",
+                    goal = "Study $topicName in ${course.code} (${course.departmentName})",
+                    roadmapJson = "${course.code} | Module: ${module.moduleNumber} | $topicName"
+                )
+                val id = dao.insertTopic(newTopic)
+                newTopic.copy(id = id)
+            }
+            selectTopic(targetTopic)
+            onNavigateToChat()
+        }
     }
 
     fun openTrack(title: String, initialPrompt: String? = null) {
@@ -637,8 +846,7 @@ Known Weak Topics: ${if (weakConcepts.isEmpty()) "None" else weakConcepts.take(3
         testAiConnection()
     }
 
-    val curriculumRepository get() = roadmapRepository.curriculumRepository
-    val allCurriculumDepartments: List<CurriculumDepartment> = curriculumRepository.getAllDepartments()
+    val allCurriculumDepartments: List<CurriculumDepartment> by lazy { curriculumRepository.getAllDepartments() }
     val curriculumSource: String = "CurriculumRepository (assets/curriculum/cse_aiml_r25_database.json)"
     val curriculumFilesCount: Int get() = allCurriculumDepartments.size
     val curriculumCoursesCount: Int get() = curriculumRepository.getCoursesForDepartment("cse_aiml").size

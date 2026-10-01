@@ -73,6 +73,8 @@ import com.example.ui.components.GlassButton
 import com.example.ui.components.GlassButtonVariant
 import com.example.ui.components.GlassCard
 import com.example.ui.components.GlassLevel
+import com.example.ui.components.MathFormulaCard
+import com.example.ui.components.MathText
 import com.example.ui.theme.SageGlassBorder
 import com.example.ui.theme.SageGlassL2
 import com.example.ui.theme.SageGlassL3
@@ -736,76 +738,14 @@ fun FormulaSheetResultView(
         }
 
         items(sheet.formulas) { item ->
-            GlassCard(
-                modifier = Modifier.fillMaxWidth(),
-                level = GlassLevel.L2,
-                glowColor = SagePrimary.copy(alpha = 0.2f)
-            ) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = item.name,
-                            color = SageTextPrimary,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp
-                        )
-                        if (item.units.isNotBlank()) {
-                            Text(
-                                text = "Units: ${item.units}",
-                                color = SageGold,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                    }
-
-                    // Prominent Formula Box
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(SageGlassL3)
-                            .border(1.dp, SagePrimaryStart.copy(alpha = 0.6f), RoundedCornerShape(10.dp))
-                            .padding(horizontal = 16.dp, vertical = 10.dp)
-                    ) {
-                        Text(
-                            text = item.formula,
-                            color = SagePrimaryLight,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            letterSpacing = 0.5.sp
-                        )
-                    }
-
-                    if (item.variables.isNotEmpty()) {
-                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            item.variables.forEach { v ->
-                                Text(text = "• $v", color = SageTextSecondary, fontSize = 12.sp)
-                            }
-                        }
-                    }
-
-                    if (item.usageExplanation.isNotBlank()) {
-                        Text(
-                            text = "Usage: ${item.usageExplanation}",
-                            color = SageTextMuted,
-                            fontSize = 12.sp
-                        )
-                    }
-
-                    if (item.example.isNotBlank()) {
-                        Text(
-                            text = "💡 Example: ${item.example}",
-                            color = SageSuccess,
-                            fontSize = 12.sp
-                        )
-                    }
-                }
-            }
+            MathFormulaCard(
+                formula = item.formula,
+                title = item.name,
+                units = item.units.ifBlank { null },
+                variables = item.variables,
+                usage = item.usageExplanation.ifBlank { null },
+                example = item.example.ifBlank { null }
+            )
         }
 
         item { Spacer(modifier = Modifier.height(24.dp)) }
@@ -860,7 +800,7 @@ fun SolutionResultView(
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
                         )
-                        Text(
+                        MathText(
                             text = solution.answer,
                             color = SageTextSecondary,
                             fontSize = 14.sp
@@ -886,7 +826,7 @@ fun SolutionResultView(
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium
                         )
-                        Text(
+                        MathText(
                             text = solution.problem,
                             color = SageTextPrimary,
                             fontSize = 15.sp,
@@ -925,7 +865,7 @@ fun SolutionResultView(
                                 fontWeight = FontWeight.Bold
                             )
                         }
-                        Text(
+                        MathText(
                             text = step.explanation,
                             color = SageTextSecondary,
                             fontSize = 14.sp,
@@ -951,12 +891,16 @@ fun SolutionResultView(
                                 fontWeight = FontWeight.ExtraBold,
                                 letterSpacing = 1.2.sp
                             )
-                            Text(
-                                text = solution.finalAnswer,
-                                color = SageTextPrimary,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                            if (solution.finalAnswer.contains("\\") || solution.finalAnswer.contains("^") || solution.finalAnswer.contains("_")) {
+                                MathFormulaCard(formula = solution.finalAnswer)
+                            } else {
+                                MathText(
+                                    text = solution.finalAnswer,
+                                    color = SageTextPrimary,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }
