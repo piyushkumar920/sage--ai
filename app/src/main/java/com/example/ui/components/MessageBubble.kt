@@ -338,31 +338,65 @@ fun MessageBubble(
                             )
 
                             if (isUser) {
-                                // User edit button
-                                if (onStartEdit != null) {
+                                // User actions: Copy and Edit
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    // User copy button
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(6.dp))
-                                            .clickable(enabled = !isGenerating) {
-                                                onStartEdit(message.id, message.content)
+                                            .clickable {
+                                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                                val clip = ClipData.newPlainText("User Message", message.content)
+                                                clipboard.setPrimaryClip(clip)
+                                                Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
                                             }
                                             .padding(horizontal = 4.dp, vertical = 2.dp)
-                                            .testTag("user_edit_button_${message.id}")
+                                            .testTag("user_copy_button_${message.id}")
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Default.Edit,
-                                            contentDescription = "Edit message",
-                                            tint = if (!isGenerating) SagePrimaryLight.copy(alpha = 0.85f) else SageTextMuted.copy(alpha = 0.4f),
+                                            imageVector = Icons.Default.ContentCopy,
+                                            contentDescription = "Copy message",
+                                            tint = SageTextMuted,
                                             modifier = Modifier.size(12.dp)
                                         )
                                         Spacer(modifier = Modifier.width(3.dp))
                                         Text(
-                                            text = "Edit",
-                                            color = if (!isGenerating) SagePrimaryLight.copy(alpha = 0.85f) else SageTextMuted.copy(alpha = 0.4f),
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Medium
+                                            text = "Copy",
+                                            color = SageTextMuted,
+                                            fontSize = 11.sp
                                         )
+                                    }
+
+                                    // User edit button
+                                    if (onStartEdit != null) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .clickable(enabled = !isGenerating) {
+                                                    onStartEdit(message.id, message.content)
+                                                }
+                                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                                                .testTag("user_edit_button_${message.id}")
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Edit,
+                                                contentDescription = "Edit message",
+                                                tint = if (!isGenerating) SagePrimaryLight.copy(alpha = 0.85f) else SageTextMuted.copy(alpha = 0.4f),
+                                                modifier = Modifier.size(12.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(3.dp))
+                                            Text(
+                                                text = "Edit",
+                                                color = if (!isGenerating) SagePrimaryLight.copy(alpha = 0.85f) else SageTextMuted.copy(alpha = 0.4f),
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                        }
                                     }
                                 }
                             } else {
