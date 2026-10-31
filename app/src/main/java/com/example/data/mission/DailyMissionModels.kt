@@ -30,7 +30,8 @@ data class MissionTask(
     @field:Json(name = "description") val description: String = "",
     @field:Json(name = "actionRoute") val actionRoute: String = "CHAT", // CHAT, FLASHCARDS, PYQ, REVISION, SCAN
     @field:Json(name = "isCompleted") val isCompleted: Boolean = false,
-    @field:Json(name = "completedAt") val completedAt: Long? = null
+    @field:Json(name = "completedAt") val completedAt: Long? = null,
+    @field:Json(name = "estimatedMinutes") val estimatedMinutes: Int = 10
 ) {
     val taskType: MissionTaskType
         get() = try {
@@ -110,6 +111,16 @@ data class DailyMissionEntity(
             val type = Types.newParameterizedType(List::class.java, MissionTask::class.java)
             val adapter = moshi.adapter<List<MissionTask>>(type)
             return adapter.toJson(tasks)
+        }
+
+        fun deserializeTasks(json: String, moshi: Moshi = defaultMoshi): List<MissionTask> {
+            return try {
+                val type = Types.newParameterizedType(List::class.java, MissionTask::class.java)
+                val adapter = moshi.adapter<List<MissionTask>>(type)
+                adapter.fromJson(json) ?: emptyList()
+            } catch (_: Exception) {
+                emptyList()
+            }
         }
     }
 }

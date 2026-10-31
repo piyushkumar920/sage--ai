@@ -60,7 +60,10 @@ data class SageBackendChatRequest(
     @field:Json(name = "message") val message: String? = null,
     @field:Json(name = "history") val history: List<SageHistoryItem> = emptyList(),
     @field:Json(name = "mode") val mode: String = "normal",
-    @field:Json(name = "systemPrompt") val systemPrompt: String? = null
+    @field:Json(name = "systemPrompt") val systemPrompt: String? = null,
+    @field:Json(name = "conversationId") val conversationId: String? = null,
+    @field:Json(name = "attachmentIds") val attachmentIds: List<String> = emptyList(),
+    @field:Json(name = "contextType") val contextType: String? = "CHAT_CONVERSATION"
 )
 
 @JsonClass(generateAdapter = true)
@@ -77,6 +80,7 @@ data class SageBackendChatResponse(
     @field:Json(name = "model") val model: String? = null,
     @field:Json(name = "error") val error: String? = null,
     @field:Json(name = "code") val code: String? = null,
+    @field:Json(name = "groundedAttachments") val groundedAttachments: List<Any>? = null,
     @field:Json(name = "requestId") val requestId: String? = null,
     @field:Json(name = "timestamp") val timestamp: String? = null
 )

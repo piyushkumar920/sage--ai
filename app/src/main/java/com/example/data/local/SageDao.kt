@@ -201,4 +201,88 @@ interface SageDao {
 
     @Query("DELETE FROM academic_profile WHERE id = 'primary'")
     suspend fun clearAcademicProfile()
+
+    // --- Personal Roadmaps ---
+    @Query("SELECT * FROM personal_roadmaps ORDER BY createdAt DESC")
+    fun getAllPersonalRoadmaps(): Flow<List<PersonalRoadmapEntity>>
+
+    @Query("SELECT * FROM personal_roadmaps ORDER BY createdAt DESC")
+    suspend fun getAllPersonalRoadmapsOnce(): List<PersonalRoadmapEntity>
+
+    @Query("SELECT * FROM personal_roadmaps WHERE roadmapId = :roadmapId LIMIT 1")
+    suspend fun getPersonalRoadmapById(roadmapId: String): PersonalRoadmapEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPersonalRoadmap(roadmap: PersonalRoadmapEntity)
+
+    @Delete
+    suspend fun deletePersonalRoadmap(roadmap: PersonalRoadmapEntity)
+
+    // --- Uploaded Documents & Document Grounded Roadmaps (Phase 6) ---
+    @Query("SELECT * FROM uploaded_documents ORDER BY uploadedAt DESC")
+    fun getAllUploadedDocuments(): Flow<List<com.example.data.documents.UploadedDocumentEntity>>
+
+    @Query("SELECT * FROM uploaded_documents WHERE documentId = :documentId LIMIT 1")
+    suspend fun getUploadedDocumentById(documentId: String): com.example.data.documents.UploadedDocumentEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertUploadedDocument(doc: com.example.data.documents.UploadedDocumentEntity)
+
+    @Query("SELECT * FROM document_extractions WHERE documentId = :documentId LIMIT 1")
+    suspend fun getDocumentExtraction(documentId: String): com.example.data.documents.DocumentExtractionEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertDocumentExtraction(extraction: com.example.data.documents.DocumentExtractionEntity)
+
+    @Query("SELECT * FROM document_grounded_roadmaps ORDER BY createdAt DESC")
+    fun getAllDocumentGroundedRoadmaps(): Flow<List<com.example.data.documents.DocumentGroundedRoadmapEntity>>
+
+    @Query("SELECT * FROM document_grounded_roadmaps WHERE roadmapId = :roadmapId LIMIT 1")
+    suspend fun getDocumentGroundedRoadmapById(roadmapId: String): com.example.data.documents.DocumentGroundedRoadmapEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertDocumentGroundedRoadmap(grounded: com.example.data.documents.DocumentGroundedRoadmapEntity)
+
+    @Query("UPDATE document_grounded_roadmaps SET status = :status, updatedAt = :updatedAt WHERE roadmapId = :roadmapId")
+    suspend fun updateDocumentGroundedRoadmapStatus(roadmapId: String, status: String, updatedAt: Long = System.currentTimeMillis())
+
+    // --- Universal Study Attachments (Stage 1) ---
+    @Query("SELECT * FROM study_attachments WHERE contextType = :contextType AND contextId = :contextId AND isDeleted = 0 ORDER BY createdAt ASC")
+    fun getAttachmentsForContext(contextType: String, contextId: String): Flow<List<com.example.data.attachments.StudyAttachmentEntity>>
+
+    @Query("SELECT * FROM study_attachments WHERE contextType = :contextType AND contextId = :contextId AND isDeleted = 0 ORDER BY createdAt ASC")
+    suspend fun getAttachmentsForContextOnce(contextType: String, contextId: String): List<com.example.data.attachments.StudyAttachmentEntity>
+
+    @Query("SELECT * FROM study_attachments WHERE attachmentId = :attachmentId LIMIT 1")
+    suspend fun getAttachmentById(attachmentId: String): com.example.data.attachments.StudyAttachmentEntity?
+
+    @Query("SELECT * FROM study_attachments WHERE ownerUid = :ownerUid AND isDeleted = 0 ORDER BY updatedAt DESC")
+    fun getAllAttachmentsForOwner(ownerUid: String): Flow<List<com.example.data.attachments.StudyAttachmentEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAttachment(attachment: com.example.data.attachments.StudyAttachmentEntity)
+
+    @Update
+    suspend fun updateAttachment(attachment: com.example.data.attachments.StudyAttachmentEntity)
+
+    @Query("UPDATE study_attachments SET uploadStatus = :uploadStatus, processingStatus = :processingStatus, updatedAt = :updatedAt WHERE attachmentId = :attachmentId")
+    suspend fun updateAttachmentStatus(
+        attachmentId: String,
+        uploadStatus: String,
+        processingStatus: String,
+        updatedAt: Long = System.currentTimeMillis()
+    )
+
+    @Query("UPDATE study_attachments SET isDeleted = 1, updatedAt = :updatedAt WHERE attachmentId = :attachmentId")
+    suspend fun softDeleteAttachment(attachmentId: String, updatedAt: Long = System.currentTimeMillis())
+
+    @Query("DELETE FROM study_attachments WHERE attachmentId = :attachmentId")
+    suspend fun hardDeleteAttachment(attachmentId: String)
+
+    @Query("SELECT COUNT(*) FROM study_attachments WHERE documentId = :documentId AND isDeleted = 0")
+    suspend fun countActiveAttachmentsForDocument(documentId: String): Int
+
+    @Query("DELETE FROM uploaded_documents WHERE documentId = :documentId")
+    suspend fun deleteUploadedDocument(documentId: String)
 }
+

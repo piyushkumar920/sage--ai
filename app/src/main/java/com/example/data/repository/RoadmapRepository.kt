@@ -41,12 +41,40 @@ data class DailyQuizDashboardStats(
 class RoadmapRepository(
     private val context: Context,
     private val dao: SageDao,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    private val authRepository: com.example.data.auth.FirebaseAuthRepository = com.example.data.auth.FirebaseAuthRepository(),
+    private val geminiClient: com.example.data.api.GeminiClient = com.example.data.api.GeminiClient()
 ) {
     private val loader = RoadmapLoader(context)
     val curriculumRepository = CurriculumRepository(context)
+    private val moshi = com.squareup.moshi.Moshi.Builder()
+        .addLast(com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory())
+        .build()
 
-    fun getSummaries(): List<DevRoadmapSummary> = loader.getSummaries()
+    fun getSummaries(): List<DevRoadmapSummary> {
+        val builtIns = loader.getSummaries()
+        val personalEntities = try {
+            kotlinx.coroutines.runBlocking(Dispatchers.IO) {
+                dao.getAllPersonalRoadmapsOnce()
+            }
+        } catch (e: Exception) { emptyList() }
+        val personalSummaries = personalEntities.map { entity ->
+            val totalNodes = try {
+                val detail = moshi.adapter(DevRoadmapDetail::class.java).fromJson(entity.jsonDetail)
+                detail?.nodes?.size ?: 5
+            } catch (e: Exception) { 5 }
+            DevRoadmapSummary(
+                id = entity.roadmapId,
+                title = entity.title,
+                icon = entity.icon,
+                nodes = totalNodes,
+                resources = 5,
+                difficulty = entity.difficulty,
+                time = entity.time
+            )
+        }
+        return personalSummaries + builtIns
+    }
 
     fun getRoadmapDetail(roadmapId: String): DevRoadmapDetail? {
         if (roadmapId.startsWith("curriculum_")) {
@@ -55,7 +83,56 @@ class RoadmapRepository(
                 return curriculumRepository.toRoadmapDetail(course)
             }
         }
+        if (roadmapId.startsWith("personal_")) {
+            try {
+                val entity = kotlinx.coroutines.runBlocking(Dispatchers.IO) {
+                    dao.getPersonalRoadmapById(roadmapId)
+                }
+                if (entity != null) {
+                    return moshi.adapter(DevRoadmapDetail::class.java).fromJson(entity.jsonDetail)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("RoadmapRepository", "Error loading personal roadmap $roadmapId", e)
+            }
+        }
         return loader.getRoadmapDetail(roadmapId)
+    }
+
+    suspend fun generatePersonalRoadmap(goalPrompt: String): com.example.data.api.GeminiResult<DevRoadmapDetail> = withContext(Dispatchers.IO) {
+        val token = authRepository.getIdToken()
+        val res = geminiClient.generateRoadmap(
+            goal = goalPrompt,
+            idToken = token
+        )
+        when (res) {
+            is com.example.data.api.GeminiResult.Success -> {
+                try {
+                    val adapter = moshi.adapter(DevRoadmapDetail::class.java)
+                    val detail = adapter.fromJson(res.data)
+                    if (detail != null) {
+                        val fixedId = if (detail.id.isBlank() || detail.id == "personal_123" || !detail.id.startsWith("personal_")) "personal_${System.currentTimeMillis()}" else detail.id
+                        val finalDetail = detail.copy(id = fixedId)
+                        val entity = com.example.data.local.PersonalRoadmapEntity(
+                            roadmapId = fixedId,
+                            title = if (finalDetail.title.isBlank()) "Custom AI Roadmap" else finalDetail.title,
+                            description = if (finalDetail.description.isBlank()) goalPrompt else finalDetail.description,
+                            icon = if (finalDetail.icon.isBlank()) "🧭" else finalDetail.icon,
+                            difficulty = "Intermediate",
+                            time = "3 months",
+                            goalPrompt = goalPrompt,
+                            jsonDetail = res.data
+                        )
+                        dao.insertPersonalRoadmap(entity)
+                        com.example.data.api.GeminiResult.Success(finalDetail)
+                    } else {
+                        com.example.data.api.GeminiResult.Error("Generated roadmap data was empty.")
+                    }
+                } catch (e: Exception) {
+                    com.example.data.api.GeminiResult.Error("Failed to parse generated roadmap: ${e.message}")
+                }
+            }
+            is com.example.data.api.GeminiResult.Error -> res
+        }
     }
 
     fun getActiveRoadmapId(): String = preferencesManager.activeRoadmapId
@@ -561,5 +638,50 @@ class RoadmapRepository(
         )
 
         return questions[dateHash % questions.size]
+    }
+
+    suspend fun updatePersonalRoadmap(detail: DevRoadmapDetail) = withContext(Dispatchers.IO) {
+        val jsonStr = moshi.adapter(DevRoadmapDetail::class.java).toJson(detail)
+        val existing = dao.getPersonalRoadmapById(detail.id)
+        val entity = com.example.data.local.PersonalRoadmapEntity(
+            roadmapId = detail.id,
+            title = detail.title,
+            description = detail.description,
+            icon = detail.icon,
+            difficulty = detail.difficulty,
+            time = detail.time,
+            goalPrompt = existing?.goalPrompt ?: detail.title,
+            jsonDetail = jsonStr,
+            createdAt = existing?.createdAt ?: System.currentTimeMillis()
+        )
+        dao.insertPersonalRoadmap(entity)
+    }
+
+    suspend fun conversationalEditRoadmap(currentDetail: DevRoadmapDetail, instruction: String): com.example.data.api.GeminiResult<DevRoadmapDetail> = withContext(Dispatchers.IO) {
+        val currentJson = moshi.adapter(DevRoadmapDetail::class.java).toJson(currentDetail)
+        val prompt = "Current Roadmap JSON:\n$currentJson\n\nUser Refinement Instruction:\n$instruction\n\nModify or update the roadmap according to the user instruction while keeping the exact JSON structure (id, title, description, icon, categories, nodes with id, title, icon, category, description, resources, children). Return only valid JSON without markdown wrapping."
+
+        val res = geminiClient.generateStudyTool(
+            operation = "roadmap",
+            prompt = prompt
+        )
+        when (res) {
+            is com.example.data.api.GeminiResult.Success -> {
+                try {
+                    val adapter = moshi.adapter(DevRoadmapDetail::class.java)
+                    val detail = adapter.fromJson(res.data)
+                    if (detail != null) {
+                        val finalDetail = detail.copy(id = currentDetail.id)
+                        updatePersonalRoadmap(finalDetail)
+                        com.example.data.api.GeminiResult.Success(finalDetail)
+                    } else {
+                        com.example.data.api.GeminiResult.Error("AI refinement returned empty roadmap.")
+                    }
+                } catch (e: Exception) {
+                    com.example.data.api.GeminiResult.Error("Failed to parse refined roadmap: ${e.message}")
+                }
+            }
+            is com.example.data.api.GeminiResult.Error -> res
+        }
     }
 }

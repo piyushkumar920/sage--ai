@@ -25,7 +25,7 @@ class DailyMissionTest {
                 title = "Understand Pointers & Dynamic Memory",
                 description = "Read core concept breakdown and syntax",
                 estimatedMinutes = 10,
-                taskType = MissionTaskType.LEARN,
+                type = "LEARN",
                 isCompleted = false
             ),
             MissionTask(
@@ -33,7 +33,7 @@ class DailyMissionTest {
                 title = "Solve Pointer Arithmetic Exercise",
                 description = "Practice memory address calculations",
                 estimatedMinutes = 10,
-                taskType = MissionTaskType.PRACTICE,
+                type = "PRACTICE",
                 isCompleted = true,
                 completedAt = 1700000000L
             )

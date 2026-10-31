@@ -94,7 +94,9 @@ class SageRepository(
         topicId: Long,
         userText: String,
         currentMode: String,
-        curriculumContext: String? = null
+        curriculumContext: String? = null,
+        attachmentIds: List<String> = emptyList(),
+        idToken: String? = null
     ): Result<String> = withContext(Dispatchers.IO) {
         val cleanText = userText.trim()
         if (cleanText.isEmpty()) {
@@ -154,7 +156,14 @@ class SageRepository(
 
         // 5. Call Gemini API via Backend Proxy
         val startTime = System.currentTimeMillis()
-        val result = geminiClient.generateContent(conversationHistory, systemPrompt, mode = currentMode)
+        val result = geminiClient.generateContent(
+            history = conversationHistory,
+            systemPrompt = systemPrompt,
+            mode = currentMode,
+            conversationId = topicId.toString(),
+            attachmentIds = attachmentIds,
+            idToken = idToken
+        )
         val latency = System.currentTimeMillis() - startTime
         preferencesManager.lastLatencyMs = latency
 
@@ -200,7 +209,9 @@ class SageRepository(
         userMessageId: Long,
         newText: String,
         currentMode: String,
-        curriculumContext: String? = null
+        curriculumContext: String? = null,
+        attachmentIds: List<String> = emptyList(),
+        idToken: String? = null
     ): Result<String> = withContext(Dispatchers.IO) {
         val cleanText = newText.trim()
         if (cleanText.isEmpty()) {
@@ -260,7 +271,14 @@ class SageRepository(
 
         // 6. Call Gemini API via Backend Proxy
         val startTime = System.currentTimeMillis()
-        val result = geminiClient.generateContent(conversationHistory, systemPrompt, mode = currentMode)
+        val result = geminiClient.generateContent(
+            history = conversationHistory,
+            systemPrompt = systemPrompt,
+            mode = currentMode,
+            conversationId = topicId.toString(),
+            attachmentIds = attachmentIds,
+            idToken = idToken
+        )
         val latency = System.currentTimeMillis() - startTime
         preferencesManager.lastLatencyMs = latency
 
@@ -305,7 +323,9 @@ class SageRepository(
         topicId: Long,
         assistantMessageId: Long,
         currentMode: String,
-        curriculumContext: String? = null
+        curriculumContext: String? = null,
+        attachmentIds: List<String> = emptyList(),
+        idToken: String? = null
     ): Result<String> = withContext(Dispatchers.IO) {
         val topic = dao.getTopicById(topicId) ?: return@withContext Result.failure(
             IllegalStateException("Topic not found")
@@ -353,7 +373,14 @@ class SageRepository(
 
         // 5. Call Gemini API
         val startTime = System.currentTimeMillis()
-        val result = geminiClient.generateContent(conversationHistory, systemPrompt, mode = currentMode)
+        val result = geminiClient.generateContent(
+            history = conversationHistory,
+            systemPrompt = systemPrompt,
+            mode = currentMode,
+            conversationId = topicId.toString(),
+            attachmentIds = attachmentIds,
+            idToken = idToken
+        )
         val latency = System.currentTimeMillis() - startTime
         preferencesManager.lastLatencyMs = latency
 

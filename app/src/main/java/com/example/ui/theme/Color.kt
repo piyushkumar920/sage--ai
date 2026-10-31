@@ -11,6 +11,7 @@ val SageCardBorder = Color(0xFF222238)
 val SagePrimaryStart = Color(0xFF5B21B6)
 val SagePrimary = Color(0xFF8B5CF6)
 val SagePrimaryLight = Color(0xFFA78BFA)
+val SagePurple = Color(0xFF8B5CF6)
 val SageAccent = Color(0xFF3B82F6)
 val SageAccentDark = Color(0xFF1E3A8A)
 

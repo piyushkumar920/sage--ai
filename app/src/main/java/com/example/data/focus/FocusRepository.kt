@@ -38,10 +38,11 @@ class FocusRepository(
             val course = context?.courseName?.trim()
 
             return when {
+                !topic.isNullOrBlank() && !course.isNullOrBlank() -> "Master $topic in $course"
                 !topic.isNullOrBlank() -> "Understand $topic and solve one core practice example."
                 !module.isNullOrBlank() -> "Master key concepts in $module and review key definitions."
                 !course.isNullOrBlank() -> "Study core principles of $course and practice active recall."
-                else -> "Complete focused study session and review key takeaways."
+                else -> "Complete current curriculum module"
             }
         }
 
@@ -52,6 +53,17 @@ class FocusRepository(
             val minutes = totalSeconds / 60
             val seconds = totalSeconds % 60
             return "%02d:%02d".format(minutes, seconds)
+        }
+
+        fun formatDuration(totalSeconds: Int): String {
+            val hours = totalSeconds / 3600
+            val minutes = (totalSeconds % 3600) / 60
+            val seconds = totalSeconds % 60
+            return if (hours > 0) {
+                "%02d:%02d:%02d".format(hours, minutes, seconds)
+            } else {
+                "%02d:%02d".format(minutes, seconds)
+            }
         }
 
         /**

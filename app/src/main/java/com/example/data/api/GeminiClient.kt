@@ -37,7 +37,7 @@ sealed class GeminiResult<out T> {
  * Zero Gemini credentials in Android APK.
  * Enforces HTTPS, strictly validates Content-Type JSON, and handles connection failures gracefully.
  */
-class GeminiClient(
+open class GeminiClient(
     private val backendUrlProvider: () -> String? = { null }
 ) {
     private val okHttpClient: OkHttpClient = OkHttpClient.Builder()
@@ -106,12 +106,58 @@ class GeminiClient(
     /**
      * Sends prompt/chat history to the secure server-side Node.js proxy.
      */
-    suspend fun generateContent(
+    open suspend fun generateContent(
         history: List<GeminiContent>,
         systemPrompt: String = GeminiConfig.SYSTEM_PROMPT,
-        mode: String = "normal"
+        mode: String = "normal",
+        conversationId: String? = null,
+        attachmentIds: List<String> = emptyList(),
+        idToken: String? = null
     ): GeminiResult<String> {
-        return chatViaBackend(history, systemPrompt, mode)
+        return chatViaBackend(history, systemPrompt, mode, conversationId, attachmentIds, idToken)
+    }
+
+    /**
+     * Calls the dedicated /api/roadmaps/generate endpoint on the secure Render backend.
+     */
+    suspend fun generateRoadmap(
+        goal: String,
+        duration: String? = null,
+        preferences: Map<String, Any?>? = null,
+        idToken: String? = null
+    ): GeminiResult<String> {
+        return try {
+            val api = createApiService()
+            val request = com.example.data.studytools.RoadmapGenerationRequest(
+                goal = goal,
+                duration = duration,
+                preferences = preferences
+            )
+            val authHeader = if (!idToken.isNullOrBlank()) "Bearer $idToken" else null
+            val response = api.generateRoadmap(request, authHeader = authHeader)
+            
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null && (body.success || body.ok == true) && body.data != null) {
+                    val jsonAdapter = moshi.adapter(Any::class.java)
+                    val dataJson = jsonAdapter.toJson(body.data)
+                    GeminiResult.Success(dataJson)
+                } else {
+                    val errMsg = body?.error ?: "Roadmap generation returned empty data."
+                    GeminiResult.Error(
+                        message = errMsg,
+                        diagnosticMessage = errMsg,
+                        requestId = body?.requestId
+                    )
+                }
+            } else {
+                val errorBody = response.errorBody()?.string()
+                android.util.Log.e("GeminiClient", "Roadmap generation failed. Code: ${response.code()}, Body: $errorBody")
+                parseHttpError(response.code(), errorBody)
+            }
+        } catch (e: Exception) {
+            handleException(e)
+        }
     }
 
     /**
@@ -126,7 +172,11 @@ class GeminiClient(
         imageBase64: String = "",
         imageMimeType: String = "image/jpeg",
         prompt: String = "",
-        academicContext: com.example.data.studytools.AcademicContext? = null
+        academicContext: com.example.data.studytools.AcademicContext? = null,
+        attachmentIds: List<String> = emptyList(),
+        contextType: String = "",
+        contextId: String = "",
+        idToken: String? = null
     ): GeminiResult<String> {
         return try {
             val api = createApiService()
@@ -138,9 +188,13 @@ class GeminiClient(
                 imageBase64 = imageBase64,
                 imageMimeType = imageMimeType,
                 prompt = prompt,
-                academicContext = academicContext
+                academicContext = academicContext,
+                attachmentIds = attachmentIds,
+                contextType = contextType,
+                contextId = contextId
             )
-            val response = api.generateStudyTool(request)
+            val authHeader = if (!idToken.isNullOrBlank()) "Bearer $idToken" else null
+            val response = api.generateStudyTool(request, authHeader = authHeader)
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null && (body.success || body.ok == true) && body.data != null) {
@@ -219,7 +273,10 @@ class GeminiClient(
     private suspend fun chatViaBackend(
         history: List<GeminiContent>,
         systemPrompt: String,
-        mode: String
+        mode: String,
+        conversationId: String? = null,
+        attachmentIds: List<String> = emptyList(),
+        idToken: String? = null
     ): GeminiResult<String> {
         val historyItems = history.map { item ->
             SageHistoryItem(
@@ -231,12 +288,15 @@ class GeminiClient(
         val request = SageBackendChatRequest(
             history = historyItems,
             mode = mode.lowercase(),
-            systemPrompt = systemPrompt
+            systemPrompt = systemPrompt,
+            conversationId = conversationId,
+            attachmentIds = attachmentIds
         )
 
         return try {
             val api = createApiService()
-            val response = api.chatWithBackend(request)
+            val authHeader = if (!idToken.isNullOrBlank()) "Bearer $idToken" else null
+            val response = api.chatWithBackend(request, authHeader)
 
             if (response.isSuccessful) {
                 val body = response.body()
@@ -261,7 +321,7 @@ class GeminiClient(
     private fun parseHttpError(code: Int, errorBody: String?): GeminiResult.Error {
         return when (code) {
             400 -> GeminiResult.Error(
-                message = "Invalid study tool request. Please check inputs and try again.",
+                message = errorBody ?: "Invalid study tool request. Please check inputs and try again.",
                 diagnosticMessage = "Bad request to backend (HTTP 400): ${errorBody ?: "Invalid parameters"}",
                 isBackendError = true
             )

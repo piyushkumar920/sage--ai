@@ -1,0 +1,1052 @@
+SAGE PHASE 6 — DOCUMENT INTELLIGENCE, SYLLABUS EXTRACTION & SOURCE VERIFICATION
+MASTER IMPLEMENTATION PROMPT
+ROLE
+Act as a principal Android architect, senior Kotlin developer, Jetpack Compose specialist, Gemini AI engineer, Node.js backend engineer, Firebase architect, document-processing specialist, educational curriculum researcher, security engineer and QA automation engineer.
+You are working on my EXISTING Android application:
+SAGE — AI Learning Companion
+Your responsibility is to implement Phase 6, the final phase of Sage's six-phase AI Personal Learning Roadmap System.
+This is an existing production-oriented application. You must inspect its actual source code and architecture before making changes.
+Do not generate a separate application, rebuild existing features, replace working systems, or introduce unnecessary dependencies.
+Your implementation must integrate with the existing application naturally.
+
+1. PROJECT CONTEXT — EXISTING ARCHITECTURE
+The following architecture and requirements are already established.
+Android application
+
+Native Android.
+Kotlin.
+Jetpack Compose.
+MVVM architecture.
+Room Database for local persistence.
+DataStore / existing preferences architecture.
+Firebase Authentication.
+Cloud Firestore.
+Existing offline-first architecture.
+Existing Gemini integration through the Render backend.
+Existing glassmorphism design language and animated UI.
+
+Backend
+Existing backend repository:
+piyushkumar920/sage--ai
+Backend:
+https://sage-backend-ai.onrender.com
+Backend root directory:
+server
+Existing endpoint:
+/api/study-tools
+The backend uses Node.js and is deployed on Render.
+The existing Gemini API key is stored server-side as:
+GEMINI_API_KEY
+Never expose the API key in the Android application, source code, APK, logs, responses or GitHub repository.
+Do not move Gemini calls directly into the Android application.
+Existing Gemini configuration
+Preserve the existing configured model and current no-card/free-tier arrangement.
+Do not silently change the Gemini model.
+Inspect the current backend configuration and use the existing model selection and integration patterns.
+Existing Firebase configuration
+Firebase project:
+Sage ai
+Project ID:
+sage-ai-31ea8
+Android package:
+com.aistudio.sage.learn
+Firestore region:
+asia-south1
+Preserve the current authentication, security rules, user isolation and Firestore integration.
+Existing Sage functionality
+The application already includes:
+
+AI Chat.
+Explore.
+Academic curriculum.
+Career roadmaps.
+Personal AI roadmaps.
+AI roadmap generation.
+Roadmap preview and customization.
+Roadmap confirmation.
+AI Learning Agent.
+Learning context injection.
+Nine learning modes.
+Learn.
+Simplify.
+Examples.
+Practice.
+Quiz.
+PYQs.
+Revise.
+Ask Sage.
+Scan & Solve.
+Progress analytics.
+Adaptive learning recommendations.
+Schedule health.
+Weak-topic identification.
+Developer Console.
+Room persistence.
+Firestore synchronization.
+Offline functionality.
+
+Preserve every existing feature.
+
+2. PHASE 6 OBJECTIVE
+Implement a complete document intelligence and source verification system.
+Users must be able to upload educational documents, particularly official syllabi, and let Gemini extract structured educational information.
+Sage should understand:
+
+Course information.
+Department information.
+Programme information.
+Regulation or academic year.
+Semester information.
+Subject names.
+Subject codes.
+Modules.
+Units.
+Chapters.
+Topics.
+Subtopics.
+Learning objectives.
+Recommended study sequence.
+Assessment information.
+Examination-related information.
+References and source locations.
+
+The extracted information must be presented to the user for review before it becomes an approved learning source.
+The system must distinguish information explicitly found in the uploaded document from AI-generated supplementary recommendations.
+The goal is not merely PDF text extraction.
+The goal is a trustworthy document-grounded educational intelligence pipeline.
+
+3. SUPPORTED DOCUMENT FORMATS
+Implement support for:
+
+PDF
+JPG
+JPEG
+PNG
+TXT
+DOCX
+PPTX
+
+File handling
+Inspect the Android project's existing file-picker implementation.
+Use Android's Storage Access Framework / Activity Result APIs or the project's existing document-picker architecture.
+The user should be able to:
+
+Browse files.
+Select supported documents.
+Preview the selected filename.
+See file size.
+Remove a selected file.
+Replace a selected file.
+See upload progress.
+Cancel an upload.
+Retry a failed upload.
+
+File validation
+Validate files on BOTH the Android client and backend.
+Validation must include:
+
+Allowed extensions.
+Actual MIME type.
+File signature where applicable.
+File size.
+Empty files.
+Corrupted files.
+Unsupported files.
+Malformed documents.
+Maximum processing limits.
+
+Never trust the filename extension alone.
+Use configurable size limits based on the existing backend's available resources and Gemini model constraints.
+Do not invent unsupported Gemini limits.
+If a file exceeds the allowed limit, explain the reason and suggest an appropriate alternative.
+Multiple documents
+Support multiple related files where practical.
+Examples:
+
+Main syllabus PDF.
+Additional subject syllabus.
+Examination pattern document.
+Supplementary study material.
+
+Allow the user to identify the primary source document.
+Do not merge unrelated documents without user confirmation.
+
+4. DOCUMENT PROCESSING ARCHITECTURE
+Implement the following secure processing flow:
+Android Application
+↓
+Android Document Picker
+↓
+Local File Validation
+↓
+Authenticated HTTPS Upload
+↓
+Existing Render Backend
+↓
+Backend File Validation
+↓
+Document Text / Image Extraction
+↓
+Gemini Document Understanding
+↓
+Structured JSON Validation
+↓
+Source Mapping and Confidence Assessment
+↓
+Android Review Interface
+↓
+User Confirmation
+↓
+Persistent Document and Curriculum Records
+↓
+Personal Roadmap / Approved Academic Source Integration
+Critical requirements
+
+Gemini API requests must originate from the existing backend.
+Do not expose API keys.
+Do not create a second backend unless absolutely necessary.
+Reuse existing Node.js backend architecture.
+Reuse existing API response conventions.
+Keep the backend API compatible with existing endpoints.
+Implement request timeouts and upload error handling.
+Implement safe temporary-file cleanup.
+Avoid unnecessary permanent storage of original uploaded documents.
+Preserve user privacy.
+Do not log document contents, authentication tokens or API keys.
+
+Gemini document understanding
+Use the most reliable processing method compatible with the currently configured Gemini model.
+For PDF:
+
+Prefer native PDF document understanding when supported.
+Preserve page references.
+Support scanned PDFs where the configured model supports visual document understanding.
+If native PDF processing is unavailable, use an appropriate extraction/OCR fallback.
+
+For JPG/JPEG/PNG:
+
+Process images using the existing Gemini vision capability if supported.
+Preserve available page or image references.
+Detect unreadable, blurry or incomplete content.
+
+For TXT:
+
+Extract text directly.
+Preserve meaningful headings and document structure.
+
+For DOCX:
+
+Extract paragraphs, headings and tables.
+Preserve document order where practical.
+Do not silently discard tables.
+
+For PPTX:
+
+Extract slide titles, text, tables and relevant ordering.
+Retain slide numbers as source references.
+
+Do not assume Gemini natively accepts every format through the same endpoint.
+Use format-specific preprocessing when required.
+If OCR or document parsing requires a library, first inspect existing dependencies and available free/open-source options. Avoid paid third-party document APIs.
+Do not introduce a new service that requires a credit card.
+
+5. STRUCTURED CURRICULUM EXTRACTION
+Gemini must return structured JSON.
+Do not depend on unstructured natural-language responses for database persistence.
+Create a validated schema appropriate for the existing application.
+Suggested conceptual structure:
+{
+"documentMetadata": {
+"documentTitle": "",
+"documentType": "",
+"institution": "",
+"department": "",
+"programme": "",
+"regulation": "",
+"academicYear": "",
+"sourceLanguage": "",
+"totalPages": 0
+},
+"extractionSummary": {
+"status": "SUCCESS",
+"confidence": "HIGH",
+"warnings": [],
+"unreadableSections": []
+},
+"semesters": [
+{
+"semesterNumber": 1,
+"subjects": [
+{
+"subjectName": "",
+"subjectCode": "",
+"credits": null,
+"modules": [
+{
+"moduleNumber": 1,
+"moduleTitle": "",
+"topics": [
+{
+"topicName": "",
+"subtopics": [],
+"learningObjectives": [],
+"sourceReferences": [
+{
+"pageNumber": 1,
+"sectionTitle": "",
+"sourceType": "EXPLICIT"
+}
+],
+"confidence": "HIGH"
+}
+]
+}
+]
+}
+]
+}
+],
+"supplementarySuggestions": [],
+"verificationWarnings": []
+}
+This is a conceptual schema, not a requirement to copy blindly.
+Adapt it to existing Kotlin models, Moshi/Gson serialization conventions and database entities.
+JSON validation
+Implement:
+
+Required-field validation.
+Type validation.
+Safe null handling.
+Duplicate detection.
+Empty-section detection.
+Schema versioning.
+Malformed JSON recovery.
+Structured error responses.
+Extraction retry handling.
+
+If Gemini returns malformed JSON, attempt a controlled repair or retry.
+Never persist incomplete or invalid data as a verified syllabus.
+Never fabricate missing subject codes, credits, module names or topics.
+Represent missing information as null or an explicitly labelled unknown value.
+
+6. SOURCE VERIFICATION AND TRACEABILITY
+This is one of the most important requirements.
+Every extracted curriculum element should retain source information wherever possible.
+Examples:
+
+Subject: Page 3.
+Module 1: Page 4.
+Topic: Page 5.
+Assessment scheme: Page 12.
+PPTX slide: Slide 7.
+
+Each extracted item must distinguish between:
+A. EXPLICIT
+Directly found in the uploaded document.
+B. INFERRED
+Derived from document structure or context but not explicitly stated.
+C. AI_SUPPLEMENTARY
+Suggested by Gemini to improve learning but not present in the original source.
+Never misrepresent AI_SUPPLEMENTARY material as official syllabus content.
+Confidence
+Support:
+
+HIGH.
+MEDIUM.
+LOW.
+INSUFFICIENT.
+
+Confidence must reflect extraction quality and evidence, not arbitrary certainty.
+Examples:
+
+Clear printed heading with page reference: potentially HIGH.
+Ambiguous scanned heading: MEDIUM or LOW.
+Incomplete or unreadable content: INSUFFICIENT.
+
+A confidence score must not replace the actual source reference.
+Verification warnings
+Detect and display:
+
+Missing pages.
+Unreadable text.
+Uncertain topic boundaries.
+Possible duplicate subjects.
+Inconsistent semester numbering.
+Missing module headings.
+Conflicting information between documents.
+Ambiguous academic year.
+Uncertain institution identification.
+
+If two documents conflict, show the conflicting values and ask the user to resolve them.
+Do not silently select one.
+
+7. DOCUMENT REVIEW INTERFACE
+Create a premium, modern document review experience using Sage's existing glassmorphism design language.
+Do not redesign the entire application.
+Use existing theme tokens, reusable components, typography, spacing and animation conventions.
+Screen 1: Document Upload
+Include:
+
+Animated upload illustration or icon.
+Select document button.
+Supported format information.
+File-size information.
+Selected document cards.
+File name.
+File type.
+File size.
+Remove and replace actions.
+Upload progress.
+Cancel and retry actions.
+
+Screen 2: Document Processing
+Create an attractive processing screen.
+Show actual processing stages:
+
+Uploading.
+Validating file.
+Extracting document content.
+Understanding curriculum.
+Mapping source references.
+Validating structured data.
+Preparing review.
+
+Only show a stage as completed after the backend confirms it.
+Do not fake progress percentages.
+Use subtle animated progress indicators and appropriate error states.
+Screen 3: Extraction Summary
+Display:
+
+Document title.
+Institution.
+Programme.
+Academic year.
+Semester count.
+Subject count.
+Module count.
+Topic count.
+Extraction confidence.
+Warnings.
+Unreadable sections.
+
+All values must come from the actual extraction result.
+Screen 4: Curriculum Review
+Display an expandable hierarchy:
+Document
+→ Semester
+→ Subject
+→ Module
+→ Topic
+→ Subtopic
+Each item should support:
+
+View source reference.
+View page number or slide number.
+View confidence.
+View source classification.
+Edit extracted name.
+Remove an incorrect item.
+Add a missing item manually.
+Mark an uncertain extraction for review.
+
+Make source references easy to inspect.
+Screen 5: Verification Summary
+Before approval, display:
+
+Explicitly extracted content.
+Inferred content.
+AI supplementary suggestions.
+Unresolved warnings.
+Conflicts.
+Items requiring user attention.
+
+Provide clear actions:
+
+Approve verified content.
+Save as draft.
+Continue reviewing.
+Cancel import.
+
+Require explicit confirmation before approval.
+
+8. INTEGRATION WITH PERSONAL AI ROADMAPS
+Integrate document understanding with the existing Personal AI Roadmap creation flow from Phases 1–5.
+When creating a personal roadmap:
+
+User enters a learning goal.
+User optionally selects a syllabus or study document.
+Sage processes the document.
+Gemini extracts its educational structure.
+User reviews the extracted content.
+User approves the source.
+The roadmap generator uses the approved document content.
+Gemini may recommend supplementary material separately.
+User reviews the roadmap.
+Existing Phase 2 confirmation workflow activates it.
+
+Important
+Do not automatically activate a generated roadmap.
+Maintain the existing DRAFT → REVIEW → CONFIRM → ACTIVE lifecycle.
+Roadmap grounding
+When generating a roadmap from an approved document:
+
+Use extracted document topics as the primary curriculum.
+Preserve original module and topic order.
+Preserve source references.
+Avoid omitting explicitly stated topics.
+Do not invent official content.
+Clearly label supplementary learning recommendations.
+Allow the user to choose whether supplementary content should be included.
+
+A document-grounded roadmap must remain connected to the document from which it was created.
+
+9. INTEGRATION WITH OFFICIAL ACADEMIC CURRICULUM
+This requirement is CRITICAL.
+Sage already has an official academic curriculum database covering multiple departments and programmes.
+Its hierarchy is:
+Department
+→ Programme
+→ Regulation
+→ Semester
+→ Subject
+→ Module
+→ Topic
+→ Lesson
+→ Progress
+The existing verified institutional curriculum remains the source of truth.
+Rules
+
+Never overwrite existing official curriculum records through document extraction.
+Never silently replace an official subject or topic.
+Never change department, programme or regulation records automatically.
+Never treat a user-uploaded document as officially verified solely because Gemini extracted it.
+Never merge an uploaded syllabus into the institutional database without an explicit, separately designed institutional verification workflow.
+
+Academic document comparison
+Allow users to compare an uploaded syllabus against their existing official academic curriculum.
+Where a matching official curriculum is found, display:
+
+Matching subjects.
+Matching modules.
+Missing topics.
+Additional topics.
+Naming differences.
+Potential conflicts.
+Source references.
+
+Use a transparent comparison result.
+Possible labels:
+
+MATCHED.
+MISSING_FROM_OFFICIAL.
+ADDITIONAL_IN_UPLOAD.
+NAME_MISMATCH.
+NEEDS_MANUAL_REVIEW.
+
+Do not automatically alter official records.
+The uploaded document may be used as a supplementary reference for learning after user approval.
+
+10. PERSISTENCE AND DATABASE DESIGN
+Inspect existing Room entities, DAOs, repositories and Firestore synchronization before designing new storage.
+Reuse existing structures wherever practical.
+If new entities are needed, introduce the smallest compatible schema extension.
+Suggested conceptual records:
+UploadedDocumentEntity
+
+documentId.
+userId.
+documentName.
+mimeType.
+fileSize.
+documentType.
+processingStatus.
+uploadTimestamp.
+extractionTimestamp.
+extractionSummary.
+sourceHash.
+schemaVersion.
+
+DocumentExtractionEntity
+
+extractionId.
+documentId.
+extractedStructuredData.
+confidence.
+warnings.
+verificationStatus.
+
+DocumentSourceReferenceEntity
+
+referenceId.
+documentId.
+curriculumItemId.
+pageNumber.
+slideNumber.
+sectionTitle.
+sourceClassification.
+confidence.
+
+DocumentGroundedRoadmapEntity
+
+roadmapId.
+documentId.
+approvedExtractionId.
+sourceVersion.
+
+These are conceptual models. Adapt to the existing data model.
+Persistence requirements
+
+Save drafts locally.
+Preserve review progress.
+Preserve user-approved extractions.
+Preserve source references.
+Preserve roadmap-to-document linkage.
+Support offline viewing of previously processed and approved data.
+Handle interrupted processing safely.
+Prevent duplicate imports using content hashes where appropriate.
+Ensure user isolation.
+
+Database migrations
+Inspect the current Room database version before changing it.
+Create explicit, non-destructive migrations.
+Preserve all historical data.
+Never delete or reset existing tables to simplify migration.
+Test migration from the previous installed schema.
+Firestore
+Synchronize metadata and approved structured extraction data where appropriate.
+Avoid uploading original documents to Firestore unnecessarily.
+Respect existing Firestore security rules.
+Use the authenticated user's UID for data ownership.
+Implement duplicate prevention and conflict handling.
+If the existing system uses local-first writes, preserve that approach.
+Do not claim cloud synchronization works without actual integration tests.
+
+11. SECURITY AND PRIVACY
+Implement production-conscious security.
+Android
+
+Use the system document picker.
+Avoid unnecessary broad storage permissions.
+Validate selected file type and size.
+Do not expose backend secrets.
+Do not retain unnecessary temporary copies.
+Provide clear upload failure messages.
+
+Backend
+
+Authenticate requests using the existing authentication architecture.
+Verify the authenticated user's identity.
+Validate MIME type and actual file signature.
+Enforce configurable file-size limits.
+Prevent path traversal.
+Generate safe temporary filenames.
+Avoid arbitrary filesystem access.
+Clean up temporary files after processing.
+Apply request timeouts.
+Rate-limit expensive processing where compatible with the existing backend.
+Avoid sensitive document content in logs.
+Prevent cross-user document access.
+
+Do not introduce Firebase Admin credentials into the APK.
+Do not weaken existing Firebase security rules.
+
+12. OFFLINE AND FAILURE HANDLING
+Sage must remain offline-first.
+When offline:
+
+Users can view previously approved extracted documents.
+Users can view existing document-grounded roadmaps.
+Users can review cached source references.
+Users can continue normal learning using cached roadmap data.
+
+When offline document processing is requested:
+Display a clear message explaining that new Gemini document extraction requires an internet connection.
+Do not show fake processing results.
+Error handling
+Handle:
+
+Network interruption.
+Backend unavailable.
+Render cold start.
+Gemini quota exhaustion.
+Gemini timeout.
+Invalid document.
+Unsupported document.
+Empty document.
+Corrupted document.
+Malformed extraction response.
+Partial extraction.
+Conflicting documents.
+Authentication failure.
+Firestore permission errors.
+
+Provide retry actions where appropriate.
+Do not lose the user's selected document or review progress unnecessarily.
+
+13. API DESIGN
+Inspect the existing /api/study-tools endpoint and current backend response conventions.
+Add dedicated document-processing routes only when appropriate.
+Suggested route design:
+POST /api/documents/validate
+POST /api/documents/extract
+POST /api/documents/verify
+POST /api/documents/compare-curriculum
+GET /api/documents/:documentId/status
+Use the existing authentication and backend middleware.
+You may adjust the route design if the existing architecture suggests a better approach.
+API response requirements
+Return structured JSON with:
+
+success.
+requestId.
+processingStatus.
+documentId.
+extractionId.
+structuredData.
+sourceReferences.
+warnings.
+errors.
+retryable.
+
+Do not return unvalidated raw Gemini output directly to the Android database layer.
+Implement clear status codes and safe error messages.
+Keep existing endpoints backward-compatible.
+
+14. UI/UX AND ANIMATIONS
+Sage already uses glassmorphism.
+Maintain the existing design language.
+The new screens should feel native to Sage.
+Use:
+
+Rounded cards.
+Subtle glass surfaces.
+Consistent typography.
+Animated expansion of curriculum hierarchy.
+Smooth document upload transitions.
+Processing-stage animations.
+Source-reference preview.
+Confidence indicators.
+Accessible touch targets.
+Responsive layouts.
+Light and dark theme support if already supported.
+
+Animations must be smooth and restrained.
+Do not introduce excessive animation that affects performance.
+Use Compose state correctly.
+Avoid blocking the main thread during parsing or uploading.
+Use coroutines and appropriate background dispatchers.
+Provide accessibility labels and semantic descriptions.
+
+15. TESTING REQUIREMENTS
+Do not stop after generating code.
+Inspect and test the actual implementation.
+A. Document format tests
+Test:
+
+Valid PDF.
+Scanned PDF.
+Multi-page PDF.
+JPG.
+JPEG.
+PNG.
+TXT.
+DOCX with headings.
+DOCX with tables.
+PPTX with multiple slides.
+Empty file.
+Corrupted file.
+Unsupported file.
+Oversized file.
+
+B. Extraction tests
+Verify:
+
+Subject extraction.
+Subject code extraction.
+Semester extraction.
+Module extraction.
+Topic extraction.
+Subtopic extraction.
+Source page references.
+Slide references.
+Confidence levels.
+Missing information.
+Duplicate detection.
+Conflicting content.
+Supplementary AI content separation.
+
+C. User workflow tests
+Verify:
+
+Upload a document.
+Cancel upload.
+Retry failed upload.
+Extract document.
+Review extracted syllabus.
+Edit an incorrect topic.
+Remove an incorrect topic.
+Save draft.
+Resume review.
+Approve extraction.
+Generate personal roadmap.
+Confirm roadmap.
+Open learning session.
+Verify document-grounded context.
+
+D. Academic curriculum tests
+Verify:
+
+Existing official curriculum remains unchanged.
+Uploaded syllabus comparison works.
+Differences are accurately identified.
+No automatic official curriculum modification occurs.
+
+E. Database tests
+Verify:
+
+Room persistence.
+Database migration.
+Historical data preservation.
+Offline viewing.
+Firestore user isolation.
+Duplicate prevention.
+Conflict handling.
+
+F. Regression tests
+Test all Phases 1–5:
+
+Goal understanding.
+Personal roadmap creation.
+Draft preview.
+Editing and customization.
+Explicit roadmap confirmation.
+Learning agent.
+Context injection.
+Nine learning modes.
+Scan & Solve.
+Quiz and practice.
+PYQ attribution.
+Adaptive learning.
+Weak-topic detection.
+Revision recommendations.
+Schedule health.
+Academic curriculum.
+Career roadmaps.
+Chat.
+Firebase authentication.
+Firestore.
+Developer Console.
+Offline functionality.
+
+Do not break any existing functionality.
+
+16. RESOURCE AND COST CONSTRAINTS
+This is a strict requirement.
+I want to preserve the existing no-card/free-tier architecture.
+Therefore:
+
+Do not add paid third-party APIs.
+Do not require a payment card.
+Do not migrate to paid document-processing services.
+Do not add a new cloud hosting provider.
+Continue using the existing Render backend.
+Continue using the existing Gemini integration.
+Do not change the existing Gemini model without permission.
+Prefer existing libraries and free/open-source libraries.
+Do not enable paid Firebase features.
+Do not silently introduce billing-dependent infrastructure.
+
+Before implementing any feature that may exceed free quotas, document the risk.
+Gemini inference and processing may consume quota even when a file-processing API itself is free.
+If a particular document-processing method is incompatible with the existing free-tier configuration, use a compatible fallback.
+Never make a paid-service dependency silently.
+
+17. IMPLEMENTATION STRATEGY
+Work in the following order.
+Step 1 — Inspect
+Inspect:
+
+Android project structure.
+Existing document picker.
+Existing Gemini integration.
+Existing backend routes.
+Backend server.js.
+Authentication flow.
+Existing Room entities.
+Existing DAO methods.
+Repository architecture.
+Firestore synchronization.
+Existing roadmap models.
+Academic curriculum models.
+Existing UI design system.
+Current database version.
+Existing tests.
+
+Prepare a concise architecture map before editing.
+Step 2 — Design
+Design:
+
+Document-processing pipeline.
+JSON schema.
+API contract.
+Room persistence.
+Firestore metadata.
+Source-reference model.
+Review workflow.
+Official curriculum comparison.
+
+Ensure compatibility with existing code.
+Step 3 — Backend
+Implement secure file validation, extraction, Gemini document understanding, JSON validation, source mapping, and structured responses.
+Preserve existing backend routes.
+Step 4 — Android
+Implement:
+
+Document picker.
+Upload manager.
+Processing state.
+Extraction repository.
+Document review screens.
+Source reference UI.
+Approval workflow.
+Offline persistence.
+
+Step 5 — Integration
+Integrate document processing with:
+
+Personal AI roadmap creation.
+Existing roadmap review.
+Existing roadmap confirmation.
+Official academic curriculum comparison.
+Existing AI Learning Agent context.
+
+Step 6 — Database and synchronization
+Add only necessary schema changes and safe migrations.
+Implement offline persistence and appropriate Firestore synchronization.
+Step 7 — QA
+Run compilation, tests, backend validation and runtime checks.
+Correct actual defects.
+
+18. NON-NEGOTIABLE RULES
+
+Do not rebuild Sage.
+Do not replace its architecture.
+Do not remove existing features.
+Do not create duplicate roadmap systems.
+Do not merge personal AI roadmaps with official curriculum records.
+Do not overwrite verified academic curriculum.
+Do not fabricate document content.
+Do not claim unsupported source references.
+Do not silently mark an extraction verified.
+Do not auto-activate generated roadmaps.
+Do not expose API keys.
+Do not introduce paid services or card requirements.
+Do not introduce destructive Room migrations.
+Do not claim tests passed when they were not run.
+Do not implement the separate general-purpose Chat AI attachment feature in this phase.
+Preserve Phases 1–5.
+Do not remove offline functionality.
+Do not weaken authentication or Firestore security.
+Do not use Gemini-generated content as an official source.
+Do not stop at UI mockups. Implement the real end-to-end processing pipeline.
+
+
+19. FINAL DELIVERABLES
+At completion, provide:
+Architecture
+
+Final document-processing architecture.
+Android-to-backend flow.
+Gemini integration method.
+Security design.
+
+Backend
+
+Files created and modified.
+Routes created.
+Validation and extraction implementation.
+Gemini request handling.
+JSON validation.
+Error handling.
+
+Android
+
+Files created and modified.
+New Compose screens.
+ViewModels.
+Repositories.
+Data models.
+Upload and processing workflow.
+
+Database
+
+New Room entities and DAO methods.
+Database version changes.
+Migration details.
+Firestore changes.
+Offline behaviour.
+
+Functionality
+
+Supported document formats.
+Extraction features.
+Source verification.
+Review and approval.
+Academic curriculum comparison.
+Personal roadmap integration.
+
+Testing
+Provide separate results for:
+
+Compilation.
+Unit tests.
+Backend tests.
+API integration.
+Gemini integration.
+Room migration.
+Firestore integration.
+Android runtime tests.
+Document-format tests.
+Regression tests.
+
+Clearly distinguish tests actually executed from tests that are only configured.
+Remaining limitations
+Mention:
+
+Gemini model restrictions.
+Free-tier quota considerations.
+OCR limitations.
+Large-file limitations.
+Any unsupported document structures.
+Any untested functionality.
+
+
+20. FINAL ACCEPTANCE CRITERIA
+Phase 6 is complete only when:
+
+All five requested document formats/categories are supported (PDF, image, TXT, DOCX, PPTX).
+File validation works on client and backend.
+Gemini can extract structured educational content through the existing backend.
+Source references are retained wherever available.
+Confidence and uncertainty are represented honestly.
+Users can review and correct extracted content.
+Approval is explicit.
+Approved content can generate personal AI roadmaps.
+Official academic curriculum remains protected.
+Uploaded syllabi can be compared against official curriculum without modifying it.
+Document-grounded learning context works.
+Room persistence and offline viewing work.
+Existing authentication and user isolation remain intact.
+Existing no-card architecture is preserved.
+All existing Phases 1–5 functionality remains operational.
+Compilation and available automated tests pass.
+
+If a requirement cannot be completed, clearly explain why and provide a compatible alternative rather than pretending it is implemented.
+FINAL INSTRUCTION
+Begin by inspecting the existing project and its source code.
+Then implement Phase 6 incrementally, using the existing architecture.
+Do not ask me to recreate the project or manually rewrite existing functionality.
+Do not implement unrelated features.
+Do not implement general-purpose Chat AI attachments in this phase.
+Complete Phase 6, perform a detailed technical audit, and provide the final implementation and testing report.
+This is the final phase of Sage's six-phase AI Personal Learning Roadmap System.

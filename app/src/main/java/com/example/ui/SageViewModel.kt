@@ -26,6 +26,7 @@ import com.example.data.roadmap.DevRoadmapSummary
 import com.example.data.roadmap.TopicStatus
 import com.example.util.NetworkMonitor
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -59,10 +60,15 @@ class SageViewModel(application: Application) : AndroidViewModel(application) {
         geminiClient = geminiClient,
         preferencesManager = preferencesManager
     )
+    // --- AUTH REPOSITORY ---
+    val authRepository = com.example.data.auth.FirebaseAuthRepository()
+
     val roadmapRepository = RoadmapRepository(
         context = application,
         dao = dao,
-        preferencesManager = preferencesManager
+        preferencesManager = preferencesManager,
+        authRepository = authRepository,
+        geminiClient = geminiClient
     )
     val curriculumRepository: com.example.data.curriculum.CurriculumRepository
         get() = roadmapRepository.curriculumRepository
@@ -99,7 +105,67 @@ class SageViewModel(application: Application) : AndroidViewModel(application) {
     val currentMode: StateFlow<String> = _currentMode.asStateFlow()
 
     // --- ROADMAP STATE ---
-    val allRoadmapSummaries: List<DevRoadmapSummary> = roadmapRepository.getSummaries()
+    val allRoadmapSummaries: List<DevRoadmapSummary>
+        get() = roadmapRepository.getSummaries()
+
+    private val _isGeneratingRoadmap = MutableStateFlow(false)
+    val isGeneratingRoadmap: StateFlow<Boolean> = _isGeneratingRoadmap.asStateFlow()
+
+    private val _roadmapGenerationError = MutableStateFlow<String?>(null)
+    val roadmapGenerationError: StateFlow<String?> = _roadmapGenerationError.asStateFlow()
+
+    fun generatePersonalRoadmap(goalPrompt: String, onSuccess: (DevRoadmapDetail) -> Unit) {
+        viewModelScope.launch {
+            _isGeneratingRoadmap.value = true
+            _roadmapGenerationError.value = null
+            when (val res = roadmapRepository.generatePersonalRoadmap(goalPrompt)) {
+                is GeminiResult.Success -> {
+                    _isGeneratingRoadmap.value = false
+                    onSuccess(res.data)
+                }
+                is GeminiResult.Error -> {
+                    _isGeneratingRoadmap.value = false
+                    _roadmapGenerationError.value = res.message
+                }
+            }
+        }
+    }
+
+    fun updateDraftRoadmap(detail: DevRoadmapDetail) {
+        viewModelScope.launch {
+            roadmapRepository.updatePersonalRoadmap(detail)
+        }
+    }
+
+    fun conversationalEditDraftRoadmap(
+        currentDetail: DevRoadmapDetail,
+        instruction: String,
+        onSuccess: (DevRoadmapDetail) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            _isGeneratingRoadmap.value = true
+            when (val res = roadmapRepository.conversationalEditRoadmap(currentDetail, instruction)) {
+                is GeminiResult.Success -> {
+                    _isGeneratingRoadmap.value = false
+                    onSuccess(res.data)
+                }
+                is GeminiResult.Error -> {
+                    _isGeneratingRoadmap.value = false
+                    onError(res.message)
+                }
+            }
+        }
+    }
+
+    fun confirmAndActivateRoadmap(detail: DevRoadmapDetail, onActivated: () -> Unit) {
+        viewModelScope.launch {
+            roadmapRepository.updatePersonalRoadmap(detail)
+            dao.updateDocumentGroundedRoadmapStatus(detail.id, "ACTIVE")
+            selectRoadmap(detail.id)
+            onActivated()
+        }
+    }
 
     private val _activeRoadmapId = MutableStateFlow(roadmapRepository.getActiveRoadmapId())
     val activeRoadmapId: StateFlow<String> = _activeRoadmapId.asStateFlow()
@@ -151,6 +217,270 @@ class SageViewModel(application: Application) : AndroidViewModel(application) {
     val weeklyReviewData: StateFlow<com.example.data.adaptive.WeeklyReviewData> = adaptiveLearningRepository
         .getWeeklyReviewFlow()
         .stateIn(viewModelScope, SharingStarted.Lazily, com.example.data.adaptive.WeeklyReviewData())
+
+    fun applyAdaptiveRecommendation(recommendationId: String, targetConcept: String, onApplied: (String) -> Unit) {
+        viewModelScope.launch {
+            adaptiveLearningRepository.recordWeakConcept(targetConcept, _activeRoadmapId.value, "", "Applied AI recommendation")
+            onApplied("Applied recommendation for '$targetConcept' successfully!")
+        }
+    }
+
+    // --- DOCUMENT INTELLIGENCE & SYLLABUS EXTRACTION (PHASE 6) ---
+    val documentExtractionRepository = com.example.data.documents.DocumentExtractionRepository(
+        context = getApplication(),
+        geminiClient = geminiClient
+    )
+
+    suspend fun extractSyllabusDocument(name: String, mimeType: String, base64: String, text: String): com.example.data.documents.DocumentExtractionResponse? {
+        val result = documentExtractionRepository.extractSyllabus(name, mimeType, base64, text)
+        return when (result) {
+            is GeminiResult.Success -> {
+                val data = result.data
+                val docId = data.documentId ?: "doc_${System.currentTimeMillis()}"
+                val extId = data.extractionId ?: "ext_${System.currentTimeMillis()}"
+                // Non-blocking offline persistence
+                viewModelScope.launch {
+                    dao.insertUploadedDocument(
+                        com.example.data.documents.UploadedDocumentEntity(
+                            documentId = docId,
+                            fileName = name,
+                            mimeType = mimeType,
+                            fileSizeBytes = base64.length.toLong(),
+                            fileSignature = mimeType,
+                            validationStatus = "VALIDATED"
+                        )
+                    )
+                    dao.insertDocumentExtraction(
+                        com.example.data.documents.DocumentExtractionEntity(
+                            extractionId = extId,
+                            documentId = docId,
+                            confidence = data.structuredData?.extractionSummary?.confidence ?: "HIGH",
+                            structuredCurriculumJson = name,
+                            verificationStatus = "PENDING_REVIEW"
+                        )
+                    )
+                }
+                data
+            }
+            is GeminiResult.Error -> com.example.data.documents.DocumentExtractionResponse(
+                success = false,
+                documentId = null,
+                extractionId = null,
+                structuredData = null,
+                processingStatus = "FAILED",
+                error = result.message
+            )
+        }
+    }
+
+    fun createGroundedRoadmapDraftFromDocument(
+        structuredData: com.example.data.documents.StructuredCurriculumData,
+        documentId: String = "doc_${System.currentTimeMillis()}"
+    ): DevRoadmapDetail {
+        val meta = structuredData.documentMetadata
+        val title = meta?.documentTitle?.takeIf { it.isNotBlank() } ?: "Document Grounded Syllabus"
+        val desc = "Grounded on approved syllabus${meta?.institution?.let { " from $it" } ?: ""}. Verified topics with source citations."
+        val categories = mutableListOf<String>()
+        val nodes = mutableListOf<DevRoadmapNode>()
+
+        val semesters = structuredData.semesters ?: emptyList()
+        var nodeCount = 0
+        for (sem in semesters) {
+            val subjects = sem.subjects ?: emptyList()
+            for (sub in subjects) {
+                val catName = "${sub.subjectName} (Sem ${sem.semesterNumber})"
+                if (!categories.contains(catName)) categories.add(catName)
+                val modules = sub.modules ?: emptyList()
+                for (mod in modules) {
+                    val topics = mod.topics ?: emptyList()
+                    for (top in topics) {
+                        nodeCount++
+                        val nodeId = "grounded_node_${nodeCount}"
+                        val pageRef = top.sourceReferences?.firstOrNull()?.pageNumber
+                        val typeRef = top.sourceReferences?.firstOrNull()?.sourceType ?: "EXPLICIT"
+                        val pageDesc = if (pageRef != null) " [Source: Page $pageRef ($typeRef)]" else " [Source: $typeRef]"
+                        val objectives = top.learningObjectives?.joinToString("; ") ?: ""
+                        val description = "${top.subtopics?.joinToString(", ") ?: top.topicName}$pageDesc. $objectives"
+
+                        nodes.add(
+                            DevRoadmapNode(
+                                id = nodeId,
+                                title = top.topicName,
+                                icon = "📄",
+                                category = catName,
+                                description = description,
+                                difficulty = "Intermediate"
+                            )
+                        )
+                    }
+                }
+            }
+        }
+
+        if (nodes.isEmpty()) {
+            nodes.add(
+                DevRoadmapNode(
+                    id = "grounded_node_1",
+                    title = "Fundamental Core Concepts",
+                    icon = "📄",
+                    category = "Overview",
+                    description = "Core syllabus foundations extracted from document.",
+                    difficulty = "Beginner"
+                )
+            )
+            categories.add("Overview")
+        }
+
+        val roadmapId = "personal_doc_${System.currentTimeMillis()}"
+        val detail = DevRoadmapDetail(
+            id = roadmapId,
+            title = title,
+            description = desc,
+            icon = "📄",
+            categories = categories,
+            nodes = nodes,
+            difficulty = "Intermediate",
+            time = "4 months",
+            scheduleTarget = "2 hours / day",
+            targetCompletion = "4 months"
+        )
+
+        viewModelScope.launch {
+            dao.insertDocumentGroundedRoadmap(
+                com.example.data.documents.DocumentGroundedRoadmapEntity(
+                    roadmapId = roadmapId,
+                    documentId = documentId,
+                    extractionId = "ext_${System.currentTimeMillis()}",
+                    status = "DRAFT",
+                    groundedConfidence = structuredData.extractionSummary?.confidence ?: "HIGH"
+                )
+            )
+            // Register draft in roadmap repository so it is reviewable and editable
+            roadmapRepository.updatePersonalRoadmap(detail)
+        }
+
+        return detail
+    }
+
+    // --- UNIVERSAL STUDY ATTACHMENTS (STAGE 1 & 2) ---
+
+    val studyAttachmentRepository = com.example.data.attachments.StudyAttachmentRepository(
+        context = application,
+        dao = dao,
+        geminiClient = geminiClient,
+        authRepository = authRepository
+    )
+
+    val activeConversationAttachments: StateFlow<List<com.example.data.attachments.StudyAttachmentEntity>> = _activeTopic.flatMapLatest { topic ->
+        if (topic != null) {
+            val uid = authRepository.currentUser?.uid ?: "local_user"
+            val context = com.example.data.attachments.AttachmentContext(
+                contextType = com.example.data.attachments.AttachmentContextType.CHAT_CONVERSATION,
+                contextId = topic.id.toString(),
+                ownerUid = uid
+            )
+            studyAttachmentRepository.getAttachmentsForContext(context)
+        } else {
+            flowOf(emptyList())
+        }
+    }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    private val _attachmentActionError = MutableStateFlow<String?>(null)
+    val attachmentActionError: StateFlow<String?> = _attachmentActionError.asStateFlow()
+
+    fun clearAttachmentError() {
+        _attachmentActionError.value = null
+    }
+
+    fun addChatAttachments(uris: List<android.net.Uri>) {
+        val topic = _activeTopic.value ?: return
+        if (uris.isEmpty()) return
+
+        val uid = authRepository.currentUser?.uid ?: "local_user"
+        val attachmentContext = com.example.data.attachments.AttachmentContext(
+            contextType = com.example.data.attachments.AttachmentContextType.CHAT_CONVERSATION,
+            contextId = topic.id.toString(),
+            ownerUid = uid
+        )
+
+        viewModelScope.launch {
+            for (uri in uris) {
+                val result = studyAttachmentRepository.addAttachmentFromUri(
+                    attachmentContext = attachmentContext,
+                    uri = uri
+                )
+                if (result is GeminiResult.Error) {
+                    _attachmentActionError.value = result.message
+                }
+            }
+        }
+    }
+
+    val allOwnerAttachments: StateFlow<List<com.example.data.attachments.StudyAttachmentEntity>> = authRepository.authStateFlow
+        .flatMapLatest { user ->
+            val uid = user?.uid ?: "local_user"
+            studyAttachmentRepository.getAllAttachmentsForOwner(uid)
+        }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    fun getAttachmentsForContextFlow(
+        contextType: com.example.data.attachments.AttachmentContextType,
+        contextId: String
+    ): Flow<List<com.example.data.attachments.StudyAttachmentEntity>> {
+        val uid = authRepository.currentUser?.uid ?: "local_user"
+        val context = com.example.data.attachments.AttachmentContext(
+            contextType = contextType,
+            contextId = contextId,
+            ownerUid = uid
+        )
+        return studyAttachmentRepository.getAttachmentsForContext(context)
+    }
+
+    fun addTopicAttachments(
+        contextType: com.example.data.attachments.AttachmentContextType,
+        contextId: String,
+        uris: List<android.net.Uri>
+    ) {
+        if (uris.isEmpty()) return
+        val uid = authRepository.currentUser?.uid ?: "local_user"
+        val attachmentContext = com.example.data.attachments.AttachmentContext(
+            contextType = contextType,
+            contextId = contextId,
+            ownerUid = uid
+        )
+
+        viewModelScope.launch {
+            for (uri in uris) {
+                val result = studyAttachmentRepository.addAttachmentFromUri(
+                    attachmentContext = attachmentContext,
+                    uri = uri
+                )
+                if (result is GeminiResult.Error) {
+                    _attachmentActionError.value = result.message
+                }
+            }
+        }
+    }
+
+    fun removeAttachmentFromChat(attachmentId: String) {
+        viewModelScope.launch {
+            studyAttachmentRepository.removeFromContext(attachmentId)
+        }
+    }
+
+    fun deleteAttachmentPermanently(attachmentId: String) {
+        viewModelScope.launch {
+            studyAttachmentRepository.deletePermanently(attachmentId)
+        }
+    }
+
+    fun retryAttachment(attachmentId: String) {
+        viewModelScope.launch {
+            val result = studyAttachmentRepository.retryAttachmentUpload(attachmentId)
+            if (result is GeminiResult.Error) {
+                _attachmentActionError.value = result.message
+            }
+        }
+    }
 
     // --- ACADEMIC PROFILE STATE (PHASE C2.5) ---
     val academicProfileRepository = com.example.data.profile.AcademicProfileRepository(
@@ -797,11 +1127,18 @@ Known Weak Topics: ${if (weakConcepts.isEmpty()) "None" else weakConcepts.take(3
                     )
                 }
 
+                val activeAttIds = activeConversationAttachments.value
+                    .filter { !it.isDeleted && (it.uploadStatus == "ATTACHED" || it.processingStatus == "COMPLETED") }
+                    .map { it.attachmentId }
+                val idToken = authRepository.getIdToken()
+
                 repository.sendMessage(
                     topicId = topic.id,
                     userText = text,
                     currentMode = _currentMode.value,
-                    curriculumContext = roadmapOverview
+                    curriculumContext = roadmapOverview,
+                    attachmentIds = activeAttIds,
+                    idToken = idToken
                 )
                 refreshRoadmapPercentages()
             } finally {
@@ -819,12 +1156,19 @@ Known Weak Topics: ${if (weakConcepts.isEmpty()) "None" else weakConcepts.take(3
             try {
                 val roadmapOverview = buildCurriculumContextOverview(topic)
 
+                val activeAttIds = activeConversationAttachments.value
+                    .filter { !it.isDeleted && (it.uploadStatus == "ATTACHED" || it.processingStatus == "COMPLETED") }
+                    .map { it.attachmentId }
+                val idToken = authRepository.getIdToken()
+
                 repository.editAndResendMessage(
                     topicId = topic.id,
                     userMessageId = messageId,
                     newText = newText,
                     currentMode = _currentMode.value,
-                    curriculumContext = roadmapOverview
+                    curriculumContext = roadmapOverview,
+                    attachmentIds = activeAttIds,
+                    idToken = idToken
                 )
                 refreshRoadmapPercentages()
             } finally {
@@ -842,11 +1186,18 @@ Known Weak Topics: ${if (weakConcepts.isEmpty()) "None" else weakConcepts.take(3
             try {
                 val roadmapOverview = buildCurriculumContextOverview(topic)
 
+                val activeAttIds = activeConversationAttachments.value
+                    .filter { !it.isDeleted && (it.uploadStatus == "ATTACHED" || it.processingStatus == "COMPLETED") }
+                    .map { it.attachmentId }
+                val idToken = authRepository.getIdToken()
+
                 repository.retryAiResponse(
                     topicId = topic.id,
                     assistantMessageId = messageId,
                     currentMode = _currentMode.value,
-                    curriculumContext = roadmapOverview
+                    curriculumContext = roadmapOverview,
+                    attachmentIds = activeAttIds,
+                    idToken = idToken
                 )
                 refreshRoadmapPercentages()
             } finally {

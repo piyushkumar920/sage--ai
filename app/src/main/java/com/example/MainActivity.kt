@@ -40,6 +40,7 @@ import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
+import com.example.ui.screens.PersonalRoadmapReviewScreen
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -69,10 +70,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.data.local.TopicEntity
+import com.example.data.roadmap.DevRoadmapDetail
 import com.example.data.roadmap.DevRoadmapNode
 import com.example.data.roadmap.TopicStatus
 import com.example.data.auth.AdminAuthManager
 import com.example.ui.SageViewModel
+import com.example.ui.screens.PersonalRoadmapCreateDialog
 import com.example.ui.admin.AdminConsoleScreen
 import com.example.ui.admin.AdminViewModel
 import com.example.ui.components.AmbientGlowBackground
@@ -94,6 +97,7 @@ import com.example.ui.screens.RoadmapScreen
 import com.example.ui.screens.SettingsScreen
 import com.example.ui.screens.TopicDetailScreen
 import com.example.ui.screens.TopicDialog
+import com.example.ui.screens.documents.DocumentManagerScreen
 import com.example.ui.screens.focus.FocusScreen
 import com.example.ui.screens.focus.FocusViewModel
 import com.example.ui.studytools.StudyToolsScreen
@@ -150,6 +154,7 @@ fun SageApp(
     var inChatRoadmapScreen by remember { mutableStateOf(false) }
     var inStudyToolsScreen by remember { mutableStateOf(false) }
     var viewingRoadmapId by remember { mutableStateOf<String?>(null) }
+    var reviewingDraftDetail by remember { mutableStateOf<DevRoadmapDetail?>(null) }
     var viewingTopicNode by remember { mutableStateOf<DevRoadmapNode?>(null) }
     var takingQuizNode by remember { mutableStateOf<DevRoadmapNode?>(null) }
     var inDailyQuizScreen by remember { mutableStateOf(false) }
@@ -157,6 +162,8 @@ fun SageApp(
     var inDiagnosticsScreen by remember { mutableStateOf(false) }
     var inAdminConsoleScreen by remember { mutableStateOf(false) }
     var inFocusScreen by rememberSaveable { mutableStateOf(false) }
+    var inDocumentReviewScreen by remember { mutableStateOf(false) }
+    var inDocumentManagerScreen by remember { mutableStateOf(false) }
 
     val studyToolsViewModel: StudyToolsViewModel = viewModel()
     val focusViewModel: FocusViewModel = viewModel(
@@ -177,6 +184,8 @@ fun SageApp(
     val isGenerating by viewModel.isGenerating.collectAsState()
     val isOnline by viewModel.isOnline.collectAsState()
     val currentMode by viewModel.currentMode.collectAsState()
+    val activeConversationAttachments by viewModel.activeConversationAttachments.collectAsState()
+    val allOwnerAttachments by viewModel.allOwnerAttachments.collectAsState()
 
     // Auto-proceed into app when AI connects successfully
     LaunchedEffect(connectionStatus.isSuccess) {
@@ -216,6 +225,11 @@ fun SageApp(
     // Academic Profile state (Phase C2.5)
     val academicProfile by viewModel.academicProfile.collectAsState()
     var showAcademicProfileDialog by remember { mutableStateOf(false) }
+
+    // AI Roadmap generation state (Phase 1)
+    val isGeneratingRoadmap by viewModel.isGeneratingRoadmap.collectAsState()
+    val roadmapGenerationError by viewModel.roadmapGenerationError.collectAsState()
+    var showAiRoadmapDialog by remember { mutableStateOf(false) }
 
     // Adaptive Learning & Weekly Review state (Phase C3)
     val weeklyReviewData by viewModel.weeklyReviewData.collectAsState()
@@ -280,6 +294,18 @@ fun SageApp(
         return
     }
 
+    // Sub-Screen 0.5: Document Manager Screen
+    if (inDocumentManagerScreen) {
+        DocumentManagerScreen(
+            attachments = allOwnerAttachments,
+            onBack = { inDocumentManagerScreen = false },
+            onRemoveFromContext = { id -> viewModel.removeAttachmentFromChat(id) },
+            onDeletePermanently = { id -> viewModel.deleteAttachmentPermanently(id) },
+            onRetry = { id -> viewModel.retryAttachment(id) }
+        )
+        return
+    }
+
     // Sub-Screen 1: Topic Quiz Screen
     if (takingQuizNode != null) {
         val quizNode = takingQuizNode!!
@@ -323,11 +349,27 @@ fun SageApp(
             else -> TopicStatus.NOT_STARTED
         }
 
+        val topicContextId = "${activeRoadmapId}_${topicNode.id}"
+        val currentTopicAttachments by viewModel.getAttachmentsForContextFlow(
+            contextType = com.example.data.attachments.AttachmentContextType.ROADMAP_TOPIC,
+            contextId = topicContextId
+        ).collectAsState(initial = emptyList())
+
         TopicDetailScreen(
             node = topicNode,
             roadmapTitle = activeRoadmapDetail?.title ?: "Curriculum",
             status = status,
             onBack = { viewingTopicNode = null },
+            topicAttachments = currentTopicAttachments,
+            onAddAttachments = { uris ->
+                viewModel.addTopicAttachments(
+                    contextType = com.example.data.attachments.AttachmentContextType.ROADMAP_TOPIC,
+                    contextId = topicContextId,
+                    uris = uris
+                )
+            },
+            onRemoveAttachment = { id -> viewModel.removeAttachmentFromChat(id) },
+            onRetryAttachment = { id -> viewModel.retryAttachment(id) },
             onStartLearning = {
                 viewingTopicNode = null
                 viewingRoadmapId = null
@@ -387,6 +429,34 @@ fun SageApp(
                 )
                 inStudyToolsScreen = true
             },
+            onSimplify = {
+                viewingTopicNode = null
+                viewingRoadmapId = null
+                viewModel.startLearningRoadmapTopic(activeRoadmapId, topicNode) {
+                    inChatScreen = true
+                }
+            },
+            onExamples = {
+                val roadmapDetail = viewModel.getRoadmapDetail(activeRoadmapId) ?: activeRoadmapDetail
+                studyToolsViewModel.setCurriculumContext(topicNode.title, roadmapDetail?.title ?: "Subject", topicNode.description)
+                inStudyToolsScreen = true
+            },
+            onPractice = {
+                takingQuizNode = topicNode
+            },
+            onPyqs = {
+                takingQuizNode = topicNode
+            },
+            onRevise = {
+                val roadmapDetail = viewModel.getRoadmapDetail(activeRoadmapId) ?: activeRoadmapDetail
+                studyToolsViewModel.setCurriculumContext(topicNode.title, roadmapDetail?.title ?: "Subject", topicNode.description)
+                inStudyToolsScreen = true
+            },
+            onScanAndSolve = {
+                val roadmapDetail = viewModel.getRoadmapDetail(activeRoadmapId) ?: activeRoadmapDetail
+                studyToolsViewModel.setCurriculumContext(topicNode.title, roadmapDetail?.title ?: "Subject", topicNode.description)
+                inStudyToolsScreen = true
+            },
             onOpenFocusMode = {
                 val curriculumCourse = if (activeRoadmapId.startsWith("curriculum_")) {
                     viewModel.curriculumRepository.getCourseByRoadmapId(activeRoadmapId)
@@ -414,6 +484,46 @@ fun SageApp(
                 focusViewModel.initializeWithContext(academicCtx)
                 viewingTopicNode = null
                 inFocusScreen = true
+            }
+        )
+        return
+    }
+
+    // Sub-Screen 2.5: Personal Roadmap Studio / Review Screen (Phase 2)
+    if (reviewingDraftDetail != null) {
+        PersonalRoadmapReviewScreen(
+            roadmapDetail = reviewingDraftDetail!!,
+            isProcessing = isGeneratingRoadmap,
+            errorMessage = roadmapGenerationError,
+            onBack = { reviewingDraftDetail = null },
+            onUpdateRoadmap = { updated ->
+                viewModel.updateDraftRoadmap(updated)
+                reviewingDraftDetail = updated
+            },
+            onConversationalEdit = { instruction, onSuccess, onError ->
+                viewModel.conversationalEditDraftRoadmap(
+                    reviewingDraftDetail!!,
+                    instruction,
+                    { updated ->
+                        reviewingDraftDetail = updated
+                        onSuccess(updated)
+                    },
+                    onError
+                )
+            },
+            onRegenerateSection = { sectionId, prompt, onSuccess, onError ->
+                viewModel.conversationalEditDraftRoadmap(
+                    reviewingDraftDetail!!,
+                    "Regenerate section $sectionId with instruction: $prompt",
+                    onSuccess,
+                    onError
+                )
+            },
+            onConfirmActivation = { finalDetail ->
+                viewModel.confirmAndActivateRoadmap(finalDetail) {
+                    reviewingDraftDetail = null
+                    viewingRoadmapId = finalDetail.id
+                }
             }
         )
         return
@@ -478,6 +588,24 @@ fun SageApp(
         return
     }
 
+    // Sub-Screen 4.8.5: Document Intelligence & Syllabus Extraction (Phase 6)
+    if (inDocumentReviewScreen) {
+        com.example.ui.screens.documents.DocumentReviewScreen(
+            onExtractSyllabus = { name, mime, base64, text ->
+                viewModel.extractSyllabusDocument(name, mime, base64, text)
+            },
+            onRoadmapApproved = { structuredData ->
+                val draft = viewModel.createGroundedRoadmapDraftFromDocument(structuredData)
+                inDocumentReviewScreen = false
+                reviewingDraftDetail = draft
+            },
+            officialCourses = viewModel.curriculumRepository.getAllCourses(),
+            officialDeptName = academicProfile?.departmentName ?: "B.Tech Engineering",
+            onBack = { inDocumentReviewScreen = false }
+        )
+        return
+    }
+
     val activeAcademicContext by viewModel.activeAcademicContext.collectAsState()
 
     // Sub-Screen 4.9: Focus Mode Screen (Distraction-Free Learning Session)
@@ -517,6 +645,11 @@ fun SageApp(
             streakDays = viewModel.streakDays,
             academicContext = activeAcademicContext,
             studyToolsViewModel = studyToolsViewModel,
+            attachments = activeConversationAttachments,
+            onAddAttachments = { uris -> viewModel.addChatAttachments(uris) },
+            onRemoveAttachment = { attId -> viewModel.removeAttachmentFromChat(attId) },
+            onRetryAttachment = { attId -> viewModel.retryAttachment(attId) },
+            onDeleteAttachmentPermanently = { attId -> viewModel.deleteAttachmentPermanently(attId) },
             onSendMessage = { viewModel.sendMessage(it) },
             onRetryMessage = { viewModel.retryMessage(it) },
             onEditMessage = { msgId, newText -> viewModel.editAndResendMessage(msgId, newText) },
@@ -704,7 +837,7 @@ fun SageApp(
                                     inChatScreen = true
                                 },
                                 onCustomTrack = {
-                                    showTopicDialog = true
+                                    showAiRoadmapDialog = true
                                 },
                                 onOpenStudyTools = {
                                     inStudyToolsScreen = true
@@ -802,7 +935,8 @@ fun SageApp(
                                     },
                                     backendStatus = if (connectionStatus.isSuccess == true) "Online" else "Checking",
                                     syncStatus = "Active",
-                                    lastErrorCode = viewModel.lastErrorMessage
+                                    lastErrorCode = viewModel.lastErrorMessage,
+                                    onOpenDocumentManager = { inDocumentManagerScreen = true }
                                 )
                             }
                         }
@@ -856,6 +990,23 @@ fun SageApp(
             },
             onDeleteTopic = { viewModel.deleteTopic(it) },
             onDismiss = { showTopicDialog = false }
+        )
+    }
+
+    if (showAiRoadmapDialog) {
+        PersonalRoadmapCreateDialog(
+            isGenerating = isGeneratingRoadmap,
+            errorMessage = roadmapGenerationError,
+            onDismiss = { showAiRoadmapDialog = false },
+            onGenerate = { goalPrompt: String, onPreviewReady: (DevRoadmapDetail) -> Unit ->
+                viewModel.generatePersonalRoadmap(goalPrompt) { detail ->
+                    onPreviewReady(detail)
+                }
+            },
+            onRoadmapCreated = { detail: DevRoadmapDetail ->
+                showAiRoadmapDialog = false
+                reviewingDraftDetail = detail
+            }
         )
     }
 }

@@ -122,6 +122,7 @@ fun ProgressScreen(
     weeklyReviewData: WeeklyReviewData? = null,
     onStartReviewSession: (concept: String, context: AcademicContext?) -> Unit = { _, _ -> },
     onReviewWeakConcept: (concept: String, context: AcademicContext?) -> Unit = { _, _ -> },
+    onApplyRecommendation: (String, String) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
     var currentTab by remember { mutableStateOf(ProgressTab.ACADEMICS) }
@@ -209,7 +210,8 @@ fun ProgressScreen(
                         onPracticeWeakConcept = onPracticeWeakConcept,
                         onReviewWeakConcept = onReviewWeakConcept,
                         onStartReviewSession = onStartReviewSession,
-                        onOpenRoadmap = onOpenRoadmap
+                        onOpenRoadmap = onOpenRoadmap,
+                        onApplyRecommendation = onApplyRecommendation
                     )
                 }
 
@@ -250,6 +252,7 @@ private fun AcademicsProgressContent(
     onReviewWeakConcept: (concept: String, context: AcademicContext?) -> Unit = { _, _ -> },
     onStartReviewSession: (concept: String, context: AcademicContext?) -> Unit = { _, _ -> },
     onOpenRoadmap: (String) -> Unit,
+    onApplyRecommendation: (String, String) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
     val roadmapTitle = activeRoadmapDetail?.title ?: "CS101: Introduction to Programming and Problem Solving"
@@ -993,6 +996,165 @@ private fun AcademicsProgressContent(
                                     )
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Section 4.6: SCHEDULE HEALTH & AI RECOMMENDATIONS ENGINE (PHASE 5)
+        if (weeklyReviewData != null) {
+            item {
+                Text(
+                    text = "ADAPTIVE RECOMMENDATIONS ENGINE",
+                    color = SagePrimaryLight,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+            }
+
+            // Schedule Health Card
+            item {
+                val health = weeklyReviewData.scheduleHealth
+                val healthColor = when (health.statusColor) {
+                    "success" -> SageSuccess
+                    "warning" -> SageWarning
+                    else -> SagePrimaryLight
+                }
+                GlassCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("schedule_health_card"),
+                    level = GlassLevel.L2,
+                    shape = RoundedCornerShape(18.dp),
+                    borderColor = healthColor.copy(alpha = 0.4f)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(text = "📈", fontSize = 16.sp)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "SCHEDULE HEALTH: ${health.status.uppercase()}",
+                                    color = healthColor,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 0.5.sp
+                                )
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(healthColor.copy(alpha = 0.2f))
+                                    .padding(horizontal = 8.dp, vertical = 3.dp)
+                            ) {
+                                Text(
+                                    text = "${health.pacingPercentage}% Pacing",
+                                    color = healthColor,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+
+                        Text(
+                            text = health.description,
+                            color = SageTextPrimary,
+                            fontSize = 13.sp,
+                            lineHeight = 18.sp
+                        )
+
+                        LinearProgressIndicator(
+                            progress = { (health.pacingPercentage / 100f).coerceIn(0f, 1f) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp)),
+                            color = healthColor,
+                            trackColor = SageGlassL1
+                        )
+                    }
+                }
+            }
+
+            // Adaptive Recommendations Items
+            if (weeklyReviewData.recommendations.isNotEmpty()) {
+                item {
+                    Text(
+                        text = "AI ACTIONABLE RECOMMENDATIONS",
+                        color = SageTextSecondary,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.5.sp
+                    )
+                }
+
+                items(weeklyReviewData.recommendations) { rec ->
+                    GlassCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("adaptive_rec_${rec.id}"),
+                        level = GlassLevel.L1,
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = rec.title,
+                                    color = SageTextPrimary,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(SagePrimaryStart.copy(alpha = 0.2f))
+                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                ) {
+                                    Text(
+                                        text = rec.recommendationType,
+                                        color = SagePrimaryLight,
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+
+                            Text(
+                                text = rec.description,
+                                color = SageTextSecondary,
+                                fontSize = 12.sp,
+                                lineHeight = 16.sp
+                            )
+
+                            GlassButton(
+                                text = rec.actionLabel,
+                                onClick = {
+                                    onApplyRecommendation(rec.id, rec.targetConcept)
+                                },
+                                variant = GlassButtonVariant.Primary,
+                                modifier = Modifier.fillMaxWidth()
+                            )
                         }
                     }
                 }

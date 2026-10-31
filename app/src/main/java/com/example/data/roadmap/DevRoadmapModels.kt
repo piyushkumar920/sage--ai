@@ -34,7 +34,11 @@ data class DevRoadmapDetail(
     val description: String,
     val icon: String,
     val categories: List<String> = emptyList(),
-    val nodes: List<DevRoadmapNode> = emptyList()
+    val nodes: List<DevRoadmapNode> = emptyList(),
+    val difficulty: String = "Intermediate",
+    val time: String = "3 months",
+    val scheduleTarget: String = "2 hours / day",
+    val targetCompletion: String = "3 months from today"
 )
 
 enum class TopicStatus(val label: String, val symbol: String) {

@@ -43,11 +43,14 @@ class ChatEditAndRetryTest {
 
         val mockClient = object : GeminiClient(backendUrlProvider = { null }) {
             override suspend fun generateContent(
-                conversationHistory: List<com.example.data.api.GeminiContent>,
-                systemInstruction: String?,
-                mode: String?
+                history: List<com.example.data.api.GeminiContent>,
+                systemPrompt: String,
+                mode: String,
+                conversationId: String?,
+                attachmentIds: List<String>,
+                idToken: String?
             ): GeminiResult<String> {
-                val lastUserMsg = conversationHistory.lastOrNull { it.role == "user" }
+                val lastUserMsg = history.lastOrNull { it.role == "user" }
                     ?.parts?.firstOrNull()?.text ?: ""
                 return if (lastUserMsg.contains("FAIL_TRIGGER")) {
                     GeminiResult.Error(message = "API temporary failure", diagnosticMessage = "Simulated 500 error")

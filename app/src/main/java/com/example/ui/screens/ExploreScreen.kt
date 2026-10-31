@@ -104,6 +104,7 @@ fun ExploreScreen(
     onSearchCurriculum: ((String, String?) -> List<CurriculumCourse>)? = null,
     onStartCurriculumCourse: ((CurriculumCourse) -> Unit)? = null,
     onOpenStudyTools: (() -> Unit)? = null,
+    onOpenDocumentReview: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -312,6 +313,54 @@ fun ExploreScreen(
                                 imageVector = Icons.Default.ChevronRight,
                                 contentDescription = null,
                                 tint = SagePrimaryLight,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (onOpenDocumentReview != null) {
+                item {
+                    GlassCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("explore_document_review_card"),
+                        level = GlassLevel.L2,
+                        glowColor = SageGold.copy(alpha = 0.25f),
+                        borderColor = SageGold.copy(alpha = 0.4f),
+                        onClick = onOpenDocumentReview
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(text = "📂", fontSize = 22.sp)
+                                Column {
+                                    Text(
+                                        text = "Document Intelligence & Syllabus Extraction",
+                                        color = SageTextPrimary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 15.sp
+                                    )
+                                    Text(
+                                        text = "Upload PDF, images, TXT, DOCX, or PPTX to extract structured syllabi",
+                                        color = SageTextSecondary,
+                                        fontSize = 11.sp
+                                    )
+                                }
+                            }
+                            Icon(
+                                imageVector = Icons.Default.ChevronRight,
+                                contentDescription = null,
+                                tint = SageGold,
                                 modifier = Modifier.size(18.dp)
                             )
                         }

@@ -30,6 +30,17 @@ class FirebaseAuthRepository(
         get() = firebaseAuth.currentUser != null
 
     /**
+     * Retrieves the current Firebase ID Token for server-side verification.
+     */
+    suspend fun getIdToken(forceRefresh: Boolean = false): String? {
+        return try {
+            currentUser?.getIdToken(forceRefresh)?.await()?.token
+        } catch (_: Throwable) {
+            null
+        }
+    }
+
+    /**
      * Observable flow of current Firebase User authentication state.
      * Automatically emits updates on sign in, sign out, or token changes.
      */

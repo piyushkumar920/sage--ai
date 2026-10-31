@@ -5,34 +5,15 @@ import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.OpenInNew
-import androidx.compose.material.icons.filled.Quiz
-import androidx.compose.material.icons.filled.School
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,26 +32,10 @@ import com.example.ui.components.GlassButton
 import com.example.ui.components.GlassButtonVariant
 import com.example.ui.components.GlassCard
 import com.example.ui.components.GlassLevel
-import com.example.ui.theme.SageBackground
-import com.example.ui.theme.SageCardBorder
-import com.example.ui.theme.SageGlassBorder
-import com.example.ui.theme.SageGlassBorderGlow
-import com.example.ui.theme.SageGlassL1
-import com.example.ui.theme.SageGlassL2
-import com.example.ui.theme.SageGlassL3
-import com.example.ui.theme.SageGlowEnd
-import com.example.ui.theme.SageGlowStart
-import com.example.ui.theme.SageGold
-import com.example.ui.theme.SagePrimary
-import com.example.ui.theme.SagePrimaryLight
-import com.example.ui.theme.SagePrimaryStart
-import com.example.ui.theme.SageRaisedSurface
-import com.example.ui.theme.SageSuccess
-import com.example.ui.theme.SageSurface
-import com.example.ui.theme.SageTextMuted
-import com.example.ui.theme.SageTextPrimary
-import com.example.ui.theme.SageTextSecondary
-import com.example.ui.theme.SageWarning
+import com.example.ui.theme.*
+
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 
 private data class TopicDetailStatusStyle(
     val bg: Color,
@@ -91,9 +56,27 @@ fun TopicDetailScreen(
     onToggleComplete: () -> Unit,
     onOpenStudyTools: (() -> Unit)? = null,
     onOpenFocusMode: (() -> Unit)? = null,
+    onSimplify: (() -> Unit)? = null,
+    onExamples: (() -> Unit)? = null,
+    onPractice: (() -> Unit)? = null,
+    onPyqs: (() -> Unit)? = null,
+    onRevise: (() -> Unit)? = null,
+    onScanAndSolve: (() -> Unit)? = null,
+    topicAttachments: List<com.example.data.attachments.StudyAttachmentEntity> = emptyList(),
+    onAddAttachments: ((List<android.net.Uri>) -> Unit)? = null,
+    onRemoveAttachment: ((String) -> Unit)? = null,
+    onRetryAttachment: ((String) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+
+    val docPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenMultipleDocuments()
+    ) { uris ->
+        if (uris.isNotEmpty()) {
+            onAddAttachments?.invoke(uris)
+        }
+    }
 
     val style = when (status) {
         TopicStatus.COMPLETED -> TopicDetailStatusStyle(
@@ -259,54 +242,277 @@ fun TopicDetailScreen(
                 }
             }
 
-            // Action Buttons Grid (4 Working Buttons)
+            // Stage 3: Attached Study Materials for Topic
+            item {
+                GlassCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("topic_attachments_card"),
+                    level = GlassLevel.L2,
+                    shape = RoundedCornerShape(18.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.AttachFile,
+                                    contentDescription = null,
+                                    tint = SageGold,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "TOPIC STUDY MATERIALS",
+                                    color = SageGold,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 1.sp
+                                )
+                            }
+
+                            if (onAddAttachments != null) {
+                                TextButton(
+                                    onClick = {
+                                        docPickerLauncher.launch(
+                                            arrayOf(
+                                                "application/pdf",
+                                                "image/*",
+                                                "text/plain",
+                                                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                                "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                                            )
+                                        )
+                                    },
+                                    modifier = Modifier.testTag("attach_material_button")
+                                ) {
+                                    Icon(Icons.Default.Add, contentDescription = null, tint = SagePrimaryLight, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("Attach Notes", color = SagePrimaryLight, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+
+                        if (topicAttachments.isEmpty()) {
+                            Text(
+                                text = "No custom notes or slides attached yet. Attach PDFs, DOCX, or PPTX to ground AI learning sessions directly on your study material.",
+                                color = SageTextMuted,
+                                fontSize = 12.sp,
+                                lineHeight = 18.sp
+                            )
+                        } else {
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                topicAttachments.forEach { att ->
+                                    val (badgeText, badgeColor) = when {
+                                        att.mimeType.contains("pdf") -> "PDF" to Color(0xFFE53935)
+                                        att.mimeType.contains("image") -> "IMG" to Color(0xFF1E88E5)
+                                        att.mimeType.contains("word") || att.mimeType.contains("docx") -> "DOCX" to Color(0xFF1565C0)
+                                        att.mimeType.contains("presentation") || att.mimeType.contains("pptx") -> "PPTX" to Color(0xFFE65100)
+                                        else -> "TXT" to Color(0xFF43A047)
+                                    }
+
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(SageGlassL1)
+                                            .border(1.dp, SageGlassBorder, RoundedCornerShape(10.dp))
+                                            .padding(10.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(6.dp))
+                                                    .background(badgeColor.copy(alpha = 0.2f))
+                                                    .border(1.dp, badgeColor, RoundedCornerShape(6.dp))
+                                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                                            ) {
+                                                Text(text = badgeText, color = badgeColor, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                            }
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Column {
+                                                Text(text = att.originalFileName, color = SageTextPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                                                Text(text = if (att.uploadStatus == "ATTACHED" || att.processingStatus == "COMPLETED") "Grounded for AI" else att.uploadStatus, color = SageTextMuted, fontSize = 10.sp)
+                                            }
+                                        }
+
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            if (att.uploadStatus.contains("FAILED")) {
+                                                IconButton(onClick = { onRetryAttachment?.invoke(att.attachmentId) }, modifier = Modifier.size(28.dp)) {
+                                                    Icon(Icons.Default.Refresh, contentDescription = "Retry", tint = SageGold, modifier = Modifier.size(16.dp))
+                                                }
+                                            }
+                                            IconButton(onClick = { onRemoveAttachment?.invoke(att.attachmentId) }, modifier = Modifier.size(28.dp)) {
+                                                Icon(Icons.Default.Close, contentDescription = "Remove", tint = SageTextMuted, modifier = Modifier.size(16.dp))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Phase 4: 9 Interactive Learning Modes Studio Header
+            item {
+                Text(
+                    text = "PHASE 4: 9 INTERACTIVE LEARNING MODES",
+                    color = SageGold,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+            }
+
+            // 9 Learning Modes Grid / Buttons
             item {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    // Button 1: Start Learning (Primary Call to Action)
+                    // Mode 1: Learn (Structured AI Session)
                     GlassButton(
-                        text = "Start Learning (Structured AI Session)",
+                        text = "1. Learn (Structured AI Teaching Session)",
                         onClick = onStartLearning,
                         icon = Icons.Default.School,
                         variant = GlassButtonVariant.Primary,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp)
-                            .testTag("start_learning_button")
+                            .height(50.dp)
+                            .testTag("mode_learn_button")
                     )
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        // Button 2: Ask Sage (Discussion)
+                        // Mode 2: Simplify
                         GlassButton(
-                            text = "Ask Sage",
-                            onClick = onAskSage,
-                            icon = Icons.Default.AutoAwesome,
+                            text = "2. Simplify",
+                            onClick = { onSimplify?.invoke() ?: onStartLearning() },
+                            icon = Icons.Default.Lightbulb,
                             variant = GlassButtonVariant.Secondary,
                             modifier = Modifier
                                 .weight(1f)
-                                .height(48.dp)
-                                .testTag("ask_sage_button")
+                                .height(46.dp)
+                                .testTag("mode_simplify_button")
                         )
 
-                        // Button 3: Take Quiz
+                        // Mode 3: Examples
                         GlassButton(
-                            text = "Take Quiz",
+                            text = "3. Examples",
+                            onClick = { onExamples?.invoke() ?: onOpenStudyTools?.invoke() },
+                            icon = Icons.Default.MenuBook,
+                            variant = GlassButtonVariant.Secondary,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(46.dp)
+                                .testTag("mode_examples_button")
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        // Mode 4: Practice
+                        GlassButton(
+                            text = "4. Practice",
+                            onClick = { onPractice?.invoke() ?: onTakeQuiz() },
+                            icon = Icons.Default.EditNote,
+                            variant = GlassButtonVariant.Secondary,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(46.dp)
+                                .testTag("mode_practice_button")
+                        )
+
+                        // Mode 5: Quiz
+                        GlassButton(
+                            text = "5. Quiz",
                             onClick = onTakeQuiz,
                             icon = Icons.Default.Quiz,
                             variant = GlassButtonVariant.Secondary,
                             modifier = Modifier
                                 .weight(1f)
-                                .height(48.dp)
-                                .testTag("take_quiz_button")
+                                .height(46.dp)
+                                .testTag("mode_quiz_button")
                         )
                     }
 
-                    // Button 4: Study Tools (Curriculum Context AI Tools)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        // Mode 6: PYQs
+                        GlassButton(
+                            text = "6. PYQs",
+                            onClick = { onPyqs?.invoke() ?: onTakeQuiz() },
+                            icon = Icons.Default.HistoryEdu,
+                            variant = GlassButtonVariant.Secondary,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(46.dp)
+                                .testTag("mode_pyqs_button")
+                        )
+
+                        // Mode 7: Revise
+                        GlassButton(
+                            text = "7. Revise",
+                            onClick = { onRevise?.invoke() ?: onOpenStudyTools?.invoke() },
+                            icon = Icons.Default.Refresh,
+                            variant = GlassButtonVariant.Secondary,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(46.dp)
+                                .testTag("mode_revise_button")
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        // Mode 8: Ask Sage
+                        GlassButton(
+                            text = "8. Ask Sage",
+                            onClick = onAskSage,
+                            icon = Icons.Default.AutoAwesome,
+                            variant = GlassButtonVariant.Secondary,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(46.dp)
+                                .testTag("mode_ask_sage_button")
+                        )
+
+                        // Mode 9: Scan & Solve
+                        GlassButton(
+                            text = "9. Scan & Solve",
+                            onClick = { onScanAndSolve?.invoke() ?: onOpenStudyTools?.invoke() },
+                            icon = Icons.Default.CameraAlt,
+                            variant = GlassButtonVariant.Secondary,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(46.dp)
+                                .testTag("mode_scan_solve_button")
+                        )
+                    }
+
+                    // Study Tools & Focus Mode shortcuts
                     if (onOpenStudyTools != null) {
                         GlassButton(
                             text = "Study Tools (Notes, Cards, Maps & Sheets)",
@@ -320,7 +526,6 @@ fun TopicDetailScreen(
                         )
                     }
 
-                    // Button 4.5: Focus Mode (Curriculum Session)
                     if (onOpenFocusMode != null) {
                         GlassButton(
                             text = "🎯 Start Focus Session on This Topic",
@@ -333,7 +538,7 @@ fun TopicDetailScreen(
                         )
                     }
 
-                    // Button 5: Mark Complete / Toggle Status
+                    // Explicit Completion Action (Do not mark complete automatically)
                     GlassCard(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -358,7 +563,7 @@ fun TopicDetailScreen(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = if (status == TopicStatus.COMPLETED) "Completed ✓ (Tap to Undo)" else "Mark as Complete",
+                                text = if (status == TopicStatus.COMPLETED) "Completed ✓ (Tap to Undo)" else "Mark Topic as Complete",
                                 color = if (status == TopicStatus.COMPLETED) SageSuccess else SageTextSecondary,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold
@@ -373,7 +578,7 @@ fun TopicDetailScreen(
                 GlassCard(
                     modifier = Modifier.fillMaxWidth(),
                     level = GlassLevel.L1,
-                    shape = RoundedCornerShape(18.dp)
+                    shape = RoundedCornerShape(16.dp)
                 ) {
                     Column(
                         modifier = Modifier
@@ -382,155 +587,17 @@ fun TopicDetailScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "WHAT YOU'LL LEARN",
-                            color = SagePrimaryLight,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.sp
+                            text = "Core Learning Objectives",
+                            color = SageTextPrimary,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "• Core principles, lifecycle patterns, and foundational mechanics of ${node.title}.\n• Hands-on best practices, common pitfalls, and architecture tradeoffs.\n• Real-world scenario application verified through Sage's interactive tutor exercises.",
-                            color = SageTextPrimary,
+                            text = "• Master foundational principles and terminology\n• Work through structured examples and step-by-step solutions\n• Test comprehension using interactive quizzes and practice assessments\n• Build mastery for academic examinations and professional tests",
+                            color = SageTextSecondary,
                             fontSize = 13.sp,
                             lineHeight = 20.sp
                         )
-                    }
-                }
-            }
-
-            // Section: Why It Matters
-            item {
-                GlassCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    level = GlassLevel.L1,
-                    shape = RoundedCornerShape(18.dp)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = "WHY IT MATTERS",
-                            color = SageGold,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.sp
-                        )
-                        Text(
-                            text = "In the $roadmapTitle curriculum, ${node.title} bridges theoretical fundamentals with production engineering. Mastering it prevents architectural debt and ensures predictable reliability at scale.",
-                            color = SageTextPrimary,
-                            fontSize = 13.sp,
-                            lineHeight = 20.sp
-                        )
-                    }
-                }
-            }
-
-            // Section: Prerequisites
-            item {
-                GlassCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    level = GlassLevel.L1,
-                    shape = RoundedCornerShape(18.dp)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = "PREREQUISITES & DEPENDENCIES",
-                            color = SageTextMuted,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.sp
-                        )
-                        if (node.children.isNotEmpty()) {
-                            Text(
-                                text = "Unlocks subsequent modules: ${node.children.joinToString(", ")}",
-                                color = SageTextSecondary,
-                                fontSize = 13.sp
-                            )
-                        } else {
-                            Text(
-                                text = "Foundational stage module in $roadmapTitle. Ready for direct study.",
-                                color = SageTextSecondary,
-                                fontSize = 13.sp
-                            )
-                        }
-                    }
-                }
-            }
-
-            // Section: Recommended Resources
-            item {
-                Text(
-                    text = "RECOMMENDED RESOURCES (${node.resources.size})",
-                    color = SageTextSecondary,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
-                )
-            }
-
-            if (node.resources.isEmpty()) {
-                item {
-                    Text(
-                        text = "No external links attached. Sage AI interactive lessons cover this topic completely.",
-                        color = SageTextMuted,
-                        fontSize = 12.sp
-                    )
-                }
-            } else {
-                items(node.resources) { resource ->
-                    GlassCard(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                if (resource.url.isNotBlank()) {
-                                    try {
-                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(resource.url))
-                                        context.startActivity(intent)
-                                    } catch (e: Exception) {}
-                                }
-                            },
-                        level = GlassLevel.L1,
-                        shape = RoundedCornerShape(14.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = resource.title,
-                                    color = SageTextPrimary,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                                if (resource.type != null) {
-                                    Text(
-                                        text = resource.type.uppercase(),
-                                        color = SagePrimaryLight,
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
-
-                            Icon(
-                                imageVector = Icons.Default.OpenInNew,
-                                contentDescription = "Open resource",
-                                tint = SagePrimaryLight,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
                     }
                 }
             }

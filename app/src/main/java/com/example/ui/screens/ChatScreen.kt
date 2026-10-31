@@ -42,11 +42,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Map
+import com.example.data.attachments.StudyAttachmentEntity
+import com.example.ui.components.ChatAttachmentManagementDialog
+import com.example.ui.components.ChatAttachmentPreviewRow
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -129,6 +133,11 @@ fun ChatScreen(
     streakDays: Int,
     academicContext: AcademicContext? = null,
     studyToolsViewModel: StudyToolsViewModel? = null,
+    attachments: List<StudyAttachmentEntity> = emptyList(),
+    onAddAttachments: (List<Uri>) -> Unit = {},
+    onRemoveAttachment: (String) -> Unit = {},
+    onRetryAttachment: (String) -> Unit = {},
+    onDeleteAttachmentPermanently: (String) -> Unit = {},
     onSendMessage: (String) -> Unit,
     onRetryMessage: (Long) -> Unit,
     onEditMessage: ((Long, String) -> Unit)? = null,
@@ -143,6 +152,7 @@ fun ChatScreen(
 ) {
     var inputText by remember { mutableStateOf("") }
     var attachedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var showAttachmentDialog by remember { mutableStateOf(false) }
     var editingMessageId by remember { mutableStateOf<Long?>(null) }
     var editingText by remember { mutableStateOf("") }
     var editErrorMessage by remember { mutableStateOf<String?>(null) }
@@ -151,6 +161,15 @@ fun ChatScreen(
 
     val studyToolState by studyToolsViewModel?.uiState?.collectAsState()
         ?: remember { mutableStateOf(StudyToolUiState.Idle) }
+
+    // Multi-document picker for Stage 2 Universal Study Attachments
+    val documentPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenMultipleDocuments()
+    ) { uris: List<Uri> ->
+        if (uris.isNotEmpty()) {
+            onAddAttachments(uris)
+        }
+    }
 
     // Image Picker for Scan & Solve
     val photoPickerLauncher = rememberLauncherForActivityResult(
@@ -206,12 +225,29 @@ fun ChatScreen(
                                 modifier = Modifier.size(15.dp)
                             )
                         }
-                        Text(
-                            text = if (academicContext != null) "Syllabus Track • $currentMode" else "Mode: $currentMode",
-                            color = if (currentMode == "SOCRATIC") SageGold else SagePrimaryLight,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = if (academicContext != null) "Syllabus Track • $currentMode" else "Mode: $currentMode",
+                                color = if (currentMode == "SOCRATIC") SageGold else SagePrimaryLight,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                            if (attachments.isNotEmpty()) {
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "📎 ${attachments.size} docs",
+                                    color = SageGold,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(SageGold.copy(alpha = 0.15f))
+                                        .clickable { showAttachmentDialog = true }
+                                        .padding(horizontal = 4.dp, vertical = 1.dp)
+                                        .testTag("chat_attachments_header_pill")
+                                )
+                            }
+                        }
                     }
                 },
                 actions = {
@@ -581,6 +617,14 @@ fun ChatScreen(
                     }
                 )
 
+                // 5.5. Attached study documents preview row (Stage 2)
+                ChatAttachmentPreviewRow(
+                    attachments = attachments,
+                    onRemove = onRemoveAttachment,
+                    onRetry = onRetryAttachment,
+                    onOpenManagement = { showAttachmentDialog = true }
+                )
+
                 // 6. Input bar dock
                 Column(
                     modifier = Modifier
@@ -614,6 +658,36 @@ fun ChatScreen(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // Document Attachment button for Stage 2
+                        IconButton(
+                            onClick = {
+                                documentPickerLauncher.launch(
+                                    arrayOf(
+                                        "application/pdf",
+                                        "image/*",
+                                        "text/plain",
+                                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                        "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                                    )
+                                )
+                            },
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(SageGlassL3)
+                                .border(1.dp, SageGlassBorder, CircleShape)
+                                .testTag("chat_attach_document_button")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AttachFile,
+                                contentDescription = "Attach Study Document",
+                                tint = SageGold,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(6.dp))
+
                         // Scan & Solve camera button next to text input
                         IconButton(
                             onClick = {
@@ -754,5 +828,18 @@ fun ChatScreen(
                 }
             }
         }
+    }
+
+    if (showAttachmentDialog) {
+        ChatAttachmentManagementDialog(
+            attachments = attachments,
+            onDismiss = { showAttachmentDialog = false },
+            onRemoveFromChat = { attId ->
+                onRemoveAttachment(attId)
+            },
+            onDeletePermanently = { attId ->
+                onDeleteAttachmentPermanently(attId)
+            }
+        )
     }
 }

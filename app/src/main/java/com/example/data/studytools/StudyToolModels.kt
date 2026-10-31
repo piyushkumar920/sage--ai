@@ -165,7 +165,17 @@ data class AcademicContext(
     @field:Json(name = "module") val module: String = "",
     @field:Json(name = "topic") val topic: String = "",
     @field:Json(name = "officialSyllabusContent") val officialSyllabusContent: String = ""
-)
+) {
+    fun getFormattedHierarchy(): String {
+        val parts = mutableListOf<String>()
+        if (department.isNotBlank()) parts.add(department)
+        if (courseCode.isNotBlank()) parts.add(courseCode)
+        if (courseName.isNotBlank() && courseName != courseCode) parts.add(courseName)
+        if (module.isNotBlank()) parts.add(module)
+        if (topic.isNotBlank()) parts.add(topic)
+        return parts.joinToString(" • ")
+    }
+}
 
 @JsonClass(generateAdapter = true)
 data class SageStudyToolsRequest(
@@ -176,7 +186,17 @@ data class SageStudyToolsRequest(
     @field:Json(name = "imageBase64") val imageBase64: String = "",
     @field:Json(name = "imageMimeType") val imageMimeType: String = "image/jpeg",
     @field:Json(name = "prompt") val prompt: String = "",
-    @field:Json(name = "academicContext") val academicContext: AcademicContext? = null
+    @field:Json(name = "academicContext") val academicContext: AcademicContext? = null,
+    @field:Json(name = "attachmentIds") val attachmentIds: List<String> = emptyList(),
+    @field:Json(name = "contextType") val contextType: String = "",
+    @field:Json(name = "contextId") val contextId: String = ""
+)
+
+@JsonClass(generateAdapter = true)
+data class RoadmapGenerationRequest(
+    @field:Json(name = "goal") val goal: String,
+    @field:Json(name = "duration") val duration: String? = null,
+    @field:Json(name = "preferences") val preferences: Map<String, Any?>? = null
 )
 
 @JsonClass(generateAdapter = true)

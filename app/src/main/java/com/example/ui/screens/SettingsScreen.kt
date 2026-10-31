@@ -29,6 +29,8 @@ import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
@@ -93,6 +95,7 @@ fun SettingsScreen(
     backendStatus: String = "Online",
     syncStatus: String = "Active",
     lastErrorCode: String? = null,
+    onOpenDocumentManager: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val currentUser by authViewModel.currentUser.collectAsState()
@@ -516,6 +519,60 @@ fun SettingsScreen(
                                 .height(44.dp)
                                 .testTag("change_academic_profile_button")
                         )
+                    }
+                }
+
+                // UNIVERSAL STUDY ATTACHMENTS
+                if (onOpenDocumentManager != null) {
+                    Text(
+                        text = "STUDY ATTACHMENTS & DOCUMENTS",
+                        color = SageGold,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp,
+                        modifier = Modifier.padding(start = 4.dp, top = 8.dp)
+                    )
+
+                    GlassCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("settings_document_manager_card"),
+                        level = GlassLevel.L2,
+                        shape = RoundedCornerShape(18.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Folder, contentDescription = null, tint = SageGold, modifier = Modifier.size(24.dp))
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = "Universal Document Manager",
+                                        color = SageTextPrimary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp
+                                    )
+                                    Text(
+                                        text = "View, search, and manage study attachments across all contexts.",
+                                        color = SageTextSecondary,
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            }
+
+                            GlassButton(
+                                text = "Open Document Manager",
+                                onClick = onOpenDocumentManager,
+                                icon = Icons.Default.FolderOpen,
+                                variant = GlassButtonVariant.Secondary,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(44.dp)
+                                    .testTag("open_doc_manager_button")
+                            )
+                        }
                     }
                 }
 

@@ -74,3 +74,18 @@ data class WeakConceptEntity(
     val lastTestedAt: Long = System.currentTimeMillis(),
     val isResolved: Boolean = false
 )
+
+@Entity(tableName = "personal_roadmaps")
+data class PersonalRoadmapEntity(
+    @PrimaryKey
+    val roadmapId: String,
+    val title: String,
+    val description: String,
+    val icon: String,
+    val difficulty: String,
+    val time: String,
+    val goalPrompt: String,
+    val jsonDetail: String,
+    val createdAt: Long = System.currentTimeMillis()
+)
+
