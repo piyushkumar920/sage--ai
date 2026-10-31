@@ -1957,6 +1957,294 @@ app.delete('/api/attachments/:attachmentId', async (req, res) => {
   res.status(404).json({ success: false, error: 'Attachment or document not found', code: 'NOT_FOUND' });
 });
 
+function generateRoadmapPrompt(goal, duration, preferences) {
+  let prefDetails = '';
+  if (preferences && typeof preferences === 'object') {
+    const parts = [];
+    if (preferences.difficulty) parts.push(`Difficulty Level: ${preferences.difficulty}`);
+    if (preferences.dailyHours) parts.push(`Daily Study Commitment: ${preferences.dailyHours} hours/day`);
+    if (preferences.daysPerWeek) parts.push(`Days Per Week: ${preferences.daysPerWeek} days/week`);
+    if (preferences.focusAreas) parts.push(`Focus Areas: ${preferences.focusAreas}`);
+    if (parts.length > 0) {
+      prefDetails = `\nLearner Preferences:\n${parts.map(p => `- ${p}`).join('\n')}\n`;
+    }
+  }
+
+  const durationStr = duration ? `Target Duration: ${duration}` : 'Target Duration: 3 months';
+
+  return `You are designing a comprehensive, structured curriculum learning roadmap for the following goal:
+
+Learning Goal: "${goal}"
+${durationStr}
+${prefDetails}
+
+Create a progressive 6 to 12 milestone step-by-step roadmap from beginner foundations to advanced practical mastery.
+Each node represents a distinct milestone/topic.
+Nodes must link sequentially or conditionally using the "children" array (referencing downstream node IDs).
+
+Output JSON conforming EXACTLY to this schema:
+{
+  "id": "personal_${Date.now()}",
+  "title": "Clear, concise title summarizing the roadmap goal",
+  "description": "2-3 sentence overview of this personalized learning journey, prerequisites, and target outcomes",
+  "icon": "🧭",
+  "difficulty": "Intermediate",
+  "time": "${duration || '3 months'}",
+  "scheduleTarget": "2 hours / day",
+  "targetCompletion": "${duration || '3 months from today'}",
+  "categories": ["fundamentals", "core_concepts", "advanced_topics", "capstone_projects"],
+  "nodes": [
+    {
+      "id": "node_1",
+      "title": "Milestone / Module Title",
+      "icon": "📌",
+      "category": "fundamentals",
+      "description": "Thorough explanation of core concepts, competencies, and practical tasks covered in this step",
+      "difficulty": "Beginner",
+      "resources": [
+        {
+          "title": "Authoritative Guide or Documentation",
+          "url": "https://example.com/guide",
+          "type": "docs",
+          "free": true
+        }
+      ],
+      "children": ["node_2"]
+    }
+  ]
+}`;
+}
+
+// POST /api/roadmaps/generate
+app.post('/api/roadmaps/generate', async (req, res) => {
+  const requestId = req.requestId || 'unknown';
+  console.log(`[${requestId}] [ROADMAPS] Request received for goal: "${req.body?.goal}"`);
+
+  // 1. Authenticate using Firebase ID token
+  const auth = await verifyFirebaseIdToken(req);
+  if (!auth.verified) {
+    console.warn(`[${requestId}] [ROADMAPS] Unauthorized request: ${auth.error}`);
+    return res.status(401).json({
+      ok: false,
+      success: false,
+      error: auth.error || 'Authentication required to generate AI roadmap.',
+      code: 'UNAUTHORIZED',
+      service: SERVICE_NAME,
+      requestId,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  // 2. Validate Request Body
+  const { goal, duration, preferences } = req.body || {};
+  if (!goal || typeof goal !== 'string' || !goal.trim()) {
+    console.warn(`[${requestId}] [ROADMAPS] Missing or invalid goal parameter`);
+    return res.status(400).json({
+      ok: false,
+      success: false,
+      error: 'Goal is required and must be a non-empty string.',
+      code: 'INVALID_REQUEST',
+      service: SERVICE_NAME,
+      requestId,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  // 3. Verify Gemini API Key configuration
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey === 'MY_GEMINI_API_KEY') {
+    console.error(`[${requestId}] [ROADMAPS] Missing GEMINI_API_KEY`);
+    return res.status(500).json({
+      ok: false,
+      success: false,
+      error: 'AI service configuration is incomplete (missing API key).',
+      code: 'AUTH_OR_API_KEY_ERROR',
+      service: SERVICE_NAME,
+      requestId,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  // 4. Construct Prompt & Payload
+  const promptText = generateRoadmapPrompt(goal.trim(), duration, preferences);
+  const payload = {
+    contents: [
+      {
+        role: 'user',
+        parts: [{ text: promptText }]
+      }
+    ],
+    systemInstruction: {
+      parts: [
+        {
+          text: 'You are Sage AI tutor and expert curriculum architect. You generate personalized, step-by-step academic learning roadmaps. You output ONLY valid, strictly parseable JSON with NO markdown formatting, NO markdown code fences (```json or ```), and NO surrounding conversational commentary.'
+        }
+      ]
+    },
+    generationConfig: {
+      temperature: 0.2,
+      responseMimeType: 'application/json',
+      maxOutputTokens: 8192
+    }
+  };
+
+  // 5. Query candidate Gemini models with fallback
+  let lastError = null;
+  for (const modelName of CANDIDATE_MODELS) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+      const upstreamRes = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(60000)
+      });
+
+      if (!upstreamRes.ok) {
+        console.error(`[${requestId}] [ROADMAPS_GEMINI_ERROR] status=${upstreamRes.status} model=${modelName}`);
+        if (upstreamRes.status === 429) {
+          console.warn(`[${requestId}] Model ${modelName} returned 429 rate limit, trying next candidate...`);
+          lastError = { status: 429, error: `AI request rate limit reached on ${modelName}.`, code: 'RATE_LIMITED' };
+          continue;
+        }
+        if (upstreamRes.status === 401 || upstreamRes.status === 403) {
+          lastError = { status: 500, error: 'AI credentials authorization error.', code: 'AUTH_OR_API_KEY_ERROR' };
+          break;
+        }
+        if (upstreamRes.status === 404) {
+          lastError = { status: 503, error: `Upstream model ${modelName} is unavailable.`, code: 'GEMINI_SERVICE_UNAVAILABLE' };
+          continue;
+        }
+        const errJson = await upstreamRes.json().catch(() => ({}));
+        const msg = errJson?.error?.message || `Gemini upstream service error (${upstreamRes.status})`;
+        lastError = { status: 503, error: msg, code: 'GEMINI_SERVICE_UNAVAILABLE' };
+        continue;
+      }
+
+      const data = await upstreamRes.json();
+      const rawText = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
+
+      if (!rawText.trim()) {
+        lastError = { status: 500, error: 'Empty generation received from Gemini.', code: 'BACKEND_ERROR' };
+        continue;
+      }
+
+      let cleanJsonStr = rawText.trim();
+      if (cleanJsonStr.startsWith('```json')) {
+        cleanJsonStr = cleanJsonStr.replace(/^```json\s*/i, '').replace(/\s*```$/, '');
+      } else if (cleanJsonStr.startsWith('```')) {
+        cleanJsonStr = cleanJsonStr.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+
+      let parsedData;
+      try {
+        parsedData = JSON.parse(cleanJsonStr);
+      } catch (parseErr) {
+        console.error(`[${requestId}] Failed to parse roadmap JSON:`, cleanJsonStr.slice(0, 200));
+        lastError = { status: 502, error: 'Malformed JSON returned by AI model.', code: 'BACKEND_ERROR' };
+        continue;
+      }
+
+      if (!parsedData || typeof parsedData !== 'object') {
+        lastError = { status: 502, error: 'Invalid roadmap object structure.', code: 'BACKEND_ERROR' };
+        continue;
+      }
+
+      const now = Date.now();
+      const safeId = typeof parsedData.id === 'string' && parsedData.id.startsWith('personal_') ? parsedData.id : `personal_${now}`;
+      const safeTitle = typeof parsedData.title === 'string' && parsedData.title.trim() ? parsedData.title.trim() : goal.trim();
+      const safeDesc = typeof parsedData.description === 'string' && parsedData.description.trim() ? parsedData.description.trim() : `Personalized roadmap for ${goal.trim()}`;
+      const safeIcon = typeof parsedData.icon === 'string' && parsedData.icon.trim() ? parsedData.icon.trim() : '🧭';
+      const safeDifficulty = typeof parsedData.difficulty === 'string' && parsedData.difficulty.trim() ? parsedData.difficulty.trim() : 'Intermediate';
+      const safeTime = typeof parsedData.time === 'string' && parsedData.time.trim() ? parsedData.time.trim() : (duration || '3 months');
+      const safeScheduleTarget = typeof parsedData.scheduleTarget === 'string' && parsedData.scheduleTarget.trim() ? parsedData.scheduleTarget.trim() : '2 hours / day';
+      const safeTargetCompletion = typeof parsedData.targetCompletion === 'string' && parsedData.targetCompletion.trim() ? parsedData.targetCompletion.trim() : (duration || '3 months from today');
+
+      const rawCategories = Array.isArray(parsedData.categories) ? parsedData.categories : [];
+      const categories = rawCategories.length > 0 ? rawCategories.map(c => String(c)) : ['fundamentals', 'core_concepts', 'advanced_topics', 'capstone_projects'];
+
+      const rawNodes = Array.isArray(parsedData.nodes) ? parsedData.nodes : [];
+      const nodes = rawNodes.map((node, idx) => {
+        const nodeId = typeof node.id === 'string' && node.id.trim() ? node.id.trim() : `node_${idx + 1}`;
+        const nodeTitle = typeof node.title === 'string' && node.title.trim() ? node.title.trim() : `Topic ${idx + 1}`;
+        const nodeIcon = typeof node.icon === 'string' && node.icon.trim() ? node.icon.trim() : '📌';
+        const nodeCategory = typeof node.category === 'string' && node.category.trim() ? node.category.trim() : categories[0];
+        const nodeDesc = typeof node.description === 'string' && node.description.trim() ? node.description.trim() : `Comprehensive concepts for ${nodeTitle}`;
+        const nodeDiff = typeof node.difficulty === 'string' && node.difficulty.trim() ? node.difficulty.trim() : safeDifficulty;
+        const rawRes = Array.isArray(node.resources) ? node.resources : [];
+        const resources = rawRes.map(r => ({
+          title: typeof r?.title === 'string' ? r.title : 'Recommended Reference',
+          url: typeof r?.url === 'string' ? r.url : 'https://developer.mozilla.org',
+          type: typeof r?.type === 'string' ? r.type : 'docs',
+          free: r?.free !== false
+        }));
+        const children = Array.isArray(node.children) ? node.children.map(String) : (idx < rawNodes.length - 1 ? [`node_${idx + 2}`] : []);
+
+        return {
+          id: nodeId,
+          title: nodeTitle,
+          icon: nodeIcon,
+          category: nodeCategory,
+          description: nodeDesc,
+          difficulty: nodeDiff,
+          resources,
+          children
+        };
+      });
+
+      const normalizedRoadmap = {
+        id: safeId,
+        title: safeTitle,
+        description: safeDesc,
+        icon: safeIcon,
+        categories,
+        nodes,
+        difficulty: safeDifficulty,
+        time: safeTime,
+        scheduleTarget: safeScheduleTarget,
+        targetCompletion: safeTargetCompletion
+      };
+
+      return res.json({
+        ok: true,
+        success: true,
+        operation: 'roadmap',
+        data: normalizedRoadmap,
+        model: modelName,
+        service: SERVICE_NAME,
+        requestId,
+        timestamp: new Date().toISOString()
+      });
+    } catch (err) {
+      console.error(`[${requestId}] [ROADMAPS_GEMINI_ERROR] error=${err.message} model=${modelName}`);
+      if (err.name === 'TimeoutError' || err.message?.includes('timeout')) {
+        lastError = { status: 504, error: 'Connection to AI model timed out.', code: 'NETWORK_ERROR' };
+      } else {
+        lastError = { status: 503, error: `Upstream error: ${err.message}`, code: 'GEMINI_SERVICE_UNAVAILABLE' };
+      }
+      continue;
+    }
+  }
+
+  const finalStatus = lastError?.status || 503;
+  return res.status(finalStatus).json({
+    ok: false,
+    success: false,
+    error: lastError?.error || 'Failed to generate learning roadmap. Please try again.',
+    code: lastError?.code || 'GEMINI_SERVICE_UNAVAILABLE',
+    service: SERVICE_NAME,
+    requestId,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// GET /api/debug/routes
+app.get('/api/debug/routes', (req, res) => {
+  const routes = app._router.stack
+    .filter(r => r.route)
+    .map(r => `${Object.keys(r.route.methods).join(',').toUpperCase()} ${r.route.path}`);
+  res.json({ ok: true, routes });
+});
 
 // Explicit 404 for ANY unmatched /api/* route - strictly JSON only, never HTML
 app.all('/api/*', (req, res) => {
@@ -1998,110 +2286,6 @@ app.use((err, req, res, next) => {
     timestamp: new Date().toISOString()
   });
 });
-
-
-app.get('/api/debug/routes', (req, res) => {
-  const routes = app._router.stack
-    .filter(r => r.route)
-    .map(r => `${Object.keys(r.route.methods).join(',').toUpperCase()} ${r.route.path}`);
-  res.json({ routes });
-});
-
-app.post('/api/roadmaps/generate', async (req, res) => {
-  console.log(`[ROADMAPS] Request received: ${JSON.stringify(req.body)}`);
-  const { goal, duration, preferences } = req.body || {};
-  if (!goal) {
-    console.error('[ROADMAPS] Error: Missing goal');
-    return res.status(400).json({ success: false, error: 'Missing goal' });
-  }
-
-  const auth = await verifyFirebaseIdToken(req);
-  if (!auth.verified) {
-    console.error(`[ROADMAPS] Error: Unauthorized: ${auth.error}`);
-    return res.status(401).json({ success: false, error: 'Unauthorized' });
-  }
-  
-  // ... rest of the logic
-
-  const apiKey = process.env.GEMINI_API_KEY;
-  const promptText = generateRoadmapPrompt(goal, goal, '', `Goal: ${goal}, Duration: ${duration}, Preferences: ${JSON.stringify(preferences)}`);
-
-  const payload = {
-    contents: [{ role: 'user', parts: [{ text: promptText }] }],
-    systemInstruction: { parts: [{ text: 'You are Sage Study Assistant. Output ONLY valid JSON.' }] },
-    generationConfig: { temperature: 0.2, responseMimeType: 'application/json', maxOutputTokens: 8192 }
-  };
-
-  for (const modelName of CANDIDATE_MODELS) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
-      const upstreamRes = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(60000)
-      });
-
-      if (!upstreamRes.ok) continue;
-
-      const data = await upstreamRes.json();
-      const rawText = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('') || '';
-      let clean = rawText.trim();
-      if (clean.startsWith('```json')) clean = clean.replace(/^```json\s*/i, '').replace(/\s*```$/, '');
-      
-      const parsedData = JSON.parse(clean);
-
-      return res.json({
-        success: true,
-        data: parsedData,
-        model: modelName,
-        requestId: req.requestId,
-        timestamp: new Date().toISOString()
-      });
-    } catch (err) {
-      continue;
-    }
-  }
-
-  return res.status(500).json({ success: false, error: 'Failed to generate roadmap.' });
-});
-
-function generateRoadmapPrompt(topic, subject, contextBlock, prompt) {
-  return `Generate a comprehensive multi-topic structured learning roadmap for the goal/topic: "${topic || prompt}"
-Subject/Goal: "${subject || topic || prompt}"
-${contextBlock}
-User Instructions: ${prompt || 'Create a rigorous, step-by-step curriculum roadmap tailored to the learner.'}
-
-Return JSON with exactly this structure:
-{
-  "id": "personal_${Date.now()}",
-  "title": "Custom Roadmap Title",
-  "description": "2-3 sentence overview of this personalized learning roadmap",
-  "icon": "🧭",
-  "difficulty": "Intermediate",
-  "time": "3 months",
-  "categories": ["fundamentals", "advanced", "practice"],
-  "nodes": [
-    {
-      "id": "node_1",
-      "title": "Introduction & Fundamentals",
-      "icon": "📌",
-      "category": "fundamentals",
-      "description": "Detailed description of core fundamentals",
-      "difficulty": "Beginner",
-      "resources": [
-        {
-          "title": "Recommended Guide",
-          "url": "https://example.com",
-          "type": "docs",
-          "free": true
-        }
-      ],
-      "children": ["node_2"]
-    }
-  ]
-}`;
-}
 
 // Start server listening on 0.0.0.0
 const server = app.listen(PORT, '0.0.0.0', () => {
